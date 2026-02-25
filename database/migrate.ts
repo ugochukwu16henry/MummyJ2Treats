@@ -1,4 +1,16 @@
-import 'dotenv/config';
+import { config as dotenvConfig } from 'dotenv';
+import { resolve } from 'path';
+
+// Always load .env from project root (works for both CJS and ESM)
+dotenvConfig({ path: resolve(process.cwd(), '.env') });
+
+// Debug: Print DATABASE_URL with password masked
+if (process.env.DATABASE_URL) {
+  const url = process.env.DATABASE_URL.replace(/(postgres:\/\/[^:]+:)[^@]+(@)/, '$1*****$2');
+  console.log('DATABASE_URL:', url);
+} else {
+  console.log('DATABASE_URL is not set');
+}
 import { Client } from 'pg';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';

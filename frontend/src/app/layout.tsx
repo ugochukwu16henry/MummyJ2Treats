@@ -15,11 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MummyJ2Treats",
   description: "Fresh homemade treats delivered in Lagos",
-  icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
-    apple: "/favcon.png",
-  },
+  // Favicon from app/icon.png and app/apple-icon.png (Next.js file convention)
 };
 
 export default function RootLayout({
@@ -30,8 +26,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/favcon.png" />
         <meta name="theme-color" content="#1E1E2F" />
       </head>
       <body

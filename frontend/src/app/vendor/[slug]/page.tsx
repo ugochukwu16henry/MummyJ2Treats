@@ -1,83 +1,124 @@
 
-import { Metadata } from "next";
+import Image from "next/image";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  // Example product data (replace with real fetch)
-  const product = {
-    name: "Small Chops Deluxe",
-    description: "A premium selection of small chops from Mummy Kitchen.",
-    image: "/hero-food.png",
-    price: 5000,
-    vendor: "Mummy Kitchen",
-    slug: params.slug,
-    availability: true,
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
+async function fetchVendorStore(slug: string) {
+  const res = await fetch(`${API_BASE}/products/vendor/${slug}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    return { vendor: null, products: [] as any[] };
+  }
+  const json = await res.json();
+  const products: any[] = json.data ?? [];
+  if (!products.length) {
+    return { vendor: null, products: [] };
+  }
+  const first = products[0];
+  const vendor = {
+    name: first.vendor_name as string,
+    slug: first.vendor_slug as string,
+    logoUrl: first.vendor_logo_url as string | null,
+    bannerUrl: first.vendor_banner_url as string | null,
   };
-  const url = `https://mummyj2treats.com/vendor/${product.vendor.toLowerCase().replace(/\s+/g, "-")}/${product.slug}`;
-  return {
-    title: `${product.name} | ${product.vendor} | MummyJ2Treats`,
-    description: product.description,
-    openGraph: {
-      title: `${product.name} | ${product.vendor}`,
-      description: product.description,
-      url,
-      images: [product.image],
-      // Next.js OpenGraph type does not support "product"; default to website
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${product.name} | ${product.vendor}`,
-      description: product.description,
-      images: [product.image],
-    },
-    alternates: {
-      canonical: url,
-    },
-  };
+  return { vendor, products };
 }
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-  // Example product data (replace with real fetch)
-  const product = {
-    name: "Small Chops Deluxe",
-    description: "A premium selection of small chops from Mummy Kitchen.",
-    image: "/hero-food.png",
-    price: 5000,
-    vendor: "Mummy Kitchen",
-    slug: params.slug,
-    availability: true,
-  };
+export default async function VendorStorePage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const { vendor, products } = await fetchVendorStore(params.slug);
 
-  // Structured data (Schema.org Product)
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.description,
-    image: product.image,
-    offers: {
-      "@type": "Offer",
-      price: product.price,
-      priceCurrency: "NGN",
-      availability: product.availability ? "InStock" : "OutOfStock",
-    },
-    brand: {
-      "@type": "Brand",
-      name: product.vendor,
-    },
-    url: `https://mummyj2treats.com/vendor/${product.vendor.toLowerCase().replace(/\s+/g, "-")}/${product.slug}`,
-  };
+  if (!vendor) {
+    return (
+      <main className="max-w-4xl mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-2">Vendor not found</h1>
+        <p className="text-zinc-600">
+          This vendor either does not exist or has no active products yet.
+        </p>
+      </main>
+    );
+  }
 
   return (
-    <main className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-      <p className="text-zinc-600 mb-4">{product.description}</p>
-      <img src={product.image} alt={product.name} className="rounded-lg mb-4" width={600} height={400} />
-      <div className="mb-2">Vendor: <span className="font-semibold">{product.vendor}</span></div>
-      <div className="mb-2">Price: <span className="font-semibold">₦{product.price}</span></div>
-      <div className="mb-2">Availability: <span className={product.availability ? "text-green-600" : "text-red-600"}>{product.availability ? "In Stock" : "Out of Stock"}</span></div>
-      {/* Structured Data */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
-    </main>
+    <div className="min-h-screen w-full bg-zinc-50 font-sans">
+      {/* Hero / Banner reusing homepage style */}
+      <section className="relative w-full h-56 sm:h-72 md:h-80 overflow-hidden">
+        {vendor.bannerUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={vendor.bannerUrl}
+            alt={`${vendor.name} banner`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-primary to-secondary" />
+        )}
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 flex items-end">
+          <div className="max-w-5xl mx-auto w-full px-4 pb-6 flex items-center gap-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white flex items-center justify-center overflow-hidden">
+              {vendor.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={vendor.logoUrl}
+                  alt={vendor.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-primary">
+                  {vendor.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                {vendor.name}
+              </h1>
+              <p className="text-sm text-zinc-100">
+                Homemade treats from {vendor.name}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Product grid, similar to homepage best sellers */}
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        <h2 className="text-2xl font-bold mb-4">Menu</h2>
+        {products.length === 0 ? (
+          <p className="text-zinc-600">
+            This vendor has no active products yet. Check back soon!
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+            {products.map((p) => (
+              <div
+                key={p.id}
+                className="rounded-2xl shadow-md bg-white p-3 flex flex-col items-start hover:shadow-lg transition-shadow cursor-pointer"
+              >
+                <div className="w-full aspect-[4/3] bg-zinc-100 rounded-xl mb-3 overflow-hidden flex items-center justify-center">
+                  {/* Placeholder image area. Later we can use real product images. */}
+                  <span className="text-sm text-zinc-500">Product image</span>
+                </div>
+                <span className="font-semibold text-sm sm:text-base line-clamp-2">
+                  {p.name}
+                </span>
+                <span className="text-xs text-zinc-500 mb-1">
+                  ₦{Number(p.price).toLocaleString()}
+                </span>
+                <button className="mt-auto px-3 py-1 bg-primary text-white rounded-full text-xs sm:text-sm">
+                  View details
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
+

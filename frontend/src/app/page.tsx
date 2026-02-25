@@ -1,7 +1,23 @@
 
 import Image from "next/image";
 
-export default function Home() {
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const PRIMARY_VENDOR_SLUG =
+  process.env.NEXT_PUBLIC_PRIMARY_VENDOR_SLUG ?? "mummyj2treats";
+
+async function fetchHomeProducts() {
+  const res = await fetch(
+    `${API_BASE}/products?vendorSlug=${PRIMARY_VENDOR_SLUG}&limit=8`,
+    { cache: "no-store" },
+  );
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data ?? [];
+}
+
+export default async function Home() {
+  const bestSellers = await fetchHomeProducts();
+
   return (
     <div className="min-h-screen w-full bg-zinc-50 font-sans dark:bg-black">
       {/* Announcement Bar */}
@@ -77,17 +93,37 @@ export default function Home() {
       {/* Best Sellers */}
       <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
         <h2 className="text-2xl font-bold mb-6">Best Sellers</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-          {[1,2,3,4,5,6,7,8].map((p) => (
-            <div key={p} className="rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center">
-              <div className="w-full aspect-[4/3] bg-zinc-100 dark:bg-zinc-800 rounded-xl mb-3" />
-              <span className="font-semibold">Product {p}</span>
-              <span className="text-sm text-zinc-500">Vendor {p}</span>
-              <span className="font-bold text-lg mt-1">₦2,500</span>
-              <button className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm">Add to Cart</button>
-            </div>
-          ))}
-        </div>
+        {bestSellers.length === 0 ? (
+          <p className="text-zinc-600">
+            Products will appear here once the admin vendor adds items.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+            {bestSellers.map((p: any) => (
+              <div
+                key={p.id}
+                className="rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center hover:shadow-lg transition-shadow"
+              >
+                <div className="w-full aspect-[4/3] bg-zinc-100 dark:bg-zinc-800 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
+                  {/* Placeholder for product image */}
+                  <span className="text-xs text-zinc-500">Product image</span>
+                </div>
+                <span className="font-semibold line-clamp-2 text-center">
+                  {p.name}
+                </span>
+                <span className="text-sm text-zinc-500">
+                  {p.vendor_name ?? "Vendor"}
+                </span>
+                <span className="font-bold text-lg mt-1">
+                  ₦{Number(p.price).toLocaleString()}
+                </span>
+                <button className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm">
+                  View details
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* How It Works */}

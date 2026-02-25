@@ -23,7 +23,7 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <button className="hidden md:block"><span className="material-icons">search</span></button>
-          <button className="text-sm font-medium">Login</button>
+          <a href="/auth/login" className="text-sm font-medium">Login</a>
           <button className="relative">
             <span className="material-icons">shopping_cart</span>
             <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full px-1">2</span>

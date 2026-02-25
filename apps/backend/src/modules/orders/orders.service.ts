@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { FraudService } from '../moat/fraud.service';
+import { DeliveryService } from '../delivery/delivery.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class OrdersService {
   constructor(
     private readonly db: DatabaseService,
     private readonly fraudService: FraudService,
+    private readonly deliveryService: DeliveryService,
   ) {}
 
   async findAll() {
@@ -69,7 +71,18 @@ export class OrdersService {
 
   async checkout(
     customerId: string,
-    dto: { deliveryAddress: string; paymentMethod?: string },
+    dto: {
+      deliveryAddress?: string;
+      paymentMethod?: string;
+      deliveryState?: string;
+      deliveryCity?: string;
+      deliveryLga?: string;
+      deliveryStreet?: string;
+      deliveryLandmark?: string;
+      deliveryNotes?: string;
+      latitude?: number | null;
+      longitude?: number | null;
+    },
   ) {
     // Load open cart and items
     const cartResult = await this.db.query(
@@ -122,7 +135,18 @@ export class OrdersService {
       subtotal += qty * price;
     }
 
-    const deliveryFee = 0; // placeholder
+    const deliveryAddressText =
+      dto.deliveryAddress?.trim() ||
+      [dto.deliveryStreet, dto.deliveryLga, dto.deliveryCity, dto.deliveryState]
+        .filter(Boolean)
+        .join(', ') ||
+      'Address not provided';
+    const { deliveryFee, distanceKm } = await this.deliveryService.computeDeliveryFee(
+      vendorId,
+      dto.latitude ?? null,
+      dto.longitude ?? null,
+      dto.deliveryState ?? null,
+    );
     const total = subtotal + deliveryFee;
 
     // Optimistic stock update: decrement per product with stock check
@@ -160,7 +184,16 @@ export class OrdersService {
         commission_amount,
         total_amount,
         payment_status,
-        delivery_address
+        delivery_address,
+        delivery_state,
+        delivery_city,
+        delivery_lga,
+        delivery_street,
+        delivery_landmark,
+        delivery_notes,
+        latitude,
+        longitude,
+        delivery_distance_km
       )
       VALUES (
         $1,
@@ -173,7 +206,16 @@ export class OrdersService {
         0,
         $7,
         'UNPAID',
-        $8
+        $8,
+        $9,
+        $10,
+        $11,
+        $12,
+        $13,
+        $14,
+        $15,
+        $16,
+        $17
       )
       RETURNING *
       `,
@@ -185,7 +227,16 @@ export class OrdersService {
         subtotal,
         deliveryFee,
         total,
-        dto.deliveryAddress,
+        deliveryAddressText,
+        dto.deliveryState ?? null,
+        dto.deliveryCity ?? null,
+        dto.deliveryLga ?? null,
+        dto.deliveryStreet ?? null,
+        dto.deliveryLandmark ?? null,
+        dto.deliveryNotes ?? null,
+        dto.latitude ?? null,
+        dto.longitude ?? null,
+        distanceKm ?? null,
       ],
     );
 

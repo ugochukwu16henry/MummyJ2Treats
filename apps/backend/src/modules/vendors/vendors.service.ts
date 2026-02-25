@@ -124,6 +124,38 @@ export class VendorsService {
     return result.rows[0] ?? null;
   }
 
+  async updateLocationAndDelivery(vendorId: string, dto: {
+    operatingState?: string;
+    operatingCity?: string;
+    operatingLga?: string;
+    vendorLatitude?: number | null;
+    vendorLongitude?: number | null;
+    deliverOutsideState?: boolean;
+    maxDeliveryRadiusKm?: number | null;
+    deliveryPricePerKm?: number | null;
+    deliveryMinFee?: number | null;
+    deliveryFixedCityRate?: number | null;
+    interStateDeliveryFee?: number | null;
+  }) {
+    const fields = [];
+    const values: any[] = [vendorId];
+    let index = 2;
+    if (dto.operatingState !== undefined) { fields.push(`operating_state = $${index++}`); values.push(dto.operatingState); }
+    if (dto.operatingCity !== undefined) { fields.push(`operating_city = $${index++}`); values.push(dto.operatingCity); }
+    if (dto.operatingLga !== undefined) { fields.push(`operating_lga = $${index++}`); values.push(dto.operatingLga); }
+    if (dto.vendorLatitude !== undefined) { fields.push(`vendor_latitude = $${index++}`); values.push(dto.vendorLatitude); }
+    if (dto.vendorLongitude !== undefined) { fields.push(`vendor_longitude = $${index++}`); values.push(dto.vendorLongitude); }
+    if (dto.deliverOutsideState !== undefined) { fields.push(`deliver_outside_state = $${index++}`); values.push(dto.deliverOutsideState); }
+    if (dto.maxDeliveryRadiusKm !== undefined) { fields.push(`max_delivery_radius_km = $${index++}`); values.push(dto.maxDeliveryRadiusKm); }
+    if (dto.deliveryPricePerKm !== undefined) { fields.push(`delivery_price_per_km = $${index++}`); values.push(dto.deliveryPricePerKm); }
+    if (dto.deliveryMinFee !== undefined) { fields.push(`delivery_min_fee = $${index++}`); values.push(dto.deliveryMinFee); }
+    if (dto.deliveryFixedCityRate !== undefined) { fields.push(`delivery_fixed_city_rate = $${index++}`); values.push(dto.deliveryFixedCityRate); }
+    if (dto.interStateDeliveryFee !== undefined) { fields.push(`inter_state_delivery_fee = $${index++}`); values.push(dto.interStateDeliveryFee); }
+    if (!fields.length) return this.findOne(vendorId);
+    const result = await this.db.query(`UPDATE vendors SET ${fields.join(', ')} WHERE id = $1 RETURNING *`, values);
+    return result.rows[0] ?? null;
+  }
+
   async updatePayoutSettings(vendorId: string, dto: {
     billingProvider?: 'manual' | 'paystack';
     bankAccountName?: string;

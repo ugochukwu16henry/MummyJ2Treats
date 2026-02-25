@@ -27,6 +27,16 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [address, setAddress] = useState("");
+  const [deliveryState, setDeliveryState] = useState("");
+  const [deliveryCity, setDeliveryCity] = useState("");
+  const [deliveryLga, setDeliveryLga] = useState("");
+  const [deliveryStreet, setDeliveryStreet] = useState("");
+  const [deliveryLandmark, setDeliveryLandmark] = useState("");
+  const [deliveryNotes, setDeliveryNotes] = useState("");
+  const [useMyLocation, setUseMyLocation] = useState(false);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"paystack" | "bank_transfer">("paystack");
   const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
@@ -78,19 +88,55 @@ export default function CartPage() {
     }
   }
 
+  function captureLocation() {
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setUseMyLocation(true);
+      },
+      () => setLocationError("Could not get your location. Please allow location access or enter address manually."),
+    );
+  }
+
   async function checkout() {
-    if (!address.trim()) {
-      setError("Please enter a delivery address.");
+    const hasManual = [deliveryStreet, deliveryCity, deliveryState].some((s) => s.trim());
+    const hasLocation = latitude != null && longitude != null;
+    const hasLegacy = address.trim().length > 0;
+    if (!hasManual && !hasLocation && !hasLegacy) {
+      setError("Please enter a delivery address or use your current location.");
       return;
     }
     try {
       setError(null);
       setCheckoutLoading(true);
+      const deliveryAddress =
+        address.trim() ||
+        [deliveryStreet, deliveryLandmark, deliveryLga, deliveryCity, deliveryState].filter(Boolean).join(", ");
+      const body: Record<string, unknown> = {
+        paymentMethod,
+        deliveryAddress: deliveryAddress || undefined,
+        deliveryState: deliveryState.trim() || undefined,
+        deliveryCity: deliveryCity.trim() || undefined,
+        deliveryLga: deliveryLga.trim() || undefined,
+        deliveryStreet: deliveryStreet.trim() || undefined,
+        deliveryLandmark: deliveryLandmark.trim() || undefined,
+        deliveryNotes: deliveryNotes.trim() || undefined,
+      };
+      if (latitude != null && longitude != null) {
+        body.latitude = latitude;
+        body.longitude = longitude;
+      }
       const res = await fetch(`${API_BASE}/orders/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ deliveryAddress: address, paymentMethod }),
+        body: JSON.stringify(body),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -226,13 +272,76 @@ export default function CartPage() {
                   </label>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Delivery address
-                </label>
+              <div className="space-y-3">
+                <span className="block text-sm font-medium">Delivery address</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  <input
+                    type="text"
+                    placeholder="State"
+                    className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={deliveryState}
+                    onChange={(e) => setDeliveryState(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="City"
+                    className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={deliveryCity}
+                    onChange={(e) => setDeliveryCity(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="LGA"
+                    className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
+                    value={deliveryLga}
+                    onChange={(e) => setDeliveryLga(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Street address"
+                    className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
+                    value={deliveryStreet}
+                    onChange={(e) => setDeliveryStreet(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Landmark (optional)"
+                    className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
+                    value={deliveryLandmark}
+                    onChange={(e) => setDeliveryLandmark(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Delivery notes (optional)"
+                    className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
+                    value={deliveryNotes}
+                    onChange={(e) => setDeliveryNotes(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={captureLocation}
+                    className="text-sm py-2 px-3 border border-primary text-primary rounded-md hover:bg-primary/5"
+                  >
+                    Use my current location
+                  </button>
+                  {useMyLocation && latitude != null && longitude != null && (
+                    <p className="text-xs text-green-700">
+                      Location captured: {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                    </p>
+                  )}
+                  {locationError && (
+                    <p className="text-xs text-red-600">{locationError}</p>
+                  )}
+                </div>
+                <p className="text-xs text-zinc-500">
+                  Or enter a single address below:
+                </p>
                 <textarea
                   className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  rows={3}
+                  rows={2}
+                  placeholder="Full address (if not using fields above)"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />

@@ -471,6 +471,29 @@ export class AdminService {
     return r.rows[0];
   }
 
+  /** Founder Admin: delivery map data — vendors, order delivery locations, riders */
+  async getDeliveryMapData() {
+    const vendors = await this.db.query(
+      `SELECT id, business_name, slug, operating_state, operating_city, vendor_latitude, vendor_longitude
+       FROM vendors WHERE vendor_latitude IS NOT NULL AND vendor_longitude IS NOT NULL`
+    );
+    const orders = await this.db.query(
+      `SELECT id, order_number, vendor_id, rider_id, status, latitude, longitude, delivery_state, delivery_city, created_at
+       FROM orders WHERE status NOT IN ('CANCELLED') AND (latitude IS NOT NULL OR delivery_address IS NOT NULL)
+       ORDER BY created_at DESC LIMIT 500`
+    );
+    const riders = await this.db.query(
+      `SELECT r.id, r.state, r.current_latitude, r.current_longitude, r.location_updated_at, u.first_name, u.last_name
+       FROM riders r JOIN users u ON u.id = r.user_id
+       WHERE r.current_latitude IS NOT NULL AND r.current_longitude IS NOT NULL`
+    );
+    return {
+      vendors: vendors.rows,
+      orders: orders.rows,
+      riders: riders.rows,
+    };
+  }
+
   async getPlatformMetrics(periodDate?: string, periodType?: 'day' | 'month') {
     if (periodDate && periodType) {
       const r = await this.db.query(

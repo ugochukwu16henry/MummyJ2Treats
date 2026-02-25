@@ -87,4 +87,9 @@ export class AdminController {
   getCohortRetention() {
     return this.adminService.getCohortRetention();
   }
+
+  @Get('delivery-map')
+  getDeliveryMap() {
+    return this.adminService.getDeliveryMapData();
+  }
 }

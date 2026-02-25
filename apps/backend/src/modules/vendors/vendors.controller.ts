@@ -49,6 +49,32 @@ export class VendorsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Roles('vendor', 'admin')
+  @Patch('me/location-and-delivery')
+  async updateLocationAndDelivery(
+    @Req() req: Request,
+    @Body()
+    dto: {
+      operatingState?: string;
+      operatingCity?: string;
+      operatingLga?: string;
+      vendorLatitude?: number | null;
+      vendorLongitude?: number | null;
+      deliverOutsideState?: boolean;
+      maxDeliveryRadiusKm?: number | null;
+      deliveryPricePerKm?: number | null;
+      deliveryMinFee?: number | null;
+      deliveryFixedCityRate?: number | null;
+      interStateDeliveryFee?: number | null;
+    },
+  ) {
+    const user = req.user as { userId: string; role: string };
+    const vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor) return null;
+    return this.vendorsService.updateLocationAndDelivery(vendor.id, dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('vendor', 'admin')
   @Patch('me/payout')
   async updatePayout(
     @Req() req: Request,

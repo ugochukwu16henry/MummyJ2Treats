@@ -1,0 +1,2 @@
+// App logo for MummyJ2Treats
+// Place your app logo image here as mummyj2logo.png

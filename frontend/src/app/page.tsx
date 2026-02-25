@@ -6,7 +6,7 @@ export default function Home() {
     <div className="min-h-screen w-full bg-zinc-50 font-sans dark:bg-black">
       {/* Announcement Bar */}
       <div className="h-10 flex items-center justify-center bg-[#1E1E2F] text-white text-sm font-medium">
-        Fresh homemade treats delivered in Lagos 🚚
+        Fresh homemade treats delivered in Uyo 🚚
       </div>
 
       {/* Navbar */}
@@ -39,7 +39,7 @@ export default function Home() {
             <span className="text-3xl md:text-5xl font-extrabold text-zinc-900 dark:text-white tracking-tight">MummyJ2Treats</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight text-zinc-900 dark:text-white">Bringing Homemade Excellence to Your Table</h1>
-          <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-300">Order delicious, trusted homemade meals from Lagos’ best home cooks and caterers.</p>
+          <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-300">Order delicious, trusted homemade meals from Uyo’s best home cooks and caterers.</p>
           <div className="flex gap-4 mt-4">
             <button className="bg-primary text-white px-6 py-3 rounded-full font-semibold text-lg shadow hover:bg-primary/90">Order Now</button>
             <button className="bg-white border border-primary text-primary px-6 py-3 rounded-full font-semibold text-lg hover:bg-primary/10">Become a Vendor</button>

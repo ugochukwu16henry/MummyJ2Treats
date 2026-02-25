@@ -11,8 +11,9 @@ export default function Home() {
 
       {/* Navbar */}
       <nav className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="flex items-center gap-2">
-          <Image src="/mummyj2logo.png" alt="MummyJ2Treats Logo" width={40} height={40} />
+        <div className="flex items-center gap-4">
+          <Image src="/mummyj2logo.png" alt="MummyJ2Treats Logo" width={64} height={64} />
+          <span className="text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">MummyJ2Treats</span>
         </div>
         <div className="hidden md:flex gap-6 text-base font-medium">
           <a href="#" className="hover:text-primary">Home</a>

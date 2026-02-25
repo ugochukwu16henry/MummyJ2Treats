@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://mummyj2treats.com
+
+# Sitemaps
+Sitemap: https://mummyj2treats.com/sitemap.xml

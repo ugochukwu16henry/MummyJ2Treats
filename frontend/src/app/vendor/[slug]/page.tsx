@@ -21,7 +21,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       description: product.description,
       url,
       images: [product.image],
-      type: "product",
+      // Next.js OpenGraph type does not support "product"; default to website
+      type: "website",
     },
     twitter: {
       card: "summary_large_image",

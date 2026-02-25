@@ -1,19 +1,98 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import * as argon2 from 'argon2';
+import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
-  async register(dto: any) {
-    // TODO: Hash password, create user, return tokens
-    return { message: 'Register endpoint' };
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async register(dto: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    password: string;
+    role?: 'admin' | 'vendor' | 'customer' | 'rider';
+  }) {
+    const existing = await this.usersService.findByEmail(dto.email);
+    if (existing) {
+      throw new BadRequestException('Email is already registered');
+    }
+
+    const passwordHash = await argon2.hash(dto.password);
+    const user = await this.usersService.createUser({
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      email: dto.email,
+      phone: dto.phone,
+      role: dto.role ?? 'customer',
+      passwordHash,
+    });
+
+    const tokens = await this.issueTokens(user.id, user.role);
+    return {
+      user: {
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        role: user.role,
+      },
+      ...tokens,
+    };
   }
 
-  async login(dto: any) {
-    // TODO: Validate user, check password, return tokens
-    return { message: 'Login endpoint' };
+  async login(dto: { email: string; password: string }) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordValid = await argon2.verify(user.password_hash, dto.password);
+    if (!passwordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const tokens = await this.issueTokens(user.id, user.role);
+    return {
+      user: {
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        role: user.role,
+      },
+      ...tokens,
+    };
   }
 
-  async refresh(dto: any) {
-    // TODO: Validate refresh token, rotate, return new tokens
-    return { message: 'Refresh endpoint' };
+  async refresh(payload: { sub: string; role: string }) {
+    // simple rotation: return new access & refresh tokens
+    const tokens = await this.issueTokens(payload.sub, payload.role as any);
+    return tokens;
+  }
+
+  private async issueTokens(userId: string, role: 'admin' | 'vendor' | 'customer' | 'rider') {
+    const accessToken = await this.jwtService.signAsync(
+      { sub: userId, role, type: 'access' },
+      {
+        secret: process.env.JWT_SECRET,
+        expiresIn: '15m',
+      },
+    );
+
+    const refreshToken = await this.jwtService.signAsync(
+      { sub: userId, role, type: 'refresh' },
+      {
+        secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        expiresIn: '7d',
+      },
+    );
+
+    return { accessToken, refreshToken };
   }
 }

@@ -26,6 +26,18 @@ export class OrdersService {
     return { data: result.rows };
   }
 
+  async findByCustomerId(customerId: string) {
+    const result = await this.db.query(
+      `SELECT o.id, o.order_number, o.vendor_id, o.status, o.subtotal, o.delivery_fee, o.total_amount, o.payment_status, o.delivery_address, o.created_at,
+        v.business_name AS vendor_name, v.slug AS vendor_slug
+       FROM orders o
+       LEFT JOIN vendors v ON v.id = o.vendor_id
+       WHERE o.customer_id = $1 ORDER BY o.created_at DESC`,
+      [customerId],
+    );
+    return { data: result.rows };
+  }
+
   async findOne(id: string) {
     const result = await this.db.query('SELECT * FROM orders WHERE id = $1', [
       id,

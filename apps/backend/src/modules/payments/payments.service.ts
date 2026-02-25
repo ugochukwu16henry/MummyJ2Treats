@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { createHmac } from 'crypto';
 import { DatabaseService } from '../../database/database.service';
 import { LoyaltyService } from '../moat/loyalty.service';
 import { ReferralService } from '../moat/referral.service';
@@ -96,5 +97,52 @@ export class PaymentsService {
       ocrAmount,
       expectedAmount: total,
     };
+  }
+
+  /** Verify Paystack webhook signature (HMAC SHA512 of payload with secret) */
+  verifyPaystackSignature(payload: string | object, signature: string): boolean {
+    const secret = process.env.PAYSTACK_SECRET_KEY;
+    if (!secret) return false;
+    const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
+    const hash = createHmac('sha512', secret).update(body).digest('hex');
+    return hash === signature;
+  }
+
+  /** Handle Paystack webhook: on charge.success mark payment and order PAID, trigger loyalty/referral */
+  async handlePaystackWebhook(body: { event?: string; data?: { reference?: string } }) {
+    if (body.event !== 'charge.success' || !body.data?.reference) {
+      return { processed: false };
+    }
+    const reference = body.data.reference;
+    const result = await this.db.query(
+      `SELECT p.id AS payment_id, p.order_id, p.status, o.customer_id, o.total_amount
+       FROM payments p
+       JOIN orders o ON o.id = p.order_id
+       WHERE p.provider = 'paystack' AND p.provider_reference = $1`,
+      [reference],
+    );
+    const row = result.rows[0];
+    if (!row || row.status === 'success') {
+      return { processed: row != null };
+    }
+    await this.db.query(
+      'UPDATE payments SET status = $2 WHERE id = $1',
+      [row.payment_id, 'success'],
+    );
+    await this.db.query(
+      `UPDATE orders SET payment_status = 'PAID', status = 'PAID' WHERE id = $1`,
+      [row.order_id],
+    );
+    const total = Number(row.total_amount);
+    const customerId = row.customer_id;
+    if (customerId && total > 0) {
+      try {
+        await this.loyalty.earnForOrder(customerId, row.order_id, total);
+        await this.referral.recordReferredOrder(customerId, row.order_id);
+      } catch {
+        // don't fail webhook if loyalty/referral fails
+      }
+    }
+    return { processed: true };
   }
 }

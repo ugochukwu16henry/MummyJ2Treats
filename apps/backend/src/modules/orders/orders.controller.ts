@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards, Req, NotFoundException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -18,13 +18,31 @@ export class OrdersController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Roles('vendor', 'admin')
+  @Roles('customer', 'vendor', 'admin')
   @Get('me')
   async myOrders(@Req() req: Request) {
     const user = req.user as { userId: string; role: string };
+    if (user.role === 'customer') {
+      return this.ordersService.findByCustomerId(user.userId);
+    }
     const vendor = await this.vendorsService.findByUserId(user.userId);
     if (!vendor) return { data: [] };
     return this.ordersService.findByVendorId(vendor.id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('customer', 'vendor', 'admin')
+  @Get('me/:id')
+  async myOrderDetail(@Param('id') id: string, @Req() req: Request) {
+    const user = req.user as { userId: string; role: string };
+    const order = await this.ordersService.findOne(id);
+    if (!order) throw new NotFoundException('Order not found');
+    if (user.role === 'customer' && order.customer_id !== user.userId) throw new NotFoundException('Order not found');
+    if (user.role === 'vendor' || user.role === 'admin') {
+      const vendor = await this.vendorsService.findByUserId(user.userId);
+      if (vendor && order.vendor_id !== vendor.id && user.role !== 'admin') throw new NotFoundException('Order not found');
+    }
+    return order;
   }
 
   @Get(':id')

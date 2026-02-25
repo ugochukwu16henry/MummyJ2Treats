@@ -58,6 +58,14 @@ export default async function DashboardPage() {
           <p className="text-sm text-zinc-600">
             You are logged in{role ? ` as ${role}` : ""}.
           </p>
+          {role === "customer" && (
+            <Link
+              href="/dashboard/orders"
+              className="inline-block text-primary font-medium hover:underline mr-4"
+            >
+              My orders →
+            </Link>
+          )}
           {role === "vendor" && (
             <Link
               href="/dashboard/vendor"

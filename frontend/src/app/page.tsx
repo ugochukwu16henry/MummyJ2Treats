@@ -34,10 +34,6 @@ export default function Home() {
       {/* Hero Section */}
       <section className="flex flex-col-reverse md:flex-row items-center justify-between gap-8 px-4 py-20 md:py-24 bg-gradient-to-b from-white to-zinc-50 dark:from-black dark:to-zinc-900">
         <div className="flex-1 flex flex-col gap-6 items-start">
-          <div className="flex items-center gap-4 mb-4">
-            <Image src="/mummyj2logo.png" alt="MummyJ2Treats Logo" width={64} height={64} />
-            <span className="text-3xl md:text-5xl font-extrabold text-zinc-900 dark:text-white tracking-tight">MummyJ2Treats</span>
-          </div>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight text-zinc-900 dark:text-white">Bringing Homemade Excellence to Your Table</h1>
           <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-300">Order delicious, trusted homemade meals from Uyo’s best home cooks and caterers.</p>
           <div className="flex gap-4 mt-4">

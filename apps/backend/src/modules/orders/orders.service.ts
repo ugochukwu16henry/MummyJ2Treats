@@ -29,6 +29,26 @@ export class OrdersService {
     return result.rows[0] ?? null;
   }
 
+  async updateStatus(
+    orderId: string,
+    status: string,
+    opts?: { vendorId?: string; isAdmin?: boolean },
+  ) {
+    const order = await this.findOne(orderId);
+    if (!order) throw new BadRequestException('Order not found');
+    if (opts?.vendorId && order.vendor_id !== opts.vendorId && !opts.isAdmin) {
+      throw new BadRequestException('Not your order');
+    }
+    const valid = ['PENDING', 'PAID', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'];
+    if (!valid.includes(status)) throw new BadRequestException('Invalid status');
+    const setDeliveredAt = status === 'DELIVERED' ? ', delivered_at = NOW()' : '';
+    await this.db.query(
+      `UPDATE orders SET status = $2${setDeliveredAt} WHERE id = $1 RETURNING id, status, delivered_at`,
+      [orderId, status],
+    );
+    return this.findOne(orderId);
+  }
+
   async checkout(
     customerId: string,
     dto: { deliveryAddress: string; paymentMethod?: string },

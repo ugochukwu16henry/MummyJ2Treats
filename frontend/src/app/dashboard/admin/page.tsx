@@ -185,6 +185,10 @@ export default function AdminDashboardPage() {
           <a href="/dashboard" className="text-sm text-zinc-600 hover:underline">← Back to Dashboard</a>
         </header>
 
+        <p className="text-sm text-zinc-500 bg-zinc-100 rounded-lg px-4 py-2 border border-zinc-200">
+          CAC, traffic, CPC, support tickets, and delivery SLA are stored in the DB. Record support tickets via <code className="bg-zinc-200 px-1 rounded">POST /admin/support-tickets</code>; set marketing metrics (traffic, CPC, CPA, CAC, referrals) via <code className="bg-zinc-200 px-1 rounded">POST /admin/platform-metrics</code> (periodDate: YYYY-MM-DD, periodType: month). Delivery SLA is computed from orders once you set status to DELIVERED (and <code>delivered_at</code> is set automatically).
+        </p>
+
         {/* A. Revenue */}
         <section className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-zinc-800 mb-4 flex items-center gap-2">

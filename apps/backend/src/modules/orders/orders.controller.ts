@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards, Req } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -30,6 +30,21 @@ export class OrdersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.ordersService.findOne(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('vendor', 'admin')
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string },
+    @Req() req: Request,
+  ) {
+    const user = req.user as { userId: string; role: string };
+    const vendor = await this.vendorsService.findByUserId(user.userId);
+    const vendorId = vendor?.id;
+    const isAdmin = user.role === 'admin';
+    return this.ordersService.updateStatus(id, body.status, { vendorId, isAdmin });
   }
 
   @UseGuards(AuthGuard('jwt'))

@@ -49,6 +49,14 @@ async function migrate() {
       files = files.filter((f) => f !== '003_cart.sql');
     }
 
+    // If payments.receipt_url already exists, skip 004_payment_receipt.sql
+    const hasReceiptUrl = await client.query(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'payments' AND column_name = 'receipt_url'",
+    );
+    if ((hasReceiptUrl.rowCount ?? 0) > 0) {
+      files = files.filter((f) => f !== '004_payment_receipt.sql');
+    }
+
     for (const file of files) {
       const sql = readFileSync(join(dir, file), 'utf8');
       console.log(`Running migration: ${file}`);

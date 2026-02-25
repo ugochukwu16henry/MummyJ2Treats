@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AdminService {
@@ -85,7 +86,10 @@ export class AdminService {
     const avgOrdersPerCustomer = everOrdered > 0 ? totalOrders / everOrdered : 0;
     const grossMargin = 0.2;
     const ltv = aov * avgOrdersPerCustomer * grossMargin;
-    const cac = 0; // Not tracked in DB
+
+    // CAC from platform_metrics (current month)
+    const platformRow = await this.getPlatformMetricsForMonth(thisMonthStart);
+    const cac = platformRow?.cac != null ? Number(platformRow.cac) : 0;
     const ltvCacRatio = cac > 0 ? ltv / cac : null;
 
     // ---- C. Vendor ----
@@ -133,15 +137,33 @@ export class AdminService {
     const failedPaymentRate = paymentTotal > 0 ? (failedPayments / paymentTotal) * 100 : 0;
 
     const refundRate = 0; // No refunds table
-    const deliverySla = null; // No delivered_at
-    const supportTicketVolume = 0; // No support table
 
-    // ---- E. Growth & Marketing (placeholders) ----
+    // Delivery SLA: avg hours from order created to delivered_at (when set)
+    const slaResult = await this.db.query<{ avg_hours: string }>(
+      `SELECT EXTRACT(EPOCH FROM AVG(delivered_at - created_at)) / 3600 AS avg_hours
+       FROM orders WHERE status = 'DELIVERED' AND delivered_at IS NOT NULL`
+    );
+    const deliverySla = slaResult.rows[0]?.avg_hours != null ? Math.round(Number(slaResult.rows[0].avg_hours) * 100) / 100 : null;
+
+    // Support ticket volume (this month)
+    const ticketResult = await this.db.query<{ count: string }>(
+      `SELECT COUNT(*)::int AS count FROM support_tickets WHERE created_at >= $1`,
+      [thisMonthStart.toISOString()]
+    );
+    const supportTicketVolume = Number(ticketResult.rows[0]?.count ?? 0);
+
+    // ---- E. Growth & Marketing (from platform_metrics when present) ----
+    const trafficOrganic = platformRow?.traffic_organic != null ? Number(platformRow.traffic_organic) : null;
+    const trafficPaid = platformRow?.traffic_paid != null ? Number(platformRow.traffic_paid) : null;
+    const visitors = (trafficOrganic ?? 0) + (trafficPaid ?? 0) || totalCustomers * 10;
     const conversionResult = await this.db.query<{ total: string }>(
       `SELECT COUNT(*)::int AS total FROM users WHERE role = 'customer'`
     );
-    const visitors = totalCustomers * 10; // Placeholder
     const conversionRate = visitors > 0 ? (totalCustomers / visitors) * 100 : 0;
+    const costPerClick = platformRow?.cpc != null ? Number(platformRow.cpc) : null;
+    const costPerAcquisition = platformRow?.cpa != null ? Number(platformRow.cpa) : null;
+    const referralCount = platformRow?.referral_count != null ? Number(platformRow.referral_count) : 0;
+    const referralRatePercent = visitors > 0 ? (referralCount / visitors) * 100 : null;
 
     return {
       revenue: {
@@ -184,13 +206,13 @@ export class AdminService {
         supportTicketVolume,
       },
       growth: {
-        trafficOrganic: null,
-        trafficPaid: null,
+        trafficOrganic: trafficOrganic,
+        trafficPaid: trafficPaid,
         conversionRatePercent: Math.round(conversionRate * 100) / 100,
         targetConversionRate: '3-5%',
-        costPerClick: null,
-        costPerAcquisition: null,
-        referralRatePercent: null,
+        costPerClick: costPerClick,
+        costPerAcquisition: costPerAcquisition,
+        referralRatePercent: referralRatePercent != null ? Math.round(referralRatePercent * 100) / 100 : null,
       },
     };
   }
@@ -358,5 +380,108 @@ export class AdminService {
         retentionPercent: data.size > 0 ? Math.round((data.retainedNext / data.size) * 10000) / 100 : 0,
       })).sort((a, b) => a.cohortMonth.localeCompare(b.cohortMonth)),
     };
+  }
+
+  private async getPlatformMetricsForMonth(monthStart: Date): Promise<{
+    traffic_organic?: string;
+    traffic_paid?: string;
+    cpc?: string;
+    cpa?: string;
+    cac?: string;
+    referral_count?: string;
+  } | null> {
+    const periodDate = monthStart.toISOString().slice(0, 10);
+    const r = await this.db.query(
+      `SELECT traffic_organic, traffic_paid, cpc, cpa, cac, referral_count
+       FROM platform_metrics WHERE period_type = 'month' AND period_date = $1 LIMIT 1`,
+      [periodDate],
+    );
+    return r.rows[0] ?? null;
+  }
+
+  async createSupportTicket(dto: {
+    subject: string;
+    body?: string;
+    orderId?: string;
+    customerId?: string;
+  }) {
+    const id = uuidv4();
+    await this.db.query(
+      `INSERT INTO support_tickets (id, subject, body, order_id, customer_id)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [id, dto.subject, dto.body ?? null, dto.orderId ?? null, dto.customerId ?? null],
+    );
+    const r = await this.db.query('SELECT * FROM support_tickets WHERE id = $1', [id]);
+    return r.rows[0];
+  }
+
+  async listSupportTickets(opts: { status?: 'open' | 'closed'; limit?: number }) {
+    const limit = Math.min(opts.limit ?? 50, 200);
+    let query = 'SELECT * FROM support_tickets';
+    const params: any[] = [];
+    if (opts.status) {
+      params.push(opts.status);
+      query += ` WHERE status = $${params.length}`;
+    }
+    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1}`;
+    params.push(limit);
+    const r = await this.db.query(query, params);
+    return { data: r.rows };
+  }
+
+  async upsertPlatformMetrics(dto: {
+    periodDate: string;
+    periodType: 'day' | 'month';
+    trafficOrganic?: number;
+    trafficPaid?: number;
+    cpc?: number;
+    cpa?: number;
+    cac?: number;
+    referralCount?: number;
+  }) {
+    const id = uuidv4();
+    await this.db.query(
+      `INSERT INTO platform_metrics (
+        id, period_date, period_type,
+        traffic_organic, traffic_paid, cpc, cpa, cac, referral_count
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      ON CONFLICT (period_date, period_type) DO UPDATE SET
+        traffic_organic = COALESCE(NULLIF($4, 0), platform_metrics.traffic_organic),
+        traffic_paid = COALESCE(NULLIF($5, 0), platform_metrics.traffic_paid),
+        cpc = COALESCE($6, platform_metrics.cpc),
+        cpa = COALESCE($7, platform_metrics.cpa),
+        cac = COALESCE($8, platform_metrics.cac),
+        referral_count = COALESCE(NULLIF($9, 0), platform_metrics.referral_count)`,
+      [
+        id,
+        dto.periodDate,
+        dto.periodType,
+        dto.trafficOrganic ?? 0,
+        dto.trafficPaid ?? 0,
+        dto.cpc ?? null,
+        dto.cpa ?? null,
+        dto.cac ?? null,
+        dto.referralCount ?? 0,
+      ],
+    );
+    const r = await this.db.query(
+      `SELECT * FROM platform_metrics WHERE period_date = $1 AND period_type = $2`,
+      [dto.periodDate, dto.periodType],
+    );
+    return r.rows[0];
+  }
+
+  async getPlatformMetrics(periodDate?: string, periodType?: 'day' | 'month') {
+    if (periodDate && periodType) {
+      const r = await this.db.query(
+        `SELECT * FROM platform_metrics WHERE period_date = $1 AND period_type = $2`,
+        [periodDate, periodType],
+      );
+      return r.rows[0] ?? null;
+    }
+    const r = await this.db.query(
+      `SELECT * FROM platform_metrics ORDER BY period_date DESC, period_type LIMIT 60`,
+    );
+    return { data: r.rows };
   }
 }

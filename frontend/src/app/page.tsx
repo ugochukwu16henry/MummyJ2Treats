@@ -40,10 +40,9 @@ export default async function Home() {
         <div className="flex items-center gap-2 sm:gap-4">
           <button className="hidden md:block"><span className="material-icons">search</span></button>
           <a href="/auth/login" className="text-sm font-medium">Login</a>
-          <button className="relative">
+          <a href="/cart" className="relative">
             <span className="material-icons">shopping_cart</span>
-            <span className="absolute -top-1 -right-2 bg-primary text-white text-xs rounded-full px-1">2</span>
-          </button>
+          </a>
         </div>
       </nav>
 
@@ -117,9 +116,24 @@ export default async function Home() {
                 <span className="font-bold text-lg mt-1">
                   ₦{Number(p.price).toLocaleString()}
                 </span>
-                <button className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm">
-                  View details
-                </button>
+                <form
+                  action={async () => {
+                    "use server";
+                    await fetch(`${API_BASE}/cart/items`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ productId: p.id, quantity: 1 }),
+                    });
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm"
+                  >
+                    Add to cart
+                  </button>
+                </form>
               </div>
             ))}
           </div>

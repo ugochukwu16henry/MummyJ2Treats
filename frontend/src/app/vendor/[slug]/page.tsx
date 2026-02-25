@@ -1,6 +1,4 @@
 
-import Image from "next/image";
-
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 async function fetchVendorStore(slug: string) {
@@ -98,7 +96,7 @@ export default async function VendorStorePage({
             {products.map((p) => (
               <div
                 key={p.id}
-                className="rounded-2xl shadow-md bg-white p-3 flex flex-col items-start hover:shadow-lg transition-shadow cursor-pointer"
+                className="rounded-2xl shadow-md bg-white p-3 flex flex-col items-start hover:shadow-lg transition-shadow"
               >
                 <div className="w-full aspect-[4/3] bg-zinc-100 rounded-xl mb-3 overflow-hidden flex items-center justify-center">
                   {/* Placeholder image area. Later we can use real product images. */}
@@ -110,9 +108,24 @@ export default async function VendorStorePage({
                 <span className="text-xs text-zinc-500 mb-1">
                   ₦{Number(p.price).toLocaleString()}
                 </span>
-                <button className="mt-auto px-3 py-1 bg-primary text-white rounded-full text-xs sm:text-sm">
-                  View details
-                </button>
+                <form
+                  action={async () => {
+                    "use server";
+                    await fetch(`${API_BASE}/cart/items`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ productId: p.id, quantity: 1 }),
+                    });
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="mt-auto px-3 py-1 bg-primary text-white rounded-full text-xs sm:text-sm"
+                  >
+                    Add to cart
+                  </button>
+                </form>
               </div>
             ))}
           </div>

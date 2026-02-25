@@ -1,5 +1,7 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Req } from '@nestjs/common';
 import { OrdersService } from './orders.service';
+import { AuthGuard } from '@nestjs/passport';
+import { Request } from 'express';
 
 @Controller('orders')
 export class OrdersController {
@@ -15,8 +17,13 @@ export class OrdersController {
     return this.ordersService.findOne(id);
   }
 
-  @Post()
-  create(@Body() dto: Record<string, unknown>) {
-    return this.ordersService.create(dto);
+  @UseGuards(AuthGuard('jwt'))
+  @Post('checkout')
+  checkout(
+    @Req() req: Request,
+    @Body() dto: { deliveryAddress: string },
+  ) {
+    const user = req.user as { userId: string };
+    return this.ordersService.checkout(user.userId, dto);
   }
 }

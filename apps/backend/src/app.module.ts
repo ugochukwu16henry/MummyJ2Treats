@@ -9,6 +9,7 @@ import { VendorsModule } from './modules/vendors/vendors.module';
 import { ProductsModule } from './modules/products/products.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   controllers: [AppController, HealthController],
@@ -20,6 +21,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     ProductsModule,
     OrdersModule,
     PaymentsModule,
+    CartModule,
   ],
 })
 export class AppModule {}

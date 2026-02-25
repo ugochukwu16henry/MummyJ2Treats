@@ -29,6 +29,9 @@ export default function CartPage() {
   const [address, setAddress] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"paystack" | "bank_transfer">("paystack");
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   async function loadCart() {
     try {
@@ -93,6 +96,9 @@ export default function CartPage() {
       if (!res.ok) {
         setError(body.message ?? "Checkout failed.");
         return;
+      }
+      if (paymentMethod === "bank_transfer") {
+        setPendingPaymentId(body?.payment?.id ?? null);
       }
       if (paymentMethod === "paystack" && body?.paystack?.authorizationUrl) {
         window.location.href = body.paystack.authorizationUrl as string;
@@ -231,6 +237,69 @@ export default function CartPage() {
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
+              {paymentMethod === "bank_transfer" && pendingPaymentId && (
+                <div className="space-y-2 border border-dashed border-zinc-200 rounded-md p-3">
+                  <p className="text-xs text-zinc-600">
+                    After making the bank transfer, upload your payment receipt
+                    here so the system and admin can verify it.
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setReceiptFile(e.target.files?.[0] ?? null)
+                    }
+                    className="text-xs"
+                  />
+                  <button
+                    type="button"
+                    disabled={!receiptFile || uploadingReceipt}
+                    className="px-3 py-1 bg-secondary text-white rounded-md text-xs disabled:opacity-60"
+                    onClick={async () => {
+                      if (!receiptFile || !pendingPaymentId) return;
+                      try {
+                        setUploadingReceipt(true);
+                        setError(null);
+                        const form = new FormData();
+                        form.append("receipt", receiptFile);
+                        const res = await fetch(
+                          `${API_BASE}/payments/${pendingPaymentId}/receipt`,
+                          {
+                            method: "POST",
+                            credentials: "include",
+                            body: form,
+                          },
+                        );
+                        const body = await res.json().catch(() => ({}));
+                        if (!res.ok) {
+                          setError(
+                            body.message ??
+                              "Failed to upload receipt. Please try again.",
+                          );
+                          return;
+                        }
+                        if (body.autoVerified) {
+                          alert(
+                            "Receipt uploaded and payment auto-verified. Thank you!",
+                          );
+                        } else {
+                          alert(
+                            "Receipt uploaded. Admin will confirm your payment shortly.",
+                          );
+                        }
+                      } catch {
+                        setError(
+                          "Failed to upload receipt. Please try again later.",
+                        );
+                      } finally {
+                        setUploadingReceipt(false);
+                      }
+                    }}
+                  >
+                    {uploadingReceipt ? "Uploading..." : "Upload receipt"}
+                  </button>
+                </div>
+              )}
               <button
                 onClick={checkout}
                 disabled={checkoutLoading || items.length === 0}

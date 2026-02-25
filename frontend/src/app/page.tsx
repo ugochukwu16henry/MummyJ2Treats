@@ -16,10 +16,10 @@ export default function Home() {
           <span className="text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">MummyJ2Treats</span>
         </div>
         <div className="hidden md:flex gap-4 sm:gap-6 text-base font-medium">
-          <a href="#" className="hover:text-primary">Home</a>
+          <a href="/" className="hover:text-primary">Home</a>
           <a href="#" className="hover:text-primary">Vendors</a>
           <a href="#" className="hover:text-primary">Categories</a>
-          <a href="#" className="hover:text-primary">About</a>
+          <a href="/about" className="hover:text-primary">About</a>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <button className="hidden md:block"><span className="material-icons">search</span></button>

@@ -28,6 +28,9 @@ export default async function DashboardPage() {
   if (role === "admin") {
     redirect("/dashboard/admin");
   }
+  if (role === "rider") {
+    redirect("/dashboard/rider");
+  }
 
   let referralCode: string | null = null;
   let loyaltyPoints: number | null = null;
@@ -67,11 +70,13 @@ export default async function DashboardPage() {
             </Link>
           )}
           {role === "vendor" && (
-            <Link
-              href="/dashboard/vendor"
-              className="inline-block text-primary font-medium hover:underline"
-            >
+            <Link href="/dashboard/vendor" className="inline-block text-primary font-medium hover:underline">
               Go to Vendor Dashboard →
+            </Link>
+          )}
+          {role === "rider" && (
+            <Link href="/dashboard/rider" className="inline-block text-primary font-medium hover:underline">
+              Go to Rider Dashboard →
             </Link>
           )}
           {!role && (

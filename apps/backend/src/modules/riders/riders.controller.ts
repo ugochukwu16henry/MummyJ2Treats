@@ -35,7 +35,7 @@ export class RidersController {
   @UseGuards(AuthGuard('jwt'))
   @Roles('rider')
   @Patch('me')
-  updateProfile(
+  async updateProfile(
     @Req() req: Request,
     @Body() dto: { phone?: string; state?: string; cities?: string[]; transportType?: 'bike' | 'car' | 'motorcycle' | 'other'; isAvailable?: boolean },
   ) {
@@ -48,7 +48,7 @@ export class RidersController {
   @UseGuards(AuthGuard('jwt'))
   @Roles('rider')
   @Patch('me/location')
-  updateLocation(
+  async updateLocation(
     @Req() req: Request,
     @Body() body: { latitude: number; longitude: number; orderId?: string },
   ) {

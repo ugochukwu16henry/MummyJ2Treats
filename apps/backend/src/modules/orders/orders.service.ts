@@ -20,7 +20,10 @@ export class OrdersService {
     return result.rows[0] ?? null;
   }
 
-  async checkout(customerId: string, dto: { deliveryAddress: string }) {
+  async checkout(
+    customerId: string,
+    dto: { deliveryAddress: string; paymentMethod?: string },
+  ) {
     // Load open cart and items
     const cartResult = await this.db.query(
       'SELECT * FROM carts WHERE customer_id = $1 AND status = $2 LIMIT 1',
@@ -146,6 +149,118 @@ export class OrdersService {
     );
     await this.db.query('DELETE FROM cart_items WHERE cart_id = $1', [cart.id]);
 
-    return orderResult.rows[0];
+    const order = orderResult.rows[0];
+
+    // Create payment record based on selected method
+    const method = (dto.paymentMethod || 'paystack').toLowerCase();
+    const provider =
+      method === 'paystack' ? 'paystack' : method === 'bank_transfer' ? 'bank_transfer' : method;
+
+    const paymentId = uuidv4();
+
+    const paymentInsert = await this.db.query(
+      `
+      INSERT INTO payments (
+        id,
+        order_id,
+        provider,
+        provider_reference,
+        amount,
+        status
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        NULL,
+        $4,
+        $5
+      )
+      RETURNING *
+      `,
+      [
+        paymentId,
+        orderId,
+        provider,
+        total,
+        provider === 'bank_transfer' ? 'pending' : 'initiated',
+      ],
+    );
+
+    let paystackRedirectUrl: string | null = null;
+    let bankTransferInfo: any = null;
+
+    if (provider === 'paystack') {
+      const secret = process.env.PAYSTACK_SECRET_KEY;
+      const callbackUrl =
+        process.env.PAYSTACK_CALLBACK_URL ||
+        'https://mummyj2treats.com/paystack/callback';
+
+      if (secret) {
+        // Load customer email for Paystack
+        const userResult = await this.db.query(
+          'SELECT email FROM users WHERE id = $1',
+          [customerId],
+        );
+        const email =
+          userResult.rows[0]?.email || 'customer@mummyj2treats.com';
+
+        const initRes = await fetch(
+          'https://api.paystack.co/transaction/initialize',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${secret}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email,
+              amount: Math.round(total * 100), // kobo
+              reference: paymentId,
+              callback_url: callbackUrl,
+              metadata: {
+                orderId,
+                customerId,
+              },
+            }),
+          },
+        );
+
+        if (initRes.ok) {
+          const data = await initRes.json().catch(() => null as any);
+          paystackRedirectUrl = data?.data?.authorization_url ?? null;
+          const ref = data?.data?.reference ?? null;
+          if (ref) {
+            await this.db.query(
+              'UPDATE payments SET provider_reference = $2 WHERE id = $1',
+              [paymentId, ref],
+            );
+          }
+        }
+      }
+    } else if (provider === 'bank_transfer') {
+      // Load vendor bank information (if set) to show to customer
+      const vendorResult = await this.db.query(
+        `
+        SELECT bank_account_name, bank_account_number, bank_bank_name
+        FROM vendors
+        WHERE id = $1
+        `,
+        [vendorId],
+      );
+      const v = vendorResult.rows[0];
+      bankTransferInfo = {
+        bankAccountName: v?.bank_account_name || null,
+        bankAccountNumber: v?.bank_account_number || null,
+        bankName: v?.bank_bank_name || null,
+      };
+    }
+
+    return {
+      order,
+      payment: paymentInsert.rows[0],
+      paystack: paystackRedirectUrl ? { authorizationUrl: paystackRedirectUrl } : null,
+      bankTransfer: bankTransferInfo,
+    };
   }
 }

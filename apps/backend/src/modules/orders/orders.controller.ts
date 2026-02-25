@@ -21,7 +21,7 @@ export class OrdersController {
   @Post('checkout')
   checkout(
     @Req() req: Request,
-    @Body() dto: { deliveryAddress: string },
+    @Body() dto: { deliveryAddress: string; paymentMethod?: string },
   ) {
     const user = req.user as { userId: string };
     return this.ordersService.checkout(user.userId, dto);

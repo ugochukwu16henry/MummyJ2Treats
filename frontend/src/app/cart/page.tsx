@@ -28,6 +28,7 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"paystack" | "bank_transfer">("paystack");
 
   async function loadCart() {
     try {
@@ -86,12 +87,26 @@ export default function CartPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ deliveryAddress: address }),
+        body: JSON.stringify({ deliveryAddress: address, paymentMethod }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(body.message ?? "Checkout failed.");
         return;
+      }
+      if (paymentMethod === "paystack" && body?.paystack?.authorizationUrl) {
+        window.location.href = body.paystack.authorizationUrl as string;
+        return;
+      }
+      if (paymentMethod === "bank_transfer") {
+        const bank = body?.bankTransfer;
+        if (bank?.bankAccountNumber) {
+          alert(
+            `Please transfer ₦${(data?.subtotal ?? 0).toLocaleString()} to:\n` +
+              `${bank.bankAccountName || "Account name"}\n` +
+              `${bank.bankAccountNumber} (${bank.bankName || "Bank"})`,
+          );
+        }
       }
       router.push("/"); // later: redirect to order confirmation page
     } catch {
@@ -178,6 +193,33 @@ export default function CartPage() {
               </div>
             </div>
             <div className="space-y-3 pt-2">
+              <div>
+                <span className="block text-sm font-medium mb-1">
+                  Payment method
+                </span>
+                <div className="flex flex-col sm:flex-row gap-2 text-sm">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="paystack"
+                      checked={paymentMethod === "paystack"}
+                      onChange={() => setPaymentMethod("paystack")}
+                    />
+                    Paystack (card/online)
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="bank_transfer"
+                      checked={paymentMethod === "bank_transfer"}
+                      onChange={() => setPaymentMethod("bank_transfer")}
+                    />
+                    Bank transfer
+                  </label>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Delivery address

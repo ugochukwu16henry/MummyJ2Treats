@@ -21,9 +21,17 @@ async function migrate() {
   await client.connect();
   try {
     const dir = 'database';
-    const files = readdirSync(dir)
+    let files = readdirSync(dir)
       .filter((f) => f.endsWith('.sql'))
       .sort();
+
+    // If base schema already exists (users table), skip 001_init_schema.sql
+    const hasUsers = await client.query(
+      "SELECT to_regclass('public.users') as reg",
+    );
+    if (hasUsers.rows[0]?.reg) {
+      files = files.filter((f) => f !== '001_init_schema.sql');
+    }
 
     for (const file of files) {
       const sql = readFileSync(join(dir, file), 'utf8');

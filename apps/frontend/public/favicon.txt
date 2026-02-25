@@ -1,2 +1,0 @@
-// Favicon for MummyJ2Treats
-// Place your favicon image here as favicon.png or favicon.ico

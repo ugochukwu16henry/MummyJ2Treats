@@ -1,10 +1,14 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { FraudService } from '../moat/fraud.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly fraudService: FraudService,
+  ) {}
 
   async findAll() {
     const result = await this.db.query(
@@ -32,7 +36,7 @@ export class OrdersService {
   async updateStatus(
     orderId: string,
     status: string,
-    opts?: { vendorId?: string; isAdmin?: boolean },
+    opts?: { vendorId?: string; isAdmin?: boolean; cancellationReason?: string },
   ) {
     const order = await this.findOne(orderId);
     if (!order) throw new BadRequestException('Order not found');
@@ -42,9 +46,11 @@ export class OrdersService {
     const valid = ['PENDING', 'PAID', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'];
     if (!valid.includes(status)) throw new BadRequestException('Invalid status');
     const setDeliveredAt = status === 'DELIVERED' ? ', delivered_at = NOW()' : '';
+    const setReason = status === 'CANCELLED' && opts?.cancellationReason ? ', cancellation_reason = $3' : '';
+    const params = setReason ? [orderId, status, opts!.cancellationReason] : [orderId, status];
     await this.db.query(
-      `UPDATE orders SET status = $2${setDeliveredAt} WHERE id = $1 RETURNING id, status, delivered_at`,
-      [orderId, status],
+      `UPDATE orders SET status = $2${setDeliveredAt}${setReason} WHERE id = $1 RETURNING id, status, delivered_at`,
+      params as [string, string, string?],
     );
     return this.findOne(orderId);
   }
@@ -171,6 +177,16 @@ export class OrdersService {
       ],
     );
 
+    // Persist order line items (data moat: customer taste & recommendations)
+    for (const item of items) {
+      const itemId = uuidv4();
+      await this.db.query(
+        `INSERT INTO order_items (id, order_id, product_id, quantity, unit_price)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [itemId, orderId, item.product_id, item.quantity, item.price],
+      );
+    }
+
     // Mark cart as checked out and clear items
     await this.db.query(
       'UPDATE carts SET status = $2, updated_at = now() WHERE id = $1',
@@ -179,6 +195,12 @@ export class OrdersService {
     await this.db.query('DELETE FROM cart_items WHERE cart_id = $1', [cart.id]);
 
     const order = orderResult.rows[0];
+
+    try {
+      await this.fraudService.scoreOrder(orderId, customerId, total);
+    } catch {
+      // don't fail checkout if fraud scoring fails
+    }
 
     // Create payment record based on selected method
     const method = (dto.paymentMethod || 'paystack').toLowerCase();

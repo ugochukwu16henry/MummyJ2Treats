@@ -37,14 +37,18 @@ export class OrdersController {
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
-    @Body() body: { status: string },
+    @Body() body: { status: string; cancellationReason?: string },
     @Req() req: Request,
   ) {
     const user = req.user as { userId: string; role: string };
     const vendor = await this.vendorsService.findByUserId(user.userId);
     const vendorId = vendor?.id;
     const isAdmin = user.role === 'admin';
-    return this.ordersService.updateStatus(id, body.status, { vendorId, isAdmin });
+    return this.ordersService.updateStatus(id, body.status, {
+      vendorId,
+      isAdmin,
+      cancellationReason: body.cancellationReason,
+    });
   }
 
   @UseGuards(AuthGuard('jwt'))

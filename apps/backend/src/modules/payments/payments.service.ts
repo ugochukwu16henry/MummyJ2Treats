@@ -1,10 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { LoyaltyService } from '../moat/loyalty.service';
+import { ReferralService } from '../moat/referral.service';
 import Tesseract from 'tesseract.js';
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly loyalty: LoyaltyService,
+    private readonly referral: ReferralService,
+  ) {}
 
   async handleBankTransferReceipt(paymentId: string, filePath: string) {
     // Save receipt path
@@ -13,10 +19,10 @@ export class PaymentsService {
       [paymentId, filePath],
     );
 
-    // Load order total
+    // Load order total and customer for loyalty/referral
     const result = await this.db.query(
       `
-      SELECT p.id, p.provider, p.status, o.id as order_id, o.total_amount
+      SELECT p.id, p.provider, p.status, o.id as order_id, o.customer_id, o.total_amount
       FROM payments p
       JOIN orders o ON o.id = p.order_id
       WHERE p.id = $1
@@ -72,6 +78,16 @@ export class PaymentsService {
         `,
         [row.order_id],
       );
+      const total = Number(row.total_amount);
+      const customerId = row.customer_id;
+      if (customerId && total > 0) {
+        try {
+          await this.loyalty.earnForOrder(customerId, row.order_id, total);
+          await this.referral.recordReferredOrder(customerId, row.order_id);
+        } catch {
+          // don't fail payment flow if loyalty/referral fails
+        }
+      }
     }
 
     return {

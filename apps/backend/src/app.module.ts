@@ -11,6 +11,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { CartModule } from './modules/cart/cart.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { MoatModule } from './modules/moat/moat.module';
 
 @Module({
   controllers: [AppController, HealthController],
@@ -24,6 +25,7 @@ import { AdminModule } from './modules/admin/admin.module';
     PaymentsModule,
     CartModule,
     AdminModule,
+    MoatModule,
   ],
 })
 export class AppModule {}

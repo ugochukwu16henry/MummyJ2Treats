@@ -1,5 +1,6 @@
 // Clean Architecture: Application root module
 import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
 import { HealthController } from './health.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -9,7 +10,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
-  controllers: [HealthController],
+  controllers: [AppController, HealthController],
   imports: [
     AuthModule,
     UsersModule,

@@ -136,7 +136,7 @@ export default function Home() {
           <div>
             <h3 className="font-bold mb-2">Company</h3>
             <ul className="space-y-1 text-sm">
-              <li><a href="#">About</a></li>
+              <li><a href="/about">About</a></li>
               <li><a href="#">Careers</a></li>
               <li><a href="#">Blog</a></li>
             </ul>

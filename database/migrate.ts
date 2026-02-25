@@ -33,6 +33,22 @@ async function migrate() {
       files = files.filter((f) => f !== '001_init_schema.sql');
     }
 
+    // If vendor subscription columns already exist, skip 002_vendor_subscription.sql
+    const hasVendorPlan = await client.query(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'vendors' AND column_name = 'subscription_plan'",
+    );
+    if ((hasVendorPlan.rowCount ?? 0) > 0) {
+      files = files.filter((f) => f !== '002_vendor_subscription.sql');
+    }
+
+    // If carts table already exists, skip 003_cart.sql
+    const hasCarts = await client.query(
+      "SELECT to_regclass('public.carts') as reg",
+    );
+    if (hasCarts.rows[0]?.reg) {
+      files = files.filter((f) => f !== '003_cart.sql');
+    }
+
     for (const file of files) {
       const sql = readFileSync(join(dir, file), 'utf8');
       console.log(`Running migration: ${file}`);

@@ -13,6 +13,15 @@ export class OrdersService {
     return { data: result.rows };
   }
 
+  async findByVendorId(vendorId: string) {
+    const result = await this.db.query(
+      `SELECT id, order_number, customer_id, status, subtotal, delivery_fee, total_amount, payment_status, delivery_address, created_at
+       FROM orders WHERE vendor_id = $1 ORDER BY created_at DESC`,
+      [vendorId],
+    );
+    return { data: result.rows };
+  }
+
   async findOne(id: string) {
     const result = await this.db.query('SELECT * FROM orders WHERE id = $1', [
       id,

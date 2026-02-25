@@ -10,10 +10,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "recharts": "^2.15.0",
     "next": "16.1.6",
     "next-sitemap": "^4.2.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.7.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

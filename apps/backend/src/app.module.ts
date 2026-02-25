@@ -10,6 +10,7 @@ import { ProductsModule } from './modules/products/products.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { CartModule } from './modules/cart/cart.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   controllers: [AppController, HealthController],
@@ -22,6 +23,7 @@ import { CartModule } from './modules/cart/cart.module';
     OrdersModule,
     PaymentsModule,
     CartModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

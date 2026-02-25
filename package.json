@@ -2,6 +2,11 @@
   "name": "mummyj2treats-monorepo",
   "private": true,
   "version": "0.1.0",
+  "scripts": {
+    "build": "npm run build --workspace backend",
+    "start": "npm run start --workspace backend",
+    "start:dev": "npm run start:dev --workspace backend"
+  },
   "workspaces": [
     "apps/*",
     "packages/*",

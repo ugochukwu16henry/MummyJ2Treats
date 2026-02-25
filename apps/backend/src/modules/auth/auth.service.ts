@@ -70,10 +70,19 @@ export class AuthService {
     };
   }
 
-  async refresh(payload: { sub: string; role: string }) {
-    // simple rotation: return new access & refresh tokens
-    const tokens = await this.issueTokens(payload.sub, payload.role as any);
-    return tokens;
+  async refreshFromToken(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+      });
+      if (payload.type !== 'refresh') {
+        throw new UnauthorizedException('Invalid token type');
+      }
+      const tokens = await this.issueTokens(payload.sub, payload.role as any);
+      return tokens;
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
   private async issueTokens(userId: string, role: 'admin' | 'vendor' | 'customer' | 'rider') {

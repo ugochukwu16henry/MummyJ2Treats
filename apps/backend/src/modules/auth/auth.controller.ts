@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Post, Body, Res, Req, UnauthorizedException, UseGuards, Get } from '@nestjs/common';
+import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -21,10 +22,20 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@Body() dto: any, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.refresh(dto);
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const token = req.cookies?.refresh_token || (req.body as any)?.refreshToken;
+    if (!token) {
+      throw new UnauthorizedException('Missing refresh token');
+    }
+    const result = await this.authService.refreshFromToken(token);
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
     return result;
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  me(@Req() req: Request) {
+    return req.user;
   }
 
   private setAuthCookies(res: Response, accessToken: string, refreshToken: string) {

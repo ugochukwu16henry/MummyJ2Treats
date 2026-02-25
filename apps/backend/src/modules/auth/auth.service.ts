@@ -2,12 +2,14 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { ReferralService } from '../moat/referral.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly referralService: ReferralService,
   ) {}
 
   async register(dto: {
@@ -17,6 +19,7 @@ export class AuthService {
     phone?: string;
     password: string;
     role?: 'admin' | 'vendor' | 'customer' | 'rider';
+    referralCode?: string;
   }) {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) {
@@ -32,6 +35,14 @@ export class AuthService {
       role: dto.role ?? 'customer',
       passwordHash,
     });
+
+    if (dto.referralCode?.trim()) {
+      try {
+        await this.referralService.applyCode(user.id, dto.referralCode.trim());
+      } catch {
+        // don't fail registration if referral apply fails
+      }
+    }
 
     const tokens = await this.issueTokens(user.id, user.role);
     return {

@@ -15,8 +15,34 @@ async function fetchHomeProducts() {
   return json.data ?? [];
 }
 
+async function fetchRankedVendors() {
+  try {
+    const res = await fetch(`${API_BASE}/moat/vendors/ranked?limit=6`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchRecommendations() {
+  try {
+    const res = await fetch(`${API_BASE}/moat/recommendations?limit=4`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
-  const bestSellers = await fetchHomeProducts();
+  const [bestSellers, rankedVendors, recommendations] = await Promise.all([
+    fetchHomeProducts(),
+    fetchRankedVendors(),
+    fetchRecommendations(),
+  ]);
 
   return (
     <div className="min-h-screen w-full bg-zinc-50 font-sans dark:bg-black">
@@ -74,20 +100,49 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Featured Vendors */}
+      {/* Top Rated Vendors (Data Moat: smart ranking) */}
       <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Featured Vendors</h2>
+        <h2 className="text-2xl font-bold mb-6">Top Rated Vendors</h2>
         <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-2">
-          {[1,2,3,4,5].map((v) => (
-            <div key={v} className="min-w-[220px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center">
-              <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-2" />
-              <span className="font-semibold">Vendor {v}</span>
-              <span className="text-yellow-500">★★★★★</span>
-              <button className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm">View Store</button>
-            </div>
-          ))}
+          {rankedVendors.length === 0 ? (
+            <p className="text-zinc-600">No vendor data yet. Orders will drive our smart ranking.</p>
+          ) : (
+            rankedVendors.map((v: { vendorId: string; businessName: string; slug: string; fulfillmentRate: number }) => (
+              <a
+                key={v.vendorId}
+                href={v.slug ? `/vendor/${v.slug}` : "#"}
+                className="min-w-[220px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center hover:shadow-lg transition-shadow"
+              >
+                <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-2 flex items-center justify-center text-lg font-bold text-primary">
+                  {v.businessName?.slice(0, 1) ?? "V"}
+                </div>
+                <span className="font-semibold text-center line-clamp-1">{v.businessName}</span>
+                <span className="text-amber-500 text-sm">{Math.round(v.fulfillmentRate)}% delivered</span>
+                <span className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm">View Store</span>
+              </a>
+            ))
+          )}
         </div>
       </section>
+
+      {/* Recommended for you (Data Moat: recommendations) */}
+      {recommendations.length > 0 && (
+        <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold mb-6">Recommended for you</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {recommendations.map((p: { productId: string; name: string; slug: string; vendorSlug: string; price: number }) => (
+              <a
+                key={p.productId}
+                href={p.vendorSlug ? `/vendor/${p.vendorSlug}#${p.slug}` : "/"}
+                className="rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center hover:shadow-lg transition-shadow"
+              >
+                <span className="font-semibold line-clamp-2 text-center">{p.name}</span>
+                <span className="font-bold text-lg mt-1">₦{Number(p.price).toLocaleString()}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Best Sellers */}
       <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">

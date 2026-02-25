@@ -80,13 +80,14 @@ export class ReferralService {
       'SELECT referrer_id, reward_applied FROM referrals WHERE referred_id = $1 LIMIT 1',
       [referredUserId],
     );
-    if (!r.rows[0] || r.rows[0].reward_applied === true) return;
+    const row = r.rows[0];
+    if (!row || String(row.reward_applied) === 'true') return;
     await this.db.query(
       'UPDATE referrals SET order_id = $2, reward_applied = true WHERE referred_id = $1',
       [referredUserId, orderId],
     );
     try {
-      await this.loyalty.earnForReferral(r.rows[0].referrer_id, orderId, 50);
+      await this.loyalty.earnForReferral((row as { referrer_id: string }).referrer_id, orderId, 50);
     } catch {
       // don't fail if loyalty grant fails
     }

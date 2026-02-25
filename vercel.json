@@ -1,0 +1,11 @@
+# Vercel Project Configuration
+# See https://vercel.com/docs/project-configuration for all options
+{
+  "version": 2,
+  "builds": [
+    { "src": "frontend/package.json", "use": "@vercel/next" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/frontend/$1" }
+  ]
+}

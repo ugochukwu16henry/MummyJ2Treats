@@ -68,3 +68,28 @@ You now have:
 - **Dev requirements**
 - **Investor pitch layout**
 - **Product requirements**
+
+## Backend Module Structure (Clean Architecture)
+
+```text
+src/
+ ├── modules/
+ │    ├── auth/
+ │    ├── users/
+ │    ├── vendors/
+ │    ├── products/
+ │    ├── categories/
+ │    ├── cart/
+ │    ├── orders/
+ │    ├── payments/
+ │    ├── delivery/
+ │
+ ├── common/
+ │    ├── guards/
+ │    ├── filters/
+ │    ├── interceptors/
+ │    ├── decorators/
+ │
+ ├── config/
+ ├── database/
+```

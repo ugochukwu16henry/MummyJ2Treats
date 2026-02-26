@@ -24,6 +24,9 @@ type Order = {
 
 type Rider = { id: string; first_name: string; last_name: string; phone: string | null; transport_type: string | null; is_available: boolean };
 
+type OnboardingStep = { key: string; completed: boolean; completedAt: string | null };
+type Bonus = { id: string; period_date: string; amount: number; criteria: string; status: string; created_at: string };
+
 export default function VendorDashboardPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -32,6 +35,8 @@ export default function VendorDashboardPage() {
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [vendorProfile, setVendorProfile] = useState<VendorProfile | null>(null);
+  const [onboarding, setOnboarding] = useState<{ steps: OnboardingStep[]; complete: boolean } | null>(null);
+  const [bonuses, setBonuses] = useState<Bonus[]>([]);
 
   async function loadOrders() {
     const res = await fetch(`${API_BASE}/orders/me`, { credentials: "include" });
@@ -60,7 +65,22 @@ export default function VendorDashboardPage() {
         }
       }
     }
-  }
+    // Onboarding steps
+    try {
+      const onboardingRes = await fetch(`${API_BASE}/moat/onboarding`, { credentials: "include" });
+      if (onboardingRes.ok) {
+        const data = await onboardingRes.json();
+        setOnboarding(data);
+      }
+    } catch {}
+    // Vendor bonuses
+    try {
+      const bonusRes = await fetch(`${API_BASE}/moat/vendor-bonuses`, { credentials: "include" });
+      if (bonusRes.ok) {
+        const data = await bonusRes.json();
+        setBonuses(Array.isArray(data.data) ? data.data : []);
+      }
+    } catch {}
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +132,43 @@ export default function VendorDashboardPage() {
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
+
+        {/* Onboarding checklist */}
+        {onboarding && onboarding.steps && onboarding.steps.length > 0 && (
+          <section className="bg-white rounded-2xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold mb-2">Onboarding Checklist</h2>
+            <ul className="space-y-1">
+              {onboarding.steps.map((step) => (
+                <li key={step.key} className="flex items-center gap-2 text-sm">
+                  <span className={`inline-block w-3 h-3 rounded-full ${step.completed ? "bg-green-500" : "bg-zinc-300"}`}></span>
+                  <span className={step.completed ? "line-through text-zinc-400" : ""}>{step.key.replace(/_/g, " ")}</span>
+                  {step.completed && step.completedAt && (
+                    <span className="text-xs text-zinc-400 ml-2">({new Date(step.completedAt).toLocaleDateString()})</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {onboarding.complete && <div className="mt-2 text-green-700 text-sm font-medium">Onboarding complete!</div>}
+          </section>
+        )}
+
+        {/* Vendor bonuses */}
+        {bonuses && bonuses.length > 0 && (
+          <section className="bg-white rounded-2xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold mb-2">Performance Bonuses</h2>
+            <ul className="space-y-2">
+              {bonuses.map((b) => (
+                <li key={b.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
+                  <div>
+                    <span className="font-medium">₦{b.amount.toLocaleString()}</span> for <span className="font-mono">{b.period_date}</span>
+                    {b.criteria && <span className="ml-2 text-xs text-zinc-500">({b.criteria})</span>}
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded ${b.status === "paid" ? "bg-green-100 text-green-700" : b.status === "pending" ? "bg-yellow-100 text-yellow-700" : "bg-zinc-100 text-zinc-700"}`}>{b.status}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Vendor Dashboard</h1>
           <div className="flex items-center gap-3 text-sm">

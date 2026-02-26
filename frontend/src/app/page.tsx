@@ -6,13 +6,17 @@ const PRIMARY_VENDOR_SLUG =
   process.env.NEXT_PUBLIC_PRIMARY_VENDOR_SLUG ?? "mummyj2treats";
 
 async function fetchHomeProducts() {
-  const res = await fetch(
-    `${API_BASE}/products?vendorSlug=${PRIMARY_VENDOR_SLUG}&limit=8`,
-    { cache: "no-store" },
-  );
-  if (!res.ok) return [];
-  const json = await res.json();
-  return json.data ?? [];
+  try {
+    const res = await fetch(
+      `${API_BASE}/products?vendorSlug=${PRIMARY_VENDOR_SLUG}&limit=8`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 async function fetchRankedVendors() {

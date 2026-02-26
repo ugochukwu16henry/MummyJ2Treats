@@ -2,25 +2,29 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 async function fetchVendorStore(slug: string) {
-  const res = await fetch(`${API_BASE}/products/vendor/${slug}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    return { vendor: null, products: [] as any[] };
-  }
-  const json = await res.json();
-  const products: any[] = json.data ?? [];
-  if (!products.length) {
+  try {
+    const res = await fetch(`${API_BASE}/products/vendor/${slug}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      return { vendor: null, products: [] as any[] };
+    }
+    const json = await res.json();
+    const products: any[] = json.data ?? [];
+    if (!products.length) {
+      return { vendor: null, products: [] };
+    }
+    const first = products[0];
+    const vendor = {
+      name: first.vendor_name as string,
+      slug: first.vendor_slug as string,
+      logoUrl: first.vendor_logo_url as string | null,
+      bannerUrl: first.vendor_banner_url as string | null,
+    };
+    return { vendor, products };
+  } catch {
     return { vendor: null, products: [] };
   }
-  const first = products[0];
-  const vendor = {
-    name: first.vendor_name as string,
-    slug: first.vendor_slug as string,
-    logoUrl: first.vendor_logo_url as string | null,
-    bannerUrl: first.vendor_banner_url as string | null,
-  };
-  return { vendor, products };
 }
 
 export default async function VendorStorePage({

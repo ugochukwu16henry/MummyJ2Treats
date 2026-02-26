@@ -32,6 +32,26 @@ export class AuthController {
     return result;
   }
 
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('access_token', '', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+    res.cookie('refresh_token', '', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+    return { success: true };
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
   me(@Req() req: Request) {

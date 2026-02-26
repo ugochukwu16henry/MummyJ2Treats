@@ -91,6 +91,12 @@ export default async function Home() {
             >
               Become a Vendor
             </a>
+            <a
+              href="/auth/register/rider"
+              className="bg-white border border-amber-500 text-amber-600 px-6 py-3 rounded-full font-semibold text-lg hover:bg-amber-50 text-center"
+            >
+              Become a Rider
+            </a>
           </div>
         </div>
         <div className="flex-1 flex justify-center">
@@ -259,10 +265,12 @@ export default async function Home() {
             </ul>
           </div>
           <div>
-            <h3 className="font-bold mb-2">Vendors</h3>
+            <h3 className="font-bold mb-2">Vendors & Riders</h3>
             <ul className="space-y-1 text-sm">
               <li><a href="/dashboard/vendor">Become a Vendor</a></li>
               <li><a href="/dashboard/vendor">Vendor Dashboard</a></li>
+              <li><a href="/auth/register/rider">Become a Rider</a></li>
+              <li><a href="/dashboard/rider">Rider Dashboard</a></li>
             </ul>
           </div>
           <div>

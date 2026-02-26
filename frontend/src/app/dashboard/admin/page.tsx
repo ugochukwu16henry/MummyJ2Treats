@@ -182,7 +182,22 @@ export default function AdminDashboardPage() {
             <h1 className="text-2xl font-bold text-zinc-900">Founder Admin Dashboard</h1>
             <p className="text-sm text-zinc-600">Operate like a real CEO — exact metrics at a glance.</p>
           </div>
-          <a href="/dashboard" className="text-sm text-zinc-600 hover:underline">← Back to Dashboard</a>
+          <div className="flex items-center gap-3 text-sm">
+            <a href="/dashboard" className="text-zinc-600 hover:underline">← Back to Dashboard</a>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
+                } catch {}
+                document.cookie = "access_token=; path=/; max-age=0";
+                router.push("/auth/login");
+              }}
+              className="px-3 py-1 rounded-md border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+            >
+              Logout
+            </button>
+          </div>
         </header>
 
         <p className="text-sm text-zinc-500 bg-zinc-100 rounded-lg px-4 py-2 border border-zinc-200">

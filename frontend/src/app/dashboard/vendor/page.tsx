@@ -98,7 +98,22 @@ export default function VendorDashboardPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Vendor Dashboard</h1>
-          <Link href="/dashboard" className="text-sm text-zinc-600 hover:underline">← Back</Link>
+          <div className="flex items-center gap-3 text-sm">
+            <Link href="/dashboard" className="text-zinc-600 hover:underline">← Back</Link>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
+                } catch {}
+                document.cookie = "access_token=; path=/; max-age=0";
+                router.push("/auth/login");
+              }}
+              className="px-3 py-1 rounded-md border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+            >
+              Logout
+            </button>
+          </div>
         </header>
         <p className="text-sm text-zinc-600">
           <Link href="/dashboard/vendor/location" className="text-primary font-medium hover:underline">Location & delivery</Link>

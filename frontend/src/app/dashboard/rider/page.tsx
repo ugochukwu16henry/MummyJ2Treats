@@ -97,6 +97,70 @@ export default function RiderDashboardPage() {
     );
   }
 
+  // Editable profile form state
+  const [editForm, setEditForm] = useState<{
+    phone: string;
+    state: string;
+    cities: string;
+    transport_type: string;
+    is_available: boolean;
+  } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editMsg, setEditMsg] = useState<string | null>(null);
+
+  // Populate edit form when profile loads
+  useEffect(() => {
+    if (profile) {
+      setEditForm({
+        phone: profile.phone ?? "",
+        state: profile.state ?? "",
+        cities: profile.cities.join(", "),
+        transport_type: profile.transport_type ?? "",
+        is_available: profile.is_available,
+      });
+    }
+  }, [profile]);
+
+  async function handleProfileSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editForm) return;
+    setSaving(true);
+    setEditMsg(null);
+    try {
+      const res = await fetch(`${API_BASE}/riders/me`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          phone: editForm.phone,
+          state: editForm.state,
+          cities: editForm.cities.split(",").map(s => s.trim()).filter(Boolean),
+          transportType: editForm.transport_type,
+          isAvailable: editForm.is_available,
+        }),
+      });
+      if (res.ok) {
+        setEditMsg("Profile updated.");
+        const updated = await res.json();
+        setProfile((p) => p ? {
+          ...p,
+          phone: updated.phone ?? "",
+          state: updated.state ?? "",
+          cities: Array.isArray(updated.cities) ? updated.cities : [],
+          transport_type: updated.transport_type ?? "",
+          is_available: updated.is_available !== false,
+        } : null);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setEditMsg(body.message ?? "Failed to update profile");
+      }
+    } catch {
+      setEditMsg("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -126,10 +190,42 @@ export default function RiderDashboardPage() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
-            <p className="text-sm text-zinc-600">State: <strong>{profile.state}</strong> · {profile.is_available ? "Available" : "Unavailable"}</p>
-            {message && <p className="text-sm text-green-700">{message}</p>}
-            <div>
-              <button type="button" onClick={updateLocation} disabled={updatingLocation} className="w-full bg-primary text-white py-2 rounded-md font-medium disabled:opacity-60">
+            <form className="space-y-3" onSubmit={handleProfileSave}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Phone</label>
+                  <input type="tel" className="w-full px-3 py-2 rounded border" value={editForm?.phone ?? ""} onChange={e => setEditForm(f => f && { ...f, phone: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">State</label>
+                  <input type="text" className="w-full px-3 py-2 rounded border" value={editForm?.state ?? ""} onChange={e => setEditForm(f => f && { ...f, state: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Cities (comma separated)</label>
+                  <input type="text" className="w-full px-3 py-2 rounded border" value={editForm?.cities ?? ""} onChange={e => setEditForm(f => f && { ...f, cities: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Transport Type</label>
+                  <select className="w-full px-3 py-2 rounded border" value={editForm?.transport_type ?? ""} onChange={e => setEditForm(f => f && { ...f, transport_type: e.target.value })}>
+                    <option value="">Select…</option>
+                    <option value="bike">Bike</option>
+                    <option value="car">Car</option>
+                    <option value="motorcycle">Motorcycle</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <input type="checkbox" id="is_available" checked={editForm?.is_available ?? false} onChange={e => setEditForm(f => f && { ...f, is_available: e.target.checked })} />
+                  <label htmlFor="is_available" className="text-xs">Available for delivery</label>
+                </div>
+              </div>
+              <button type="submit" className="w-full bg-primary text-white py-2 rounded font-semibold mt-2 disabled:opacity-60" disabled={saving}>{saving ? "Saving…" : "Save Profile"}</button>
+              {editMsg && <p className="text-xs text-green-700 mt-1">{editMsg}</p>}
+            </form>
+            <div className="border-t pt-4 mt-4">
+              <p className="text-sm text-zinc-600">State: <strong>{profile.state}</strong> · {profile.is_available ? "Available" : "Unavailable"}</p>
+              {message && <p className="text-sm text-green-700">{message}</p>}
+              <button type="button" onClick={updateLocation} disabled={updatingLocation} className="w-full bg-primary text-white py-2 rounded-md font-medium disabled:opacity-60 mt-2">
                 {updatingLocation ? "Updating…" : "Update my location"}
               </button>
               <p className="text-xs text-zinc-500 mt-1">Vendors and admin can see your live location when you update it.</p>

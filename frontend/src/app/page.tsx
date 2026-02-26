@@ -235,7 +235,7 @@ export default async function Home() {
         <h2 className="text-2xl font-bold mb-4">Get the best homemade treats in your inbox</h2>
         <form className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
           <label htmlFor="newsletter-email" className="sr-only">Your email for newsletter</label>
-          <input id="newsletter-email" name="email" type="email" placeholder="Your email" className="px-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 focus:outline-none w-full sm:w-auto" aria-label="Your email for newsletter" />
+          <input id="newsletter-email" name="email" type="email" autoComplete="email" placeholder="Your email" className="px-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 focus:outline-none w-full sm:w-auto" aria-label="Your email for newsletter" />
           <button type="submit" className="bg-primary text-white px-6 py-2 rounded-full font-semibold w-full sm:w-auto">Subscribe</button>
         </form>
       </section>

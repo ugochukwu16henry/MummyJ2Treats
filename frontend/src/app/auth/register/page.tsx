@@ -90,6 +90,7 @@ export default function RegisterPage() {
                 id="register-firstName"
                 name="firstName"
                 type="text"
+                autoComplete="given-name"
                 className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 value={form.firstName}
                 onChange={(e) =>
@@ -106,6 +107,7 @@ export default function RegisterPage() {
                 id="register-lastName"
                 name="lastName"
                 type="text"
+                autoComplete="family-name"
                 className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 value={form.lastName}
                 onChange={(e) =>
@@ -121,6 +123,7 @@ export default function RegisterPage() {
               id="register-email"
               name="email"
               type="email"
+              autoComplete="email"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.email}
               onChange={(e) =>
@@ -135,6 +138,7 @@ export default function RegisterPage() {
               id="register-phone"
               name="phone"
               type="tel"
+              autoComplete="tel"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.phone}
               onChange={(e) =>
@@ -148,6 +152,7 @@ export default function RegisterPage() {
               id="register-password"
               name="password"
               type="password"
+              autoComplete="new-password"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.password}
               onChange={(e) =>
@@ -164,6 +169,7 @@ export default function RegisterPage() {
               id="register-confirmPassword"
               name="confirmPassword"
               type="password"
+              autoComplete="new-password"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.confirmPassword}
               onChange={(e) =>

@@ -69,6 +69,7 @@ export default function LoginPage() {
               id="login-email"
               name="email"
               type="email"
+              autoComplete="email"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.email}
               onChange={(e) =>
@@ -83,6 +84,7 @@ export default function LoginPage() {
               id="login-password"
               name="password"
               type="password"
+              autoComplete="current-password"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.password}
               onChange={(e) =>

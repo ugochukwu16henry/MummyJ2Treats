@@ -280,6 +280,7 @@ export default function CartPage() {
                     id="checkout-state"
                     name="deliveryState"
                     type="text"
+                    autoComplete="address-level1"
                     placeholder="State"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     value={deliveryState}
@@ -290,6 +291,7 @@ export default function CartPage() {
                     id="checkout-city"
                     name="deliveryCity"
                     type="text"
+                    autoComplete="address-level2"
                     placeholder="City"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     value={deliveryCity}
@@ -300,6 +302,7 @@ export default function CartPage() {
                     id="checkout-lga"
                     name="deliveryLga"
                     type="text"
+                    autoComplete="address-level3"
                     placeholder="LGA"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
                     value={deliveryLga}
@@ -310,6 +313,7 @@ export default function CartPage() {
                     id="checkout-street"
                     name="deliveryStreet"
                     type="text"
+                    autoComplete="street-address"
                     placeholder="Street address"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
                     value={deliveryStreet}
@@ -320,6 +324,7 @@ export default function CartPage() {
                     id="checkout-landmark"
                     name="deliveryLandmark"
                     type="text"
+                    autoComplete="off"
                     placeholder="Landmark (optional)"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
                     value={deliveryLandmark}
@@ -330,6 +335,7 @@ export default function CartPage() {
                     id="checkout-notes"
                     name="deliveryNotes"
                     type="text"
+                    autoComplete="off"
                     placeholder="Delivery notes (optional)"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
                     value={deliveryNotes}
@@ -360,6 +366,7 @@ export default function CartPage() {
                 <textarea
                   id="checkout-full-address"
                   name="address"
+                  autoComplete="street-address"
                   className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   rows={2}
                   placeholder="Full address (if not using fields above)"

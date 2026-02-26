@@ -110,11 +110,11 @@ export default function VendorLocationPage() {
           <h2 className="font-semibold text-zinc-800">Operating location</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <label htmlFor="vendor-state" className="sr-only">State</label>
-            <input id="vendor-state" name="operatingState" type="text" placeholder="State" className="border border-zinc-300 rounded-md px-3 py-2" value={operatingState} onChange={(e) => setOperatingState(e.target.value)} />
+            <input id="vendor-state" name="operatingState" type="text" autoComplete="address-level1" placeholder="State" className="border border-zinc-300 rounded-md px-3 py-2" value={operatingState} onChange={(e) => setOperatingState(e.target.value)} />
             <label htmlFor="vendor-city" className="sr-only">City</label>
-            <input id="vendor-city" name="operatingCity" type="text" placeholder="City" className="border border-zinc-300 rounded-md px-3 py-2" value={operatingCity} onChange={(e) => setOperatingCity(e.target.value)} />
+            <input id="vendor-city" name="operatingCity" type="text" autoComplete="address-level2" placeholder="City" className="border border-zinc-300 rounded-md px-3 py-2" value={operatingCity} onChange={(e) => setOperatingCity(e.target.value)} />
             <label htmlFor="vendor-lga" className="sr-only">LGA</label>
-            <input id="vendor-lga" name="operatingLga" type="text" placeholder="LGA" className="border border-zinc-300 rounded-md px-3 py-2 sm:col-span-2" value={operatingLga} onChange={(e) => setOperatingLga(e.target.value)} />
+            <input id="vendor-lga" name="operatingLga" type="text" autoComplete="address-level3" placeholder="LGA" className="border border-zinc-300 rounded-md px-3 py-2 sm:col-span-2" value={operatingLga} onChange={(e) => setOperatingLga(e.target.value)} />
           </div>
           <div>
             <button type="button" onClick={captureLocation} className="text-sm py-2 px-3 border border-primary text-primary rounded-md">Use my current location</button>
@@ -125,15 +125,15 @@ export default function VendorLocationPage() {
           <label className="flex items-center gap-2 text-sm"><input id="vendor-deliver-outside" name="deliverOutsideState" type="checkbox" checked={deliverOutsideState} onChange={(e) => setDeliverOutsideState(e.target.checked)} /> Deliver outside my state</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <label htmlFor="vendor-max-radius" className="sr-only">Max radius (km)</label>
-            <input id="vendor-max-radius" name="maxDeliveryRadiusKm" type="number" step="0.1" placeholder="Max radius (km)" className="border border-zinc-300 rounded-md px-3 py-2" value={maxDeliveryRadiusKm} onChange={(e) => setMaxDeliveryRadiusKm(e.target.value)} />
+            <input id="vendor-max-radius" name="maxDeliveryRadiusKm" type="number" step="0.1" autoComplete="off" placeholder="Max radius (km)" className="border border-zinc-300 rounded-md px-3 py-2" value={maxDeliveryRadiusKm} onChange={(e) => setMaxDeliveryRadiusKm(e.target.value)} />
             <label htmlFor="vendor-price-per-km" className="sr-only">Price per km (₦)</label>
-            <input id="vendor-price-per-km" name="deliveryPricePerKm" type="number" step="0.01" placeholder="Price per km (₦)" className="border border-zinc-300 rounded-md px-3 py-2" value={deliveryPricePerKm} onChange={(e) => setDeliveryPricePerKm(e.target.value)} />
+            <input id="vendor-price-per-km" name="deliveryPricePerKm" type="number" step="0.01" autoComplete="off" placeholder="Price per km (₦)" className="border border-zinc-300 rounded-md px-3 py-2" value={deliveryPricePerKm} onChange={(e) => setDeliveryPricePerKm(e.target.value)} />
             <label htmlFor="vendor-min-fee" className="sr-only">Min delivery fee (₦)</label>
-            <input id="vendor-min-fee" name="deliveryMinFee" type="number" step="0.01" placeholder="Min delivery fee (₦)" className="border border-zinc-300 rounded-md px-3 py-2" value={deliveryMinFee} onChange={(e) => setDeliveryMinFee(e.target.value)} />
+            <input id="vendor-min-fee" name="deliveryMinFee" type="number" step="0.01" autoComplete="off" placeholder="Min delivery fee (₦)" className="border border-zinc-300 rounded-md px-3 py-2" value={deliveryMinFee} onChange={(e) => setDeliveryMinFee(e.target.value)} />
             <label htmlFor="vendor-fixed-city" className="sr-only">Fixed city rate (₦)</label>
-            <input id="vendor-fixed-city" name="deliveryFixedCityRate" type="number" step="0.01" placeholder="Fixed city rate (₦)" className="border border-zinc-300 rounded-md px-3 py-2" value={deliveryFixedCityRate} onChange={(e) => setDeliveryFixedCityRate(e.target.value)} />
+            <input id="vendor-fixed-city" name="deliveryFixedCityRate" type="number" step="0.01" autoComplete="off" placeholder="Fixed city rate (₦)" className="border border-zinc-300 rounded-md px-3 py-2" value={deliveryFixedCityRate} onChange={(e) => setDeliveryFixedCityRate(e.target.value)} />
             <label htmlFor="vendor-interstate-fee" className="sr-only">Inter-state fee (₦)</label>
-            <input id="vendor-interstate-fee" name="interStateDeliveryFee" type="number" step="0.01" placeholder="Inter-state fee (₦)" className="border border-zinc-300 rounded-md px-3 py-2 sm:col-span-2" value={interStateDeliveryFee} onChange={(e) => setInterStateDeliveryFee(e.target.value)} />
+            <input id="vendor-interstate-fee" name="interStateDeliveryFee" type="number" step="0.01" autoComplete="off" placeholder="Inter-state fee (₦)" className="border border-zinc-300 rounded-md px-3 py-2 sm:col-span-2" value={interStateDeliveryFee} onChange={(e) => setInterStateDeliveryFee(e.target.value)} />
           </div>
           <button onClick={save} disabled={saving} className="w-full bg-primary text-white py-2 rounded-md font-medium disabled:opacity-60">{saving ? "Saving…" : "Save"}</button>
         </div>

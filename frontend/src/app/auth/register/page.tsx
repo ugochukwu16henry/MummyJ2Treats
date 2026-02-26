@@ -63,6 +63,12 @@ export default function RegisterPage() {
         return;
       }
 
+      // Mirror backend auth cookie onto the frontend domain so /dashboard can see it
+      const body = await res.json().catch(() => null);
+      if (body?.accessToken) {
+        document.cookie = `access_token=${body.accessToken}; path=/; secure; samesite=Lax`;
+      }
+
       router.push("/dashboard");
     } catch (err) {
       setError("Network error, please try again.");

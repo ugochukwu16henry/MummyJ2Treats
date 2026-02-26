@@ -18,18 +18,26 @@ async function main() {
 
   const existing = await client.query('SELECT * FROM users WHERE email = $1', [email]);
   if (existing.rows.length > 0) {
-    console.log('Admin user already exists.');
-    await client.end();
-    return;
+    // Ensure the existing founder account is an active admin and reset the password
+    await client.query(
+      `UPDATE users
+       SET role = $2,
+           first_name = COALESCE(first_name, $3),
+           last_name = COALESCE(last_name, $4),
+           password_hash = $5,
+           is_active = true
+       WHERE email = $1`,
+      [email, role, firstName, lastName, passwordHash],
+    );
+    console.log('Existing admin updated with new password:', email);
+  } else {
+    await client.query(
+      `INSERT INTO users (id, role, first_name, last_name, email, password_hash, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, true)`,
+      [id, role, firstName, lastName, email, passwordHash]
+    );
+    console.log('Founder admin created:', email);
   }
-
-  await client.query(
-    `INSERT INTO users (id, role, first_name, last_name, email, password_hash, is_active)
-     VALUES ($1, $2, $3, $4, $5, $6, true)`,
-    [id, role, firstName, lastName, email, passwordHash]
-  );
-
-  console.log('Founder admin created:', email);
   await client.end();
 }
 

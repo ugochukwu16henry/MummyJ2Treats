@@ -249,4 +249,22 @@ export class ProductsService {
     );
     return { data: result.rows };
   }
+
+  async findByVendorId(vendorId: string, limit = 100, offset = 0) {
+    const result = await this.db.query(
+      `
+      SELECT
+        p.*,
+        v.business_name as vendor_name,
+        v.slug as vendor_slug
+      FROM products p
+      JOIN vendors v ON v.id = p.vendor_id
+      WHERE p.vendor_id = $1
+      ORDER BY p.created_at DESC
+      LIMIT $2 OFFSET $3
+      `,
+      [vendorId, limit, offset],
+    );
+    return { data: result.rows };
+  }
 }

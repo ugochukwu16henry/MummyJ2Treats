@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   BarChart,
   Bar,
@@ -76,7 +75,6 @@ const fmtMoney = (n: number) =>
   `₦${n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toFixed(0)}`;
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [chartsDaily, setChartsDaily] = useState<ChartPoint[]>([]);
   const [chartsMonthly, setChartsMonthly] = useState<ChartPoint[]>([]);
@@ -90,133 +88,86 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const cookie = document.cookie.split("; ").find((c) => c.startsWith("access_token="));
-    if (!cookie) {
-      router.push("/auth/login");
-      return;
-    }
-
-    async function run() {
-      try {
-        const opts = { credentials: "include" as RequestCredentials };
-        const meRes = await fetch(`${API_BASE}/auth/me`, opts);
-        if (!meRes.ok) {
-          router.push("/auth/login");
-          return;
-        }
-        const me = (await meRes.json()) as { role?: string };
-        if (me.role !== "admin") {
-          router.push("/dashboard");
-          return;
-        }
-
-        const [mRes, cDailyRes, cMonthRes, tRes, hRes, cityRes, cohortRes] = await Promise.all([
-          fetch(`${API_BASE}/admin/metrics`, opts),
-          fetch(`${API_BASE}/admin/charts?period=daily`, opts),
-          fetch(`${API_BASE}/admin/charts?period=monthly`, opts),
-          fetch(`${API_BASE}/admin/revenue-trend`, opts),
-          fetch(`${API_BASE}/admin/vendors-heatmap`, opts),
-          fetch(`${API_BASE}/admin/cities`, opts),
-          fetch(`${API_BASE}/admin/cohorts`, opts),
-        ]);
-
-        if (!mRes.ok) {
-          setError("Failed to load metrics");
-          return;
-        }
-
-        if (!cancelled) {
+    const opts = { credentials: "include" as RequestCredentials };
+    Promise.all([
+      fetch(`${API_BASE}/admin/metrics`, opts),
+      fetch(`${API_BASE}/admin/charts?period=daily`, opts),
+      fetch(`${API_BASE}/admin/charts?period=monthly`, opts),
+      fetch(`${API_BASE}/admin/revenue-trend`, opts),
+      fetch(`${API_BASE}/admin/vendors-heatmap`, opts),
+      fetch(`${API_BASE}/admin/cities`, opts),
+      fetch(`${API_BASE}/admin/cohorts`, opts),
+    ])
+      .then(async ([mRes, cDailyRes, cMonthRes, tRes, hRes, cityRes, cohortRes]) => {
+        if (cancelled) return;
+        if (mRes.ok) {
           const m = (await mRes.json()) as Metrics;
           setMetrics(m);
-          const cDaily = (await cDailyRes.json()) as { data: ChartPoint[] };
-          const cMonth = (await cMonthRes.json()) as { data: ChartPoint[] };
-          setChartsDaily((cDaily.data || []).map((d) => ({ ...d, period: d.period?.slice(0, 10) ?? d.period })));
-          setChartsMonthly((cMonth.data || []).map((d) => ({ ...d, period: d.period?.slice(0, 7) ?? d.period })));
-          const t = (await tRes.json()) as { historical: TrendPoint[]; predicted: TrendPoint[] };
-          setTrend(t || null);
-          const h = (await hRes.json()) as { vendors: HeatmapVendor[] };
-          setHeatmap(h.vendors || []);
-          const city = (await cityRes.json()) as { cities: CityRow[] };
-          setCities(city.cities || []);
-          const cohort = (await cohortRes.json()) as { cohorts: CohortRow[] };
-          setCohorts(cohort.cohorts || []);
+        } else {
+          setError("Could not load metrics");
         }
-      } catch {
+        const cDaily = (await cDailyRes.json()) as { data?: ChartPoint[] };
+        const cMonth = (await cMonthRes.json()) as { data?: ChartPoint[] };
+        setChartsDaily((cDaily.data || []).map((d) => ({ ...d, period: d.period?.slice(0, 10) ?? d.period })));
+        setChartsMonthly((cMonth.data || []).map((d) => ({ ...d, period: d.period?.slice(0, 7) ?? d.period })));
+        const t = (await tRes.json()) as { historical?: TrendPoint[]; predicted?: TrendPoint[] };
+        setTrend(t && (t.historical?.length || t.predicted?.length) ? t : null);
+        const h = (await hRes.json()) as { vendors?: HeatmapVendor[] };
+        setHeatmap(h.vendors || []);
+        const city = (await cityRes.json()) as { cities?: CityRow[] };
+        setCities(city.cities || []);
+        const cohort = (await cohortRes.json()) as { cohorts?: CohortRow[] };
+        setCohorts(cohort.cohorts || []);
+      })
+      .catch(() => {
         if (!cancelled) setError("Failed to load dashboard");
-      } finally {
+      })
+      .finally(() => {
         if (!cancelled) setLoading(false);
-      }
-    }
-    run();
+      });
     return () => { cancelled = true; };
-  }, [router]);
+  }, []);
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-zinc-100 px-4 py-8">
-        <div className="max-w-7xl mx-auto text-center py-20 text-zinc-500">Loading Founder Dashboard…</div>
-      </main>
-    );
-  }
-
-  if (error || !metrics) {
-    return (
-      <main className="min-h-screen bg-zinc-100 px-4 py-8">
-        <div className="max-w-7xl mx-auto text-center py-20 text-red-600">{error ?? "No data"}</div>
-      </main>
-    );
-  }
-
-  const r = metrics.revenue;
-  const c = metrics.customer;
-  const v = metrics.vendor;
-  const o = metrics.operational;
-  const g = metrics.growth;
+  const r = metrics?.revenue;
+  const c = metrics?.customer;
+  const v = metrics?.vendor;
+  const o = metrics?.operational;
+  const g = metrics?.growth;
   const chartData = chartPeriod === "monthly" ? chartsMonthly : chartsDaily;
+  const hasMetrics = !!metrics;
 
   return (
-    <main className="min-h-screen bg-zinc-100 px-4 py-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-900">Founder Admin Dashboard</h1>
-            <p className="text-sm text-zinc-600">Operate like a real CEO — exact metrics at a glance.</p>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <a href="/dashboard" className="text-zinc-600 hover:underline">← Back to Dashboard</a>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
-                } catch {}
-                document.cookie = "access_token=; path=/; max-age=0";
-                router.push("/auth/login");
-              }}
-              className="px-3 py-1 rounded-md border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
-            >
-              Logout
-            </button>
-          </div>
-        </header>
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-zinc-900">Overview</h1>
+        <p className="text-sm text-zinc-600 mt-0.5">Operate like a real CEO — exact metrics at a glance.</p>
+      </div>
 
-        <p className="text-sm text-zinc-500 bg-zinc-100 rounded-lg px-4 py-2 border border-zinc-200">
-          CAC, traffic, CPC, support tickets, and delivery SLA are stored in the DB. Record support tickets via <code className="bg-zinc-200 px-1 rounded">POST /admin/support-tickets</code>; set marketing metrics via <code className="bg-zinc-200 px-1 rounded">POST /admin/platform-metrics</code>. Delivery map (vendors, orders, riders): <code className="bg-zinc-200 px-1 rounded">GET /admin/delivery-map</code>.
-        </p>
+      {error && (
+        <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-4 py-2 border border-amber-200">{error}</p>
+      )}
+
+      <p className="text-sm text-zinc-500 bg-zinc-100 rounded-lg px-4 py-2 border border-zinc-200">
+        CAC, traffic, CPC, support tickets, and delivery SLA are stored in the DB. Record support tickets via <code className="bg-zinc-200 px-1 rounded">POST /admin/support-tickets</code>; set marketing metrics via <code className="bg-zinc-200 px-1 rounded">POST /admin/platform-metrics</code>. Delivery map: sidebar → Delivery map.
+      </p>
 
         {/* A. Revenue */}
         <section className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-zinc-800 mb-4 flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-blue-500" /> A. Revenue Dashboard
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
-            <MetricCard label="GMV" value={fmtMoney(r.gmv)} />
-            <MetricCard label="Net Revenue" value={fmtMoney(r.netRevenue)} />
-            <MetricCard label="MRR" value={fmtMoney(r.mrr)} />
-            <MetricCard label="AOV" value={fmtMoney(r.aov)} />
-            <MetricCard label="MoM Growth" value={`${r.momGrowthPercent}%`} sub={r.targetMomGrowth} />
-            <MetricCard label="Total Orders" value={String(r.totalOrders)} />
-          </div>
+          {hasMetrics && r ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+              <MetricCard label="GMV" value={fmtMoney(r.gmv)} />
+              <MetricCard label="Net Revenue" value={fmtMoney(r.netRevenue)} />
+              <MetricCard label="MRR" value={fmtMoney(r.mrr)} />
+              <MetricCard label="AOV" value={fmtMoney(r.aov)} />
+              <MetricCard label="MoM Growth" value={`${r.momGrowthPercent}%`} sub={r.targetMomGrowth} />
+              <MetricCard label="Total Orders" value={String(r.totalOrders)} />
+            </div>
+          ) : (
+            <EmptyBlock message="Revenue metrics will appear here once you have orders and data." />
+          )}
         </section>
 
         {/* B. Customer */}
@@ -224,14 +175,18 @@ export default function AdminDashboardPage() {
           <h2 className="text-lg font-semibold text-zinc-800 mb-4 flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-green-500" /> B. Customer Metrics
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
-            <MetricCard label="Total Customers" value={fmt(c.totalCustomers)} />
-            <MetricCard label="New (Monthly)" value={fmt(c.newCustomersMonthly)} />
-            <MetricCard label="Returning" value={fmt(c.returningCustomers)} />
-            <MetricCard label="Retention Rate" value={`${c.retentionRatePercent}%`} />
-            <MetricCard label="CAC" value={c.cac === 0 ? "N/A" : fmtMoney(c.cac)} />
-            <MetricCard label="LTV" value={fmtMoney(c.ltv)} sub={c.ltvCacRatio != null ? `LTV/CAC: ${c.ltvCacRatio}x` : c.targetLtvCac} />
-          </div>
+          {hasMetrics && c ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+              <MetricCard label="Total Customers" value={fmt(c.totalCustomers)} />
+              <MetricCard label="New (Monthly)" value={fmt(c.newCustomersMonthly)} />
+              <MetricCard label="Returning" value={fmt(c.returningCustomers)} />
+              <MetricCard label="Retention Rate" value={`${c.retentionRatePercent}%`} />
+              <MetricCard label="CAC" value={c.cac === 0 ? "N/A" : fmtMoney(c.cac)} />
+              <MetricCard label="LTV" value={fmtMoney(c.ltv)} sub={c.ltvCacRatio != null ? `LTV/CAC: ${c.ltvCacRatio}x` : c.targetLtvCac} />
+            </div>
+          ) : (
+            <EmptyBlock message="Customer metrics will appear when you have registered customers." />
+          )}
         </section>
 
         {/* C. Vendor */}
@@ -239,14 +194,18 @@ export default function AdminDashboardPage() {
           <h2 className="text-lg font-semibold text-zinc-800 mb-4 flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-amber-500" /> C. Vendor Metrics
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
-            <MetricCard label="Active Vendors" value={String(v.activeVendors)} />
-            <MetricCard label="Total Vendors" value={String(v.totalVendors)} />
-            <MetricCard label="Vendor Retention" value={`${v.vendorRetentionRatePercent}%`} />
-            <MetricCard label="Avg Fulfillment" value={v.avgFulfillmentTimeHours != null ? `${v.avgFulfillmentTimeHours}h` : "N/A"} />
-            <MetricCard label="Cancellation Rate" value={`${v.cancellationRatePercent}%`} />
-            <MetricCard label="Quality Score" value={v.vendorQualityScore != null ? String(v.vendorQualityScore) : "N/A"} />
-          </div>
+          {hasMetrics && v ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+              <MetricCard label="Active Vendors" value={String(v.activeVendors)} />
+              <MetricCard label="Total Vendors" value={String(v.totalVendors)} />
+              <MetricCard label="Vendor Retention" value={`${v.vendorRetentionRatePercent}%`} />
+              <MetricCard label="Avg Fulfillment" value={v.avgFulfillmentTimeHours != null ? `${v.avgFulfillmentTimeHours}h` : "N/A"} />
+              <MetricCard label="Cancellation Rate" value={`${v.cancellationRatePercent}%`} />
+              <MetricCard label="Quality Score" value={v.vendorQualityScore != null ? String(v.vendorQualityScore) : "N/A"} />
+            </div>
+          ) : (
+            <EmptyBlock message="Vendor metrics will appear when vendors join and get verified." />
+          )}
         </section>
 
         {/* D. Operational */}
@@ -254,13 +213,17 @@ export default function AdminDashboardPage() {
           <h2 className="text-lg font-semibold text-zinc-800 mb-4 flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-red-500" /> D. Operational Metrics
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <MetricCard label="Order Completion" value={`${o.orderCompletionRatePercent}%`} />
-            <MetricCard label="Failed Payment Rate" value={`${o.failedPaymentRatePercent}%`} />
-            <MetricCard label="Refund Rate" value={`${o.refundRatePercent}%`} />
-            <MetricCard label="Delivery SLA" value={o.deliverySlaHours != null ? `${o.deliverySlaHours}h` : "N/A"} />
-            <MetricCard label="Support Tickets" value={String(o.supportTicketVolume)} />
-          </div>
+          {hasMetrics && o ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <MetricCard label="Order Completion" value={`${o.orderCompletionRatePercent}%`} />
+              <MetricCard label="Failed Payment Rate" value={`${o.failedPaymentRatePercent}%`} />
+              <MetricCard label="Refund Rate" value={`${o.refundRatePercent}%`} />
+              <MetricCard label="Delivery SLA" value={o.deliverySlaHours != null ? `${o.deliverySlaHours}h` : "N/A"} />
+              <MetricCard label="Support Tickets" value={String(o.supportTicketVolume)} />
+            </div>
+          ) : (
+            <EmptyBlock message="Operational metrics will appear as orders and support tickets are recorded." />
+          )}
         </section>
 
         {/* E. Growth & Marketing */}
@@ -268,17 +231,21 @@ export default function AdminDashboardPage() {
           <h2 className="text-lg font-semibold text-zinc-800 mb-4 flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-purple-500" /> E. Growth & Marketing
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            <MetricCard label="Traffic (Organic)" value={g.trafficOrganic != null ? fmt(g.trafficOrganic) : "N/A"} />
-            <MetricCard label="Traffic (Paid)" value={g.trafficPaid != null ? fmt(g.trafficPaid) : "N/A"} />
-            <MetricCard label="Conversion Rate" value={`${g.conversionRatePercent}%`} sub={g.targetConversionRate} />
-            <MetricCard label="CPC" value={g.costPerClick != null ? fmtMoney(g.costPerClick) : "N/A"} />
-            <MetricCard label="CPA" value={g.costPerAcquisition != null ? fmtMoney(g.costPerAcquisition) : "N/A"} />
-            <MetricCard label="Referral Rate" value={g.referralRatePercent != null ? `${g.referralRatePercent}%` : "N/A"} />
-          </div>
+          {hasMetrics && g ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <MetricCard label="Traffic (Organic)" value={g.trafficOrganic != null ? fmt(g.trafficOrganic) : "N/A"} />
+              <MetricCard label="Traffic (Paid)" value={g.trafficPaid != null ? fmt(g.trafficPaid) : "N/A"} />
+              <MetricCard label="Conversion Rate" value={`${g.conversionRatePercent}%`} sub={g.targetConversionRate} />
+              <MetricCard label="CPC" value={g.costPerClick != null ? fmtMoney(g.costPerClick) : "N/A"} />
+              <MetricCard label="CPA" value={g.costPerAcquisition != null ? fmtMoney(g.costPerAcquisition) : "N/A"} />
+              <MetricCard label="Referral Rate" value={g.referralRatePercent != null ? `${g.referralRatePercent}%` : "N/A"} />
+            </div>
+          ) : (
+            <EmptyBlock message="Set marketing metrics via POST /admin/platform-metrics to see growth data." />
+          )}
         </section>
 
-        {/* Charts: daily / weekly / monthly */}
+        {/* Charts: daily / monthly */}
         <section className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-zinc-800 mb-4">Revenue & Orders (Charts)</h2>
           <div className="flex gap-2 mb-4">
@@ -292,24 +259,28 @@ export default function AdminDashboardPage() {
               </button>
             ))}
           </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
-                <XAxis dataKey="period" tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(v) => fmt(v)} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v) => fmt(v)} />
-                <Tooltip
-                  formatter={(v) =>
-                    [typeof v === "number" ? fmt(v) : String(v ?? ""), ""] as [string, string]
-                  }
-                  labelFormatter={(l) => String(l)}
-                />
-                <Bar yAxisId="left" dataKey="gmv" name="GMV" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar yAxisId="right" dataKey="orders" name="Orders" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {chartData.length > 0 ? (
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+                  <XAxis dataKey="period" tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(v) => fmt(v)} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v) => fmt(v)} />
+                  <Tooltip
+                    formatter={(v) =>
+                      [typeof v === "number" ? fmt(v) : String(v ?? ""), ""] as [string, string]
+                    }
+                    labelFormatter={(l) => String(l)}
+                  />
+                  <Bar yAxisId="left" dataKey="gmv" name="GMV" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar yAxisId="right" dataKey="orders" name="Orders" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <EmptyBlock message="Chart data will appear when you have orders over time." />
+          )}
         </section>
 
         {/* Predictive revenue trend */}
@@ -339,7 +310,7 @@ export default function AdminDashboardPage() {
         )}
 
         {/* Vendor performance heatmap */}
-        {heatmap.length > 0 && (
+        {heatmap.length > 0 ? (
           <section className="bg-white rounded-2xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-zinc-800 mb-4">Vendor Performance Heatmap</h2>
             <div className="overflow-x-auto">
@@ -358,13 +329,18 @@ export default function AdminDashboardPage() {
                     <div className="text-xs opacity-90">{vendor.orders} orders · {fmtMoney(vendor.gmv)}</div>
                   </div>
                 ))}
-              </div>
             </div>
+          </div>
+        </section>
+        ) : (
+          <section className="bg-white rounded-2xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-zinc-800 mb-4">Vendor Performance Heatmap</h2>
+            <EmptyBlock message="Vendor heatmap will appear when vendors have orders." />
           </section>
         )}
 
         {/* City-level analytics */}
-        {cities.length > 0 && (
+        {cities.length > 0 ? (
           <section className="bg-white rounded-2xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-zinc-800 mb-4">City-Level Analytics</h2>
             <div className="h-64">
@@ -380,10 +356,15 @@ export default function AdminDashboardPage() {
               </ResponsiveContainer>
             </div>
           </section>
+        ) : (
+          <section className="bg-white rounded-2xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-zinc-800 mb-4">City-Level Analytics</h2>
+            <EmptyBlock message="City data will appear when orders have delivery addresses." />
+          </section>
         )}
 
         {/* Cohort retention */}
-        {cohorts.length > 0 && (
+        {cohorts.length > 0 ? (
           <section className="bg-white rounded-2xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-zinc-800 mb-4">Cohort Retention (Next-Month Retention %)</h2>
             <div className="h-64">
@@ -398,9 +379,21 @@ export default function AdminDashboardPage() {
               </ResponsiveContainer>
             </div>
           </section>
+        ) : (
+          <section className="bg-white rounded-2xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-zinc-800 mb-4">Cohort Retention</h2>
+            <EmptyBlock message="Cohort retention will appear when you have recurring customers." />
+          </section>
         )}
       </div>
-    </main>
+  );
+}
+
+function EmptyBlock({ message }: { message: string }) {
+  return (
+    <div className="py-8 text-center text-sm text-zinc-500 bg-zinc-50 rounded-xl border border-zinc-100">
+      {message}
+    </div>
   );
 }
 

@@ -1,12 +1,16 @@
-import { Controller, Get, Param, Query, Body, Post, Patch, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Body, Post, Patch, Req, UseGuards, ForbiddenException } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { VendorsService } from '../vendors/vendors.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { Request } from 'express';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly vendorsService: VendorsService,
+  ) {}
 
   @Get()
   findAll(
@@ -24,6 +28,18 @@ export class ProductsController {
       offset: offset ? Number(offset) : undefined,
       isActiveOnly: true,
     });
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('vendor', 'admin')
+  @Get('me')
+  async listMyProducts(@Req() req: Request) {
+    const user = req.user as { userId: string };
+    const vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor) {
+      return { data: [] };
+    }
+    return this.productsService.findByVendorId(vendor.id);
   }
 
   @Get(':id')
@@ -52,7 +68,7 @@ export class ProductsController {
   @UseGuards(AuthGuard('jwt'))
   @Roles('vendor', 'admin')
   @Post('me')
-  createForMe(
+  async createForMe(
     @Req() req: Request,
     @Body()
     dto: {
@@ -63,13 +79,17 @@ export class ProductsController {
     },
   ) {
     const user = req.user as { userId: string; role: string };
-    return this.productsService.createForVendor(user.userId, dto);
+    const vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked. Create a vendor profile to add products.');
+    }
+    return this.productsService.createForVendor(vendor.id, dto);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Roles('vendor', 'admin')
   @Patch('me/:id')
-  updateForMe(
+  async updateForMe(
     @Req() req: Request,
     @Param('id') id: string,
     @Body()
@@ -82,6 +102,10 @@ export class ProductsController {
     },
   ) {
     const user = req.user as { userId: string; role: string };
-    return this.productsService.updateForVendor(user.userId, id, dto);
+    const vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    return this.productsService.updateForVendor(vendor.id, id, dto);
   }
 }

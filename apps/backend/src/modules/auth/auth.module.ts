@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { RolesGuard } from './roles.guard';
 import { UsersModule } from '../users/users.module';
 import { MoatModule } from '../moat/moat.module';
+import { VendorsModule } from '../vendors/vendors.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { MoatModule } from '../moat/moat.module';
     }),
     UsersModule,
     MoatModule,
+    VendorsModule,
   ],
   controllers: [AuthController],
   providers: [

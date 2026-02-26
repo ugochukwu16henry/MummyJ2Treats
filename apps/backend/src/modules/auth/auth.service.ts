@@ -3,6 +3,7 @@ import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { ReferralService } from '../moat/referral.service';
+import { VendorsService } from '../vendors/vendors.service';
 
 @Injectable()
 export class AuthService {
@@ -10,6 +11,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly referralService: ReferralService,
+    private readonly vendorsService: VendorsService,
   ) {}
 
   async register(dto: {
@@ -107,6 +109,49 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  /** Upgrade a logged-in user to vendor: create vendor row + switch role + issue new tokens */
+  async becomeVendor(userId: string) {
+    const user = await this.usersService.findOne(userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Ensure vendor record exists
+    let vendor = await this.vendorsService.findByUserId(userId);
+    if (!vendor) {
+      const baseName = `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim() || user.email.split('@')[0];
+      const businessName = baseName || 'New Vendor';
+      const slugBase = (baseName || businessName)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || `vendor-${user.id.slice(0, 8)}`;
+      let slug = slugBase;
+      let suffix = 1;
+      // Ensure unique slug
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const existing = await this.vendorsService.findBySlug(slug);
+        if (!existing) break;
+        slug = `${slugBase}-${suffix++}`;
+      }
+      vendor = await this.vendorsService.createVendorForUser({
+        userId,
+        businessName,
+        slug,
+      });
+    }
+
+    if (user.role !== 'vendor') {
+      await this.usersService.update(userId, { role: 'vendor' });
+    }
+
+    const tokens = await this.issueTokens(userId, 'vendor');
+    return {
+      vendor,
+      ...tokens,
+    };
   }
 
   private async issueTokens(userId: string, role: 'admin' | 'vendor' | 'customer' | 'rider') {

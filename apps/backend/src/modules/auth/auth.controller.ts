@@ -38,6 +38,18 @@ export class AuthController {
     return req.user;
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Post('become-vendor')
+  async becomeVendor(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const user = req.user as { userId: string; role: string } | undefined;
+    if (!user) {
+      throw new UnauthorizedException('Missing user');
+    }
+    const result = await this.authService.becomeVendor(user.userId);
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    return result;
+  }
+
   private setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
     const isProd = process.env.NODE_ENV === 'production';
     res.cookie('access_token', accessToken, {

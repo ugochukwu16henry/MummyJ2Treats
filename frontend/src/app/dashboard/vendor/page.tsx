@@ -54,6 +54,11 @@ export default function VendorDashboardPage() {
     let cancelled = false;
     async function run() {
       try {
+        // Ensure this user has a vendor account and vendor tokens; backend upgrades customer → vendor here.
+        await fetch(`${API_BASE}/auth/become-vendor`, {
+          method: "POST",
+          credentials: "include",
+        }).catch(() => {});
         await Promise.all([loadOrders(), loadProfileAndRiders()]);
       } catch {
         if (!cancelled) setOrders([]);

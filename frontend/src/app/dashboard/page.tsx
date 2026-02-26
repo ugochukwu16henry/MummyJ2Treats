@@ -62,12 +62,20 @@ export default async function DashboardPage() {
             You are logged in{role ? ` as ${role}` : ""}.
           </p>
           {role === "customer" && (
-            <Link
-              href="/dashboard/orders"
-              className="inline-block text-primary font-medium hover:underline mr-4"
-            >
-              My orders →
-            </Link>
+            <>
+              <Link
+                href="/dashboard/orders"
+                className="inline-block text-primary font-medium hover:underline mr-4"
+              >
+                My orders →
+              </Link>
+              <Link
+                href="/dashboard/vendor"
+                className="inline-block text-primary font-medium hover:underline"
+              >
+                Become a vendor →
+              </Link>
+            </>
           )}
           {role === "vendor" && (
             <Link href="/dashboard/vendor" className="inline-block text-primary font-medium hover:underline">

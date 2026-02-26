@@ -110,8 +110,8 @@ export default function AdminDashboardPage() {
         const cMonth = (await cMonthRes.json()) as { data?: ChartPoint[] };
         setChartsDaily((cDaily.data || []).map((d) => ({ ...d, period: d.period?.slice(0, 10) ?? d.period })));
         setChartsMonthly((cMonth.data || []).map((d) => ({ ...d, period: d.period?.slice(0, 7) ?? d.period })));
-        const t = (await tRes.json()) as { historical?: TrendPoint[]; predicted?: TrendPoint[] };
-        setTrend(t && (t.historical?.length || t.predicted?.length) ? t : null);
+          const t = (await tRes.json()) as { historical?: TrendPoint[]; predicted?: TrendPoint[] };
+          setTrend(t && (t.historical?.length || t.predicted?.length) ? { historical: t.historical ?? [], predicted: t.predicted ?? [] } : null);
         const h = (await hRes.json()) as { vendors?: HeatmapVendor[] };
         setHeatmap(h.vendors || []);
         const city = (await cityRes.json()) as { cities?: CityRow[] };

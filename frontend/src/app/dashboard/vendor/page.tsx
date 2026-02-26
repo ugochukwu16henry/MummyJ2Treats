@@ -81,6 +81,7 @@ export default function VendorDashboardPage() {
         setBonuses(Array.isArray(data.data) ? data.data : []);
       }
     } catch {}
+  }
 
   useEffect(() => {
     let cancelled = false;

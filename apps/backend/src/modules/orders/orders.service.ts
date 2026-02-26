@@ -115,7 +115,7 @@ export class OrdersService {
 
     // Enforce single-vendor cart for now
     const vendorId = items[0].vendor_id;
-    const multiVendor = items.some((i) => i.vendor_id !== vendorId);
+    const multiVendor = items.some((i: { vendor_id: string }) => i.vendor_id !== vendorId);
     if (multiVendor) {
       throw new BadRequestException(
         'Cart contains items from multiple vendors (not supported yet)',

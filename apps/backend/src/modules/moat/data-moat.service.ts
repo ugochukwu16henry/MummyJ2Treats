@@ -38,7 +38,7 @@ export class DataMoatService {
        LIMIT $2`,
       [periodStart.toISOString(), limit],
     );
-    return { data: result.rows.map((r) => ({
+    return { data: result.rows.map((r: { vendor_id: string; business_name: string; slug: string; order_count: string; delivered: string; cancelled: string; avg_hours: string | null }) => ({
       vendorId: r.vendor_id,
       businessName: r.business_name,
       slug: r.slug,
@@ -80,7 +80,7 @@ export class DataMoatService {
     );
     const recs = byVendor.rows.length > 0 ? byVendor.rows : popular.rows;
     return {
-      data: recs.slice(0, limit).map((r) => ({
+      data: recs.slice(0, limit).map((r: { product_id: string; name: string; slug: string; vendor_slug: string; price: string }) => ({
         productId: r.product_id,
         name: r.name,
         slug: r.slug,
@@ -103,7 +103,7 @@ export class DataMoatService {
       [limit],
     );
     return {
-      data: result.rows.map((r) => ({
+      data: result.rows.map((r: { product_id: string; name: string; slug: string; vendor_slug: string; price: string }) => ({
         productId: r.product_id,
         name: r.name,
         slug: r.slug,
@@ -129,7 +129,7 @@ export class DataMoatService {
     );
     return {
       periodDays,
-      data: result.rows.map((r) => ({
+      data: result.rows.map((r: { region_key: string; order_count: string; total_amount: string }) => ({
         region: r.region_key,
         orderCount: Number(r.order_count),
         totalAmount: Number(r.total_amount),

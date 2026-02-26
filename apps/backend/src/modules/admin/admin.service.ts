@@ -189,7 +189,7 @@ export class AdminService {
         activeVendors,
         totalVendors,
         vendorRetentionRatePercent: Math.round(vendorRetentionRate * 100) / 100,
-        vendorRevenueDistribution: vendorRevenueDist.rows.map((r) => ({
+        vendorRevenueDistribution: vendorRevenueDist.rows.map((r: { vendor_id: string; name: string; gmv: string }) => ({
           vendorId: r.vendor_id,
           name: r.name,
           gmv: Number(r.gmv),
@@ -246,7 +246,7 @@ export class AdminService {
 
     return {
       period,
-      data: result.rows.map((r) => ({
+      data: result.rows.map((r: { period: string; gmv: string; orders: string; net: string }) => ({
         period: r.period,
         gmv: Number(r.gmv),
         orders: Number(r.orders),
@@ -262,9 +262,9 @@ export class AdminService {
        FROM orders WHERE status != 'CANCELLED' AND created_at >= NOW() - INTERVAL '12 months'
        GROUP BY period ORDER BY period ASC`
     );
-    const points = hist.rows.map((r) => ({ t: new Date(r.period).getTime(), y: Number(r.gmv) }));
+    const points = hist.rows.map((r: { period: string; gmv: string }) => ({ t: new Date(r.period).getTime(), y: Number(r.gmv) }));
     if (points.length < 2) {
-      return { historical: points.map((p) => ({ period: new Date(p.t).toISOString(), gmv: p.y })), predicted: [] };
+      return { historical: points.map((p: { t: number; y: number }) => ({ period: new Date(p.t).toISOString(), gmv: p.y })), predicted: [] };
     }
     const n = points.length;
     let sumT = 0, sumY = 0, sumTY = 0, sumT2 = 0;
@@ -284,7 +284,7 @@ export class AdminService {
       predicted.push({ period: new Date(t).toISOString(), predictedGmv: Math.max(0, intercept + slope * t) });
     }
     return {
-      historical: points.map((p) => ({ period: new Date(p.t).toISOString(), gmv: p.y })),
+      historical: points.map((p: { t: number; y: number }) => ({ period: new Date(p.t).toISOString(), gmv: p.y })),
       predicted,
     };
   }
@@ -307,9 +307,9 @@ export class AdminService {
        GROUP BY o.vendor_id, v.business_name
        ORDER BY gmv DESC`
     );
-    const maxGmv = Math.max(...result.rows.map((r) => Number(r.gmv)), 1);
+    const maxGmv = Math.max(...result.rows.map((r: { gmv: string }) => Number(r.gmv)), 1);
     return {
-      vendors: result.rows.map((r) => ({
+      vendors: result.rows.map((r: { vendor_id: string; business_name: string; orders: string; gmv: string; cancelled: string }) => ({
         vendorId: r.vendor_id,
         name: r.business_name,
         orders: Number(r.orders),

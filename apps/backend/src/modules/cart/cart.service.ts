@@ -51,7 +51,7 @@ export class CartService {
       [cart.id],
     );
 
-    const items = itemsResult.rows.map((row) => ({
+    const items = itemsResult.rows.map((row: { product_id: string; name: string; slug: string; vendor_name: string; quantity: string; unit_price: string }) => ({
       productId: row.product_id,
       name: row.name,
       slug: row.slug,
@@ -61,7 +61,7 @@ export class CartService {
       lineTotal: Number(row.unit_price) * Number(row.quantity),
     }));
 
-    const subtotal = items.reduce((sum, i) => sum + i.lineTotal, 0);
+    const subtotal = items.reduce((sum: number, i: { lineTotal: number }) => sum + i.lineTotal, 0);
 
     return { cart, items, subtotal };
   }

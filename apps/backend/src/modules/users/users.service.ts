@@ -43,7 +43,7 @@ export class UsersService {
       'SELECT 1 FROM users WHERE role = $1 LIMIT 1',
       ['admin'],
     );
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async createUser(params: {

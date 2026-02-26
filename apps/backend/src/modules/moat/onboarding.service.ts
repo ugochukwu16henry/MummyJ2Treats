@@ -14,11 +14,11 @@ export class OnboardingService {
       'SELECT step_key, completed_at, payload FROM vendor_onboarding_steps WHERE vendor_id = $1',
       [vendorId],
     );
-    const completed = new Set(rows.rows.filter((r) => r.completed_at).map((r) => r.step_key));
+    const completed = new Set(rows.rows.filter((r: { completed_at: unknown }) => r.completed_at).map((r: { step_key: string }) => r.step_key));
     const steps = OnboardingService.STEPS.map((key) => ({
       key,
       completed: completed.has(key),
-      completedAt: rows.rows.find((r) => r.step_key === key)?.completed_at ?? null,
+      completedAt: rows.rows.find((r: { step_key: string }) => r.step_key === key)?.completed_at ?? null,
     }));
     const allDone = steps.every((s) => s.completed);
     return { steps, complete: allDone };

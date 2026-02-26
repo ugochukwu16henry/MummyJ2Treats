@@ -48,7 +48,7 @@ export class VendorBonusService {
     );
     return {
       periodDate,
-      suggestions: r.rows.map((row) => ({
+      suggestions: r.rows.map((row: { vendor_id: string; delivered: string; total: string; gmv: string }) => ({
         vendorId: row.vendor_id,
         fulfillmentRate: (Number(row.delivered) / Number(row.total)) * 100,
         orderCount: Number(row.total),

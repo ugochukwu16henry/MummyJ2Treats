@@ -284,7 +284,12 @@ export default function AdminDashboardPage() {
                 <XAxis dataKey="period" tick={{ fontSize: 11 }} />
                 <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(v) => fmt(v)} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v) => fmt(v)} />
-                <Tooltip formatter={(v: number) => [typeof v === "number" ? fmt(v) : v, ""]} labelFormatter={(l) => l} />
+                <Tooltip
+                  formatter={(v) =>
+                    [typeof v === "number" ? fmt(v) : String(v ?? ""), ""] as [string, string]
+                  }
+                  labelFormatter={(l) => String(l)}
+                />
                 <Bar yAxisId="left" dataKey="gmv" name="GMV" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 <Bar yAxisId="right" dataKey="orders" name="Orders" fill="#22c55e" radius={[4, 4, 0, 0]} />
               </BarChart>

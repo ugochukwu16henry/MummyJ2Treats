@@ -63,8 +63,8 @@ export default async function Home() {
         </div>
         <div className="hidden md:flex gap-4 sm:gap-6 text-base font-medium">
           <a href="/" className="hover:text-primary">Home</a>
-          <a href="#" className="hover:text-primary">Vendors</a>
-          <a href="#" className="hover:text-primary">Categories</a>
+          <a href="/dashboard/vendor" className="hover:text-primary">Vendors</a>
+          <a href="#categories" className="hover:text-primary">Categories</a>
           <a href="/about" className="hover:text-primary">About</a>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
@@ -82,8 +82,15 @@ export default async function Home() {
           <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold leading-tight text-zinc-900 dark:text-white">Bringing Homemade Excellence to Your Table</h1>
           <p className="text-base sm:text-lg md:text-xl text-zinc-600 dark:text-zinc-300">Order delicious, trusted homemade meals from Uyo’s best home cooks and caterers.</p>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 w-full">
-            <button className="bg-primary text-white px-6 py-3 rounded-full font-semibold text-lg shadow hover:bg-primary/90">Order Now</button>
-            <button className="bg-white border border-primary text-primary px-6 py-3 rounded-full font-semibold text-lg hover:bg-primary/10">Become a Vendor</button>
+            <a href="#best-sellers" className="bg-primary text-white px-6 py-3 rounded-full font-semibold text-lg shadow hover:bg-primary/90 text-center">
+              Order Now
+            </a>
+            <a
+              href="/dashboard/vendor"
+              className="bg-white border border-primary text-primary px-6 py-3 rounded-full font-semibold text-lg hover:bg-primary/10 text-center"
+            >
+              Become a Vendor
+            </a>
           </div>
         </div>
         <div className="flex-1 flex justify-center">
@@ -92,7 +99,7 @@ export default async function Home() {
       </section>
 
       {/* Category Grid */}
-      <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
+      <section id="categories" className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
         <h2 className="text-2xl font-bold mb-6">Categories</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
           {[1,2,3,4,5,6,7,8].map((cat) => (
@@ -149,7 +156,7 @@ export default async function Home() {
       )}
 
       {/* Best Sellers */}
-      <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
+      <section id="best-sellers" className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
         <h2 className="text-2xl font-bold mb-6">Best Sellers</h2>
         {bestSellers.length === 0 ? (
           <p className="text-zinc-600">
@@ -254,8 +261,8 @@ export default async function Home() {
           <div>
             <h3 className="font-bold mb-2">Vendors</h3>
             <ul className="space-y-1 text-sm">
-              <li><a href="#">Become a Vendor</a></li>
-              <li><a href="#">Vendor Login</a></li>
+              <li><a href="/dashboard/vendor">Become a Vendor</a></li>
+              <li><a href="/dashboard/vendor">Vendor Dashboard</a></li>
             </ul>
           </div>
           <div>

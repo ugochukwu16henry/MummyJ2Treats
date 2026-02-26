@@ -138,20 +138,20 @@ export default function CartPage() {
         credentials: "include",
         body: JSON.stringify(body),
       });
-      const body = await res.json().catch(() => ({}));
+      const json = await res.json().catch(() => ({} as any));
       if (!res.ok) {
-        setError(body.message ?? "Checkout failed.");
+        setError(json?.message ?? "Checkout failed.");
         return;
       }
       if (paymentMethod === "bank_transfer") {
-        setPendingPaymentId(body?.payment?.id ?? null);
+        setPendingPaymentId(json?.payment?.id ?? null);
       }
-      if (paymentMethod === "paystack" && body?.paystack?.authorizationUrl) {
-        window.location.href = body.paystack.authorizationUrl as string;
+      if (paymentMethod === "paystack" && json?.paystack?.authorizationUrl) {
+        window.location.href = json.paystack.authorizationUrl as string;
         return;
       }
       if (paymentMethod === "bank_transfer") {
-        const bank = body?.bankTransfer;
+        const bank = json?.bankTransfer;
         if (bank?.bankAccountNumber) {
           alert(
             `Please transfer ₦${(data?.subtotal ?? 0).toLocaleString()} to:\n` +

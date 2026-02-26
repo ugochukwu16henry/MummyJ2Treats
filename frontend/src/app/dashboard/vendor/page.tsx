@@ -6,6 +6,12 @@ import Link from "next/link";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
+type VendorProfile = {
+  business_name: string;
+  description?: string;
+  logo_url?: string;
+};
+
 type Order = {
   id: string;
   order_number: string;
@@ -25,6 +31,7 @@ export default function VendorDashboardPage() {
   const [riders, setRiders] = useState<Rider[]>([]);
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [vendorProfile, setVendorProfile] = useState<VendorProfile | null>(null);
 
   async function loadOrders() {
     const res = await fetch(`${API_BASE}/orders/me`, { credentials: "include" });
@@ -37,7 +44,12 @@ export default function VendorDashboardPage() {
   async function loadProfileAndRiders() {
     const profileRes = await fetch(`${API_BASE}/vendors/me/profile`, { credentials: "include" });
     if (profileRes.ok) {
-      const profile = (await profileRes.json()) as { operating_state?: string };
+      const profile = await profileRes.json();
+      setVendorProfile({
+        business_name: profile.business_name ?? "",
+        description: profile.description ?? "",
+        logo_url: profile.logo_url ?? undefined,
+      });
       const state = profile.operating_state?.trim();
       setVendorState(state ?? null);
       if (state) {
@@ -93,6 +105,10 @@ export default function VendorDashboardPage() {
     );
   }
 
+  // Basic analytics
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+  const completedOrders = orders.filter(o => o.status === "DELIVERED").length;
+
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -115,11 +131,33 @@ export default function VendorDashboardPage() {
             </button>
           </div>
         </header>
-        <p className="text-sm text-zinc-600">
-          <Link href="/dashboard/vendor/location" className="text-primary font-medium hover:underline">Location & delivery</Link>
-          {" · "}
-          Your orders are below. Set your operating state in Location & delivery to see riders and assign them.
-        </p>
+
+        {/* Vendor profile summary */}
+        {vendorProfile && (
+          <section className="bg-white rounded-2xl shadow-sm p-6 flex items-center gap-6">
+            {vendorProfile.logo_url && <img src={vendorProfile.logo_url} alt="Logo" className="w-16 h-16 rounded-full object-cover border" />}
+            <div>
+              <h2 className="text-xl font-semibold mb-1">{vendorProfile.business_name}</h2>
+              {vendorProfile.description && <p className="text-zinc-600 text-sm mb-1">{vendorProfile.description}</p>}
+              <Link href="/dashboard/vendor/location" className="text-primary font-medium hover:underline mr-4">Location & delivery</Link>
+              <Link href="/dashboard/vendor/products" className="text-primary font-medium hover:underline">Manage products</Link>
+            </div>
+          </section>
+        )}
+
+        {/* Basic analytics */}
+        <section className="bg-white rounded-2xl shadow-sm p-6 flex gap-8 items-center">
+          <div>
+            <div className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</div>
+            <div className="text-xs text-zinc-500">Total Revenue</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold">{completedOrders}</div>
+            <div className="text-xs text-zinc-500">Orders Delivered</div>
+          </div>
+        </section>
+
+        {/* Orders and rider assignment */}
         <section className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold mb-4">Your Orders</h2>
           {orders.length === 0 ? (

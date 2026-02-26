@@ -27,11 +27,13 @@ export default function AdminDashboardLayout({
 
   useEffect(() => {
     const cookie = document.cookie.split("; ").find((c) => c.startsWith("access_token="));
-    if (!cookie) {
+    const token = cookie?.replace(/^access_token=/, "").trim();
+    if (!token) {
       router.push("/auth/login");
       return;
     }
-    fetch(`${API_BASE}/auth/me`, { credentials: "include" })
+    const headers: HeadersInit = { Authorization: `Bearer ${token}` };
+    fetch(`${API_BASE}/auth/me`, { credentials: "include", headers })
       .then((res) => {
         if (!res.ok) {
           setUnauth(true);
@@ -49,6 +51,10 @@ export default function AdminDashboardLayout({
       .catch(() => setUnauth(true));
   }, [router]);
 
+  useEffect(() => {
+    if (unauth) router.push("/auth/login");
+  }, [unauth, router]);
+
   async function handleLogout() {
     try {
       await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
@@ -60,13 +66,17 @@ export default function AdminDashboardLayout({
   if (!ready && !unauth) {
     return (
       <div className="min-h-screen bg-zinc-100 flex items-center justify-center">
-        <p className="text-zinc-500">Loading…</p>
+        <p className="text-zinc-500">Checking access…</p>
       </div>
     );
   }
 
   if (unauth) {
-    return null;
+    return (
+      <div className="min-h-screen bg-zinc-100 flex items-center justify-center">
+        <p className="text-zinc-500">Redirecting to login…</p>
+      </div>
+    );
   }
 
   return (

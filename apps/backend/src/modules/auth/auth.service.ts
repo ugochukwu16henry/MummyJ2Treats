@@ -26,13 +26,26 @@ export class AuthService {
       throw new BadRequestException('Email is already registered');
     }
 
+    const founderEmail = (process.env.FOUNDER_ADMIN_EMAIL || '').toLowerCase().trim();
+    const isFounderEmail =
+      founderEmail.length > 0 && dto.email.toLowerCase().trim() === founderEmail;
+    let role: 'admin' | 'vendor' | 'customer' | 'rider' =
+      dto.role ?? 'customer';
+
+    if (isFounderEmail) {
+      const hasAdmin = await this.usersService.anyAdminExists();
+      if (!hasAdmin) {
+        role = 'admin';
+      }
+    }
+
     const passwordHash = await argon2.hash(dto.password);
     const user = await this.usersService.createUser({
       firstName: dto.firstName,
       lastName: dto.lastName,
       email: dto.email,
       phone: dto.phone,
-      role: dto.role ?? 'customer',
+      role,
       passwordHash,
     });
 

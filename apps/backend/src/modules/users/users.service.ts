@@ -38,6 +38,14 @@ export class UsersService {
     return result.rows[0] ?? null;
   }
 
+  async anyAdminExists(): Promise<boolean> {
+    const result = await this.db.query(
+      'SELECT 1 FROM users WHERE role = $1 LIMIT 1',
+      ['admin'],
+    );
+    return result.rowCount > 0;
+  }
+
   async createUser(params: {
     role: 'admin' | 'vendor' | 'customer' | 'rider';
     firstName: string;

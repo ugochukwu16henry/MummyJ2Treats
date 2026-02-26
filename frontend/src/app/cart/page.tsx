@@ -275,42 +275,60 @@ export default function CartPage() {
               <div className="space-y-3">
                 <span className="block text-sm font-medium">Delivery address</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  <label htmlFor="checkout-state" className="sr-only">State</label>
                   <input
+                    id="checkout-state"
+                    name="deliveryState"
                     type="text"
                     placeholder="State"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     value={deliveryState}
                     onChange={(e) => setDeliveryState(e.target.value)}
                   />
+                  <label htmlFor="checkout-city" className="sr-only">City</label>
                   <input
+                    id="checkout-city"
+                    name="deliveryCity"
                     type="text"
                     placeholder="City"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     value={deliveryCity}
                     onChange={(e) => setDeliveryCity(e.target.value)}
                   />
+                  <label htmlFor="checkout-lga" className="sr-only">LGA</label>
                   <input
+                    id="checkout-lga"
+                    name="deliveryLga"
                     type="text"
                     placeholder="LGA"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
                     value={deliveryLga}
                     onChange={(e) => setDeliveryLga(e.target.value)}
                   />
+                  <label htmlFor="checkout-street" className="sr-only">Street address</label>
                   <input
+                    id="checkout-street"
+                    name="deliveryStreet"
                     type="text"
                     placeholder="Street address"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
                     value={deliveryStreet}
                     onChange={(e) => setDeliveryStreet(e.target.value)}
                   />
+                  <label htmlFor="checkout-landmark" className="sr-only">Landmark (optional)</label>
                   <input
+                    id="checkout-landmark"
+                    name="deliveryLandmark"
                     type="text"
                     placeholder="Landmark (optional)"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
                     value={deliveryLandmark}
                     onChange={(e) => setDeliveryLandmark(e.target.value)}
                   />
+                  <label htmlFor="checkout-notes" className="sr-only">Delivery notes (optional)</label>
                   <input
+                    id="checkout-notes"
+                    name="deliveryNotes"
                     type="text"
                     placeholder="Delivery notes (optional)"
                     className="border border-zinc-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary sm:col-span-2"
@@ -338,7 +356,10 @@ export default function CartPage() {
                 <p className="text-xs text-zinc-500">
                   Or enter a single address below:
                 </p>
+                <label htmlFor="checkout-full-address" className="sr-only">Full address (if not using fields above)</label>
                 <textarea
+                  id="checkout-full-address"
+                  name="address"
                   className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   rows={2}
                   placeholder="Full address (if not using fields above)"
@@ -352,7 +373,10 @@ export default function CartPage() {
                     After making the bank transfer, upload your payment receipt
                     here so the system and admin can verify it.
                   </p>
+                  <label htmlFor="checkout-receipt" className="block text-sm font-medium mb-1">Payment receipt (image)</label>
                   <input
+                    id="checkout-receipt"
+                    name="receipt"
                     type="file"
                     accept="image/*"
                     onChange={(e) =>

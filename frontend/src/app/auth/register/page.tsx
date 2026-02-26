@@ -83,10 +83,12 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-1">
+              <label htmlFor="register-firstName" className="block text-sm font-medium mb-1">
                 First name
               </label>
               <input
+                id="register-firstName"
+                name="firstName"
                 type="text"
                 className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 value={form.firstName}
@@ -97,10 +99,12 @@ export default function RegisterPage() {
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-1">
+              <label htmlFor="register-lastName" className="block text-sm font-medium mb-1">
                 Last name
               </label>
               <input
+                id="register-lastName"
+                name="lastName"
                 type="text"
                 className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 value={form.lastName}
@@ -112,8 +116,10 @@ export default function RegisterPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label htmlFor="register-email" className="block text-sm font-medium mb-1">Email</label>
             <input
+              id="register-email"
+              name="email"
               type="email"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.email}
@@ -124,8 +130,10 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Phone</label>
+            <label htmlFor="register-phone" className="block text-sm font-medium mb-1">Phone</label>
             <input
+              id="register-phone"
+              name="phone"
               type="tel"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.phone}
@@ -135,8 +143,10 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label htmlFor="register-password" className="block text-sm font-medium mb-1">Password</label>
             <input
+              id="register-password"
+              name="password"
               type="password"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.password}
@@ -147,10 +157,12 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label htmlFor="register-confirmPassword" className="block text-sm font-medium mb-1">
               Confirm password
             </label>
             <input
+              id="register-confirmPassword"
+              name="confirmPassword"
               type="password"
               className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               value={form.confirmPassword}

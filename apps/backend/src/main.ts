@@ -6,7 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
 
-  // Explicit CORS configuration – whitelist frontend origins and allow credentials
+  // CORS: whitelist frontend so browser allows cross-origin requests (including preflight OPTIONS)
   const defaultOrigins = [
     'https://www.mummyj2treats.com',
     'https://mummyj2treats.com',
@@ -21,6 +21,8 @@ async function bootstrap() {
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
   const port = process.env.PORT || 4000;
   await app.listen(port);

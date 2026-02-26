@@ -313,7 +313,7 @@ export default function AdminDashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
                   <XAxis dataKey="period" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => fmt(v)} />
-                  <Tooltip formatter={(v: number) => [v != null ? fmt(v) : "", ""]} />
+                  <Tooltip formatter={(v: number | undefined) => [v != null ? fmt(v) : "", ""]} />
                   <Legend />
                   <Line type="monotone" dataKey="gmv" name="Actual GMV" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
                   <Line type="monotone" dataKey="predictedGmv" name="Predicted GMV" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={2} dot={{ r: 4 }} />
@@ -358,7 +358,7 @@ export default function AdminDashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
                   <XAxis type="number" tickFormatter={(v) => fmt(v)} />
                   <YAxis type="category" dataKey="name" width={56} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: number) => [typeof v === "number" ? fmt(v) : v, ""]} />
+                  <Tooltip formatter={(v: number | undefined) => [typeof v === "number" ? fmt(v) : v, ""]} />
                   <Bar dataKey="gmv" name="GMV" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
                   <Bar dataKey="orders" name="Orders" fill="#06b6d4" radius={[0, 4, 4, 0]} />
                 </BarChart>
@@ -377,7 +377,7 @@ export default function AdminDashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
                   <XAxis dataKey="cohortMonth" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
-                  <Tooltip formatter={(v: number, name: string) => [name === "retentionPercent" ? `${v}%` : v, name === "retentionPercent" ? "Retention" : name]} />
+                  <Tooltip formatter={(v: number | undefined, name?: string) => [name === "retentionPercent" ? `${v}%` : v, name === "retentionPercent" ? "Retention" : name ?? ""]} />
                   <Bar dataKey="retentionPercent" name="Retention %" fill="#ec4899" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

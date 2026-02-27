@@ -222,7 +222,10 @@ export default function VendorProductsPage() {
           ) : (
             <ul className="divide-y divide-zinc-100">
               {products.map((p) => (
-                <li key={p.id} className="p-4 flex items-center justify-between">
+                <li
+                  key={p.id}
+                  className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                >
                   <div>
                     <div className="font-medium text-zinc-900">{p.name}</div>
                     <div className="text-xs text-zinc-500">
@@ -230,7 +233,9 @@ export default function VendorProductsPage() {
                     </div>
                   </div>
                   {!p.is_active && (
-                    <span className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-600">Inactive</span>
+                    <span className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 self-start sm:self-auto">
+                      Inactive
+                    </span>
                   )}
                 </li>
               ))}

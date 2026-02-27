@@ -211,19 +211,40 @@ export default function VendorDashboardPage() {
 
         {/* Vendor profile summary */}
         {vendorProfile && (
-          <section className="bg-white rounded-2xl shadow-sm p-6 flex items-center gap-6">
-            {vendorProfile.logo_url && <img src={vendorProfile.logo_url} alt="Logo" className="w-16 h-16 rounded-full object-cover border" />}
-            <div>
+          <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            {vendorProfile.logo_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={vendorProfile.logo_url}
+                alt="Logo"
+                className="w-16 h-16 rounded-full object-cover border"
+              />
+            )}
+            <div className="text-center sm:text-left">
               <h2 className="text-xl font-semibold mb-1">{vendorProfile.business_name}</h2>
-              {vendorProfile.description && <p className="text-zinc-600 text-sm mb-1">{vendorProfile.description}</p>}
-              <Link href="/dashboard/vendor/location" className="text-primary font-medium hover:underline mr-4">Location & delivery</Link>
-              <Link href="/dashboard/vendor/products" className="text-primary font-medium hover:underline">Manage products</Link>
+              {vendorProfile.description && (
+                <p className="text-zinc-600 text-sm mb-1">{vendorProfile.description}</p>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 justify-center sm:justify-start">
+                <Link
+                  href="/dashboard/vendor/location"
+                  className="text-primary font-medium hover:underline"
+                >
+                  Location &amp; delivery
+                </Link>
+                <Link
+                  href="/dashboard/vendor/products"
+                  className="text-primary font-medium hover:underline"
+                >
+                  Manage products
+                </Link>
+              </div>
             </div>
           </section>
         )}
 
         {/* Basic analytics */}
-        <section className="bg-white rounded-2xl shadow-sm p-6 flex gap-8 items-center">
+        <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center">
           <div>
             <div className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</div>
             <div className="text-xs text-zinc-500">Total Revenue</div>

@@ -33,9 +33,14 @@ export default function AdminOrdersPage() {
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <ul className="divide-y divide-zinc-100">
             {orders.map((o) => (
-              <li key={o.id} className="p-4 flex items-center justify-between">
+              <li
+                key={o.id}
+                className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
+              >
                 <span className="font-mono text-sm text-zinc-700">{o.order_number}</span>
-                <span className="text-zinc-600">₦{Number(o.total_amount).toLocaleString()} · {o.status}</span>
+                <span className="text-zinc-600 text-sm">
+                  ₦{Number(o.total_amount).toLocaleString()} · {o.status}
+                </span>
               </li>
             ))}
           </ul>

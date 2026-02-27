@@ -69,8 +69,8 @@ export default function AdminNewsletterPage() {
           No newsletter subscribers yet.
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <table className="min-w-full text-sm">
+        <div className="bg-white rounded-2xl shadow-sm overflow-x-auto">
+          <table className="min-w-[420px] w-full text-sm">
             <thead className="bg-zinc-50 border-b border-zinc-200">
               <tr>
                 <th className="text-left px-4 py-2 font-medium text-zinc-700">Email</th>
@@ -80,7 +80,7 @@ export default function AdminNewsletterPage() {
             <tbody>
               {items.map((s) => (
                 <tr key={s.id} className="border-b border-zinc-100">
-                  <td className="px-4 py-2">{s.email}</td>
+                  <td className="px-4 py-2 break-all">{s.email}</td>
                   <td className="px-4 py-2 text-xs text-zinc-500">
                     {new Date(s.created_at).toLocaleString()}
                   </td>

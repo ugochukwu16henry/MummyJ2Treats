@@ -14,6 +14,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { MoatModule } from './modules/moat/moat.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { RidersModule } from './modules/riders/riders.module';
+import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 
 @Module({
   controllers: [AppController, HealthController],
@@ -30,6 +31,7 @@ import { RidersModule } from './modules/riders/riders.module';
     MoatModule,
     DeliveryModule,
     RidersModule,
+    TestimonialsModule,
   ],
 })
 export class AppModule {}

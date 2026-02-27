@@ -30,6 +30,7 @@ export class VendorsController {
       subscriptionStatus?: 'trial' | 'active' | 'paused';
       currentPeriodEnd?: string | null;
       trialEndsAt?: string | null;
+      commissionRate?: number;
     },
   ) {
     return this.vendorsService.updateAdminFlags(id, dto);

@@ -11,12 +11,14 @@ type Vendor = {
   is_verified: boolean;
   subscription_status?: string;
   signup_fee_paid?: boolean;
+  commission_rate?: number | null;
 };
 
 export default function AdminVendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [commissionDrafts, setCommissionDrafts] = useState<Record<string, string>>({});
 
   async function load() {
     setLoading(true);
@@ -51,6 +53,24 @@ export default function AdminVendorsPage() {
     }
   }
 
+  async function saveCommission(id: string, raw: string | undefined) {
+    if (!raw) return;
+    const rate = Number(raw);
+    if (Number.isNaN(rate) || rate < 0) return;
+    try {
+      setSavingId(id);
+      await fetch(`${API_BASE}/vendors/${id}/approve`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commissionRate: rate }),
+      });
+      await load();
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   return (
     <div className="max-w-4xl space-y-6">
       <div>
@@ -70,9 +90,11 @@ export default function AdminVendorsPage() {
               <li key={v.id} className="p-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="font-medium text-zinc-900">{v.business_name}</div>
-                  <div className="text-xs text-zinc-500">
-                    {v.slug} · {v.subscription_status ?? "no-plan"}
-                    {v.signup_fee_paid ? " · signup fee paid" : " · signup fee unpaid"}
+                  <div className="text-xs text-zinc-500 space-x-1">
+                    <span>{v.slug}</span>
+                    <span>· {v.subscription_status ?? "no-plan"}</span>
+                    <span>{v.signup_fee_paid ? "· signup fee paid" : "· signup fee unpaid"}</span>
+                    <span>· commission {v.commission_rate ?? 0}%</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -93,6 +115,21 @@ export default function AdminVendorsPage() {
                       {savingId === v.id ? "Approving…" : "Approve & activate"}
                     </button>
                   )}
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    className="w-20 text-xs border border-zinc-300 rounded px-1 py-0.5"
+                    value={
+                      commissionDrafts[v.id] ??
+                      (v.commission_rate != null ? String(v.commission_rate) : "")
+                    }
+                    placeholder="Comm %"
+                    onChange={(e) =>
+                      setCommissionDrafts((prev) => ({ ...prev, [v.id]: e.target.value }))
+                    }
+                    onBlur={() => saveCommission(v.id, commissionDrafts[v.id])}
+                  />
                 </div>
               </li>
             ))}

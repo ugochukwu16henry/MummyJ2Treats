@@ -1,5 +1,6 @@
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+import { TestimonialForm } from "../../_components/TestimonialForm";
 
 async function fetchVendorStore(slug: string) {
   try {
@@ -27,12 +28,29 @@ async function fetchVendorStore(slug: string) {
   }
 }
 
+async function fetchVendorTestimonials(slug: string) {
+  try {
+    const res = await fetch(`${API_BASE}/testimonials/vendor/${slug}?limit=8`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function VendorStorePage({
   params,
 }: {
   params: { slug: string };
 }) {
-  const { vendor, products } = await fetchVendorStore(params.slug);
+  const [store, testimonials] = await Promise.all([
+    fetchVendorStore(params.slug),
+    fetchVendorTestimonials(params.slug),
+  ]);
+  const { vendor, products } = store;
 
   if (!vendor) {
     return (
@@ -89,7 +107,7 @@ export default async function VendorStorePage({
       </section>
 
       {/* Product grid, similar to homepage best sellers */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <h2 className="text-2xl font-bold mb-4">Menu</h2>
         {products.length === 0 ? (
           <p className="text-zinc-600">
@@ -134,6 +152,29 @@ export default async function VendorStorePage({
             ))}
           </div>
         )}
+
+        {/* Vendor testimonials */}
+        <section className="pt-4">
+          <h3 className="text-xl font-semibold mb-3">What customers say</h3>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {testimonials.length === 0 ? (
+              <p className="text-sm text-zinc-600">Testimonials for this vendor will appear here after approval.</p>
+            ) : (
+              testimonials.map((t: any) => (
+                <div
+                  key={t.id}
+                  className="min-w-[260px] rounded-2xl shadow-md bg-white p-4 flex flex-col items-start"
+                >
+                  <p className="italic text-sm text-zinc-700 mb-2">“{t.content}”</p>
+                  <span className="text-xs text-zinc-500">
+                    {t.first_name ? `${t.first_name} ${t.last_name ?? ""}`.trim() : "Customer"}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+          <TestimonialForm target="vendor" vendorSlug={vendor.slug} />
+        </section>
       </main>
     </div>
   );

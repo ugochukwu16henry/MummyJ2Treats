@@ -1,5 +1,6 @@
 
 import Image from "next/image";
+import { TestimonialForm } from "./_components/TestimonialForm";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const PRIMARY_VENDOR_SLUG =
@@ -31,6 +32,18 @@ async function fetchRankedVendors() {
 }
 
 async function fetchRecommendations() {
+async function fetchFounderTestimonials() {
+  try {
+    const res = await fetch(`${API_BASE}/testimonials/founder?limit=6`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+}
   try {
     const res = await fetch(`${API_BASE}/moat/recommendations?limit=4`, { cache: "no-store" });
     if (!res.ok) return [];
@@ -42,10 +55,11 @@ async function fetchRecommendations() {
 }
 
 export default async function Home() {
-  const [bestSellers, rankedVendors, recommendations] = await Promise.all([
+  const [bestSellers, rankedVendors, recommendations, testimonials] = await Promise.all([
     fetchHomeProducts(),
     fetchRankedVendors(),
     fetchRecommendations(),
+    fetchFounderTestimonials(),
   ]);
 
   return (
@@ -233,14 +247,35 @@ export default async function Home() {
       <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold mb-6 text-center">Testimonials</h2>
         <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-2">
-          {[1,2,3].map((t) => (
-            <div key={t} className="min-w-[320px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-6 flex flex-col items-center">
-              <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-3" />
-              <p className="italic text-zinc-600 dark:text-zinc-300 mb-2">“Amazing food and fast delivery!”</p>
-              <span className="font-semibold">Customer {t}</span>
-            </div>
-          ))}
+          {testimonials.length === 0 ? (
+            <p className="text-zinc-600 mx-auto text-center">
+              Testimonials will appear here after the founder approves them.
+            </p>
+          ) : (
+            testimonials.map((t: any) => (
+              <div
+                key={t.id}
+                className="min-w-[320px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-6 flex flex-col items-center"
+              >
+                <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-3 overflow-hidden flex items-center justify-center">
+                  {t.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={t.image_url} alt="Customer" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-zinc-500">Customer</span>
+                  )}
+                </div>
+                <p className="italic text-zinc-600 dark:text-zinc-300 mb-2 text-center">
+                  “{t.content}”
+                </p>
+                <span className="font-semibold">
+                  {t.first_name ? `${t.first_name} ${t.last_name ?? ""}`.trim() : "Customer"}
+                </span>
+              </div>
+            ))
+          )}
         </div>
+        <TestimonialForm target="founder" />
       </section>
 
       {/* Newsletter */}

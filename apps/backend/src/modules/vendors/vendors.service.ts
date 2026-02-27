@@ -254,6 +254,7 @@ export class VendorsService {
       subscriptionStatus?: 'trial' | 'active' | 'paused';
       currentPeriodEnd?: string | null;
       trialEndsAt?: string | null;
+      commissionRate?: number;
     },
   ) {
     const fields: string[] = [];
@@ -283,6 +284,11 @@ export class VendorsService {
     if (dto.trialEndsAt !== undefined) {
       fields.push(`trial_ends_at = $${index}`);
       values.push(dto.trialEndsAt);
+      index += 1;
+    }
+    if (dto.commissionRate !== undefined) {
+      fields.push(`commission_rate = $${index}`);
+      values.push(dto.commissionRate);
       index += 1;
     }
 

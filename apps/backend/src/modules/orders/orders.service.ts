@@ -149,6 +149,15 @@ export class OrdersService {
     );
     const total = subtotal + deliveryFee;
 
+    // Commission: per-vendor percentage on subtotal
+    const vendorRow = await this.db.query<{ commission_rate: string | null }>(
+      'SELECT commission_rate FROM vendors WHERE id = $1',
+      [vendorId],
+    );
+    const commissionRate = Number(vendorRow.rows[0]?.commission_rate ?? 0);
+    const commissionAmount =
+      commissionRate > 0 ? (subtotal * commissionRate) / 100 : 0;
+
     // Optimistic stock update: decrement per product with stock check
     for (const item of items) {
       const qty = Number(item.quantity);
@@ -226,6 +235,7 @@ export class OrdersService {
         vendorId,
         subtotal,
         deliveryFee,
+        commissionAmount,
         total,
         deliveryAddressText,
         dto.deliveryState ?? null,

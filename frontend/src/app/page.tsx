@@ -80,7 +80,7 @@ export default async function Home() {
         </div>
         <div className="hidden md:flex gap-4 sm:gap-6 text-base font-medium">
           <a href="/" className="hover:text-primary">Home</a>
-          <a href="/dashboard/vendor" className="hover:text-primary">Vendors</a>
+          <a href="/vendors" className="hover:text-primary">Vendors</a>
           <a href="#categories" className="hover:text-primary">Categories</a>
           <a href="/about" className="hover:text-primary">About</a>
         </div>
@@ -103,7 +103,7 @@ export default async function Home() {
               Order Now
             </a>
             <a
-              href="/dashboard/vendor"
+              href="/vendor/signup"
               className="bg-white border border-primary text-primary px-6 py-3 rounded-full font-semibold text-lg hover:bg-primary/10 text-center"
             >
               Become a Vendor
@@ -156,7 +156,14 @@ export default async function Home() {
               </a>
             ))
           )}
-                       <a href="/vendor" className="hover:text-primary">Vendors</a>
+        </div>
+        {rankedVendors.length > 0 && (
+          <div className="mt-4 text-right">
+            <a href="/vendors" className="text-primary text-sm hover:underline">
+              See all vendors →
+            </a>
+          </div>
+        )}
       </section>
 
       {/* Recommended for you (Data Moat: recommendations) */}
@@ -177,57 +184,6 @@ export default async function Home() {
           </div>
         </section>
       )}
-
-                         <a
-                           href="/vendor/signup"
-                           className="bg-white border border-primary text-primary px-6 py-3 rounded-full font-semibold text-lg hover:bg-primary/10 text-center"
-                         >
-                           Become a Vendor
-                         </a>
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-            {bestSellers.map((p: any) => (
-              <div
-                key={p.id}
-                className="rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center hover:shadow-lg transition-shadow"
-              >
-                <div className="w-full aspect-[4/3] bg-zinc-100 dark:bg-zinc-800 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
-                  {/* Placeholder for product image */}
-                  <span className="text-xs text-zinc-500">Product image</span>
-                </div>
-                <span className="font-semibold line-clamp-2 text-center">
-                  {p.name}
-                </span>
-                <span className="text-sm text-zinc-500">
-                  {p.vendor_name ?? "Vendor"}
-                </span>
-                <span className="font-bold text-lg mt-1">
-                  ₦{Number(p.price).toLocaleString()}
-                </span>
-                <form
-                  action={async () => {
-                    "use server";
-                    await fetch(`${API_BASE}/cart/items`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                           <li><a href="/vendor/signup">Become a Vendor</a></li>
-                      body: JSON.stringify({ productId: p.id, quantity: 1 }),
-                    });
-                  }}
-                >
-                  <button
-                    type="submit"
-                    className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm"
-                  >
-                    Add to cart
-                  </button>
-                </form>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* How It Works */}
       <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-4xl mx-auto">
@@ -305,7 +261,7 @@ export default async function Home() {
           <div>
             <h3 className="font-bold mb-2">Vendors & Riders</h3>
             <ul className="space-y-1 text-sm">
-              <li><a href="/dashboard/vendor">Become a Vendor</a></li>
+              <li><a href="/vendor/signup">Become a Vendor</a></li>
               <li><a href="/dashboard/vendor">Vendor Dashboard</a></li>
               <li><a href="/auth/register/rider">Become a Rider</a></li>
               <li><a href="/dashboard/rider">Rider Dashboard</a></li>

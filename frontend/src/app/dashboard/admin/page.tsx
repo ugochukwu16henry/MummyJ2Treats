@@ -88,7 +88,13 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const opts = { credentials: "include" as RequestCredentials };
+    const cookie =
+      typeof document !== "undefined"
+        ? document.cookie.split("; ").find((c) => c.startsWith("access_token="))
+        : undefined;
+    const token = cookie?.split("=")[1];
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+    const opts: RequestInit = { credentials: "include", headers };
     Promise.all([
       fetch(`${API_BASE}/admin/metrics`, opts),
       fetch(`${API_BASE}/admin/charts?period=daily`, opts),

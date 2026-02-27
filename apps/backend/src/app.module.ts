@@ -16,6 +16,7 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
 import { RidersModule } from './modules/riders/riders.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { NewsletterModule } from './modules/newsletter/newsletter.module';
+import { BlogModule } from './modules/blog/blog.module';
 
 @Module({
   controllers: [AppController, HealthController],
@@ -34,6 +35,7 @@ import { NewsletterModule } from './modules/newsletter/newsletter.module';
     RidersModule,
     TestimonialsModule,
     NewsletterModule,
+    BlogModule,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -26,7 +26,7 @@ export default function VendorSignupPage() {
     const [loggedIn, setLoggedIn] = useState<boolean>(true);
 
     // Check login status on mount
-    useState(() => {
+    useEffect(() => {
       fetch(`${API_BASE}/auth/me`, { credentials: "include" })
         .then((res) => {
           if (!res.ok) setLoggedIn(false);

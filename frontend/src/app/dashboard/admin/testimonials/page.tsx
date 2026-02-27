@@ -37,7 +37,14 @@ export default function AdminTestimonialsPage() {
         headers,
       });
       if (!res.ok) {
-        setError("Failed to load pending testimonials. Make sure you are logged in as founder admin.");
+        let message = "Failed to load pending testimonials.";
+        if (res.status === 401) {
+          message += " You are not logged in. Please log in again as founder admin.";
+        } else if (res.status === 403) {
+          message += " Your account does not have founder admin access.";
+        }
+        message += ` (HTTP ${res.status})`;
+        setError(message);
         setItems([]);
         return;
       }
@@ -55,10 +62,28 @@ export default function AdminTestimonialsPage() {
   async function approve(id: string) {
     try {
       setApprovingId(id);
-      await fetch(`${API_BASE}/testimonials/${id}/approve`, {
+      const cookie = typeof document !== "undefined"
+        ? document.cookie.split("; ").find((c) => c.startsWith("access_token="))
+        : undefined;
+      const token = cookie?.split("=")[1];
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const res = await fetch(`${API_BASE}/testimonials/${id}/approve`, {
         method: "PATCH",
         credentials: "include",
+        headers,
       });
+      if (!res.ok) {
+        let message = "Failed to approve testimonial.";
+        if (res.status === 401) {
+          message += " You are not logged in.";
+        } else if (res.status === 403) {
+          message += " Your account does not have founder admin access.";
+        }
+        message += ` (HTTP ${res.status})`;
+        setError(message);
+        return;
+      }
       await load();
     } finally {
       setApprovingId(null);

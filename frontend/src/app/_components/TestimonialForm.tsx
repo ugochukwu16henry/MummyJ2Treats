@@ -13,6 +13,7 @@ export function TestimonialForm({
 }) {
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -25,13 +26,38 @@ export function TestimonialForm({
     setSubmitting(true);
     setMessage(null);
     try {
+      let finalImageUrl: string | undefined = imageUrl.trim() || undefined;
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await fetch(`${API_BASE}/testimonials/upload-image`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+        if (!uploadRes.ok) {
+          if (uploadRes.status === 401) {
+            setMessage("Please log in to submit a testimonial.");
+            return;
+          }
+          const b = await uploadRes.json().catch(() => ({}));
+          setMessage(b.message ?? "Could not upload image.");
+          return;
+        }
+        const uploaded = (await uploadRes.json().catch(() => ({}))) as { url?: string };
+        if (uploaded.url) {
+          finalImageUrl = uploaded.url;
+        }
+      }
+
       const res = await fetch(`${API_BASE}/testimonials`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content,
-          imageUrl: imageUrl.trim() || undefined,
+          imageUrl: finalImageUrl,
           target,
           vendorSlug: target === "vendor" ? vendorSlug : undefined,
         }),
@@ -47,6 +73,7 @@ export function TestimonialForm({
       }
       setContent("");
       setImageUrl("");
+      setFile(null);
       setMessage("Thank you! Your testimonial is pending approval.");
     } catch {
       setMessage("Could not submit testimonial.");
@@ -64,13 +91,24 @@ export function TestimonialForm({
         placeholder="Share your experience with MummyJ2Treats..."
         className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm"
       />
-      <input
-        type="url"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        placeholder="Link to your photo (optional)"
-        className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm"
-      />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const f = e.target.files?.[0] ?? null;
+            setFile(f);
+          }}
+          className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm bg-white"
+        />
+        <input
+          type="url"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder="Or paste image URL (optional)"
+          className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm"
+        />
+      </div>
       {message && <p className="text-xs text-zinc-600">{message}</p>}
       <button
         type="submit"

@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class TestimonialsService {
@@ -16,18 +17,15 @@ export class TestimonialsService {
       throw new BadRequestException('Content is required');
     }
 
-    const idResult = await this.db.query<{ uuid: string }>('SELECT uuid_generate_v4() as uuid').catch(() => null);
-    const id = idResult?.rows[0]?.uuid;
-
     const result = await this.db.query(
       `INSERT INTO testimonials (
         id, user_id, vendor_id, target_type, content, image_url
       ) VALUES (
-        COALESCE($1, uuid_generate_v4()), $2, $3, $4, $5, $6
+        $1, $2, $3, $4, $5, $6
       )
       RETURNING *`,
       [
-        id ?? null,
+        uuidv4(),
         params.userId,
         params.vendorId ?? null,
         params.target,

@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,6 +25,12 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
+  // Serve uploaded testimonial images (and other future assets)
+  const uploadsRoot = join(process.cwd(), 'uploads');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.use('/uploads', require('express').static(uploadsRoot));
+
   const port = process.env.PORT || 4000;
   await app.listen(port);
   console.log(`Backend running on http://localhost:${port}`);

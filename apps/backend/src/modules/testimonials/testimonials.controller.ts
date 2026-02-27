@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TestimonialsService } from './testimonials.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { Roles } from '../auth/roles.metadata';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('testimonials')
 export class TestimonialsController {
@@ -48,6 +49,18 @@ export class TestimonialsController {
       content: body.content,
       imageUrl: body.imageUrl,
     });
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('customer')
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/testimonials' }))
+  async uploadImage(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) {
+      throw new Error('File is required');
+    }
+    const relative = `/uploads/testimonials/${file.filename}`;
+    return { url: relative };
   }
 
   @Get('founder')

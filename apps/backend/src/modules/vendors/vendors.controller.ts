@@ -43,6 +43,9 @@ export class VendorsController {
   @Get('me/profile')
   async myProfile(@Req() req: Request) {
     const user = req.user as { userId: string; role: string };
+    if (user.role === 'admin') {
+      return this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     const vendor = await this.vendorsService.findByUserId(user.userId);
     return vendor;
   }

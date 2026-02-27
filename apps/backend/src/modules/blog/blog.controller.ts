@@ -84,7 +84,10 @@ export class BlogController {
     if (!user) {
       throw new ForbiddenException('Missing user');
     }
-    const vendor = await this.vendorsService.findByUserId(user.userId);
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked.');
     }
@@ -120,7 +123,10 @@ export class BlogController {
     if (!user) {
       throw new ForbiddenException('Missing user');
     }
-    const vendor = await this.vendorsService.findByUserId(user.userId);
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked. Create a vendor profile to write blog posts.');
     }
@@ -154,7 +160,10 @@ export class BlogController {
     if (!user) {
       throw new ForbiddenException('Missing user');
     }
-    const vendor = await this.vendorsService.findByUserId(user.userId);
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked.');
     }
@@ -173,7 +182,10 @@ export class BlogController {
     if (!user) {
       throw new ForbiddenException('Missing user');
     }
-    const vendor = await this.vendorsService.findByUserId(user.userId);
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked.');
     }
@@ -193,7 +205,10 @@ export class BlogController {
     if (!user) {
       throw new ForbiddenException('Missing user');
     }
-    const vendor = await this.vendorsService.findByUserId(user.userId);
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked.');
     }

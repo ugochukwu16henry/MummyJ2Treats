@@ -302,4 +302,41 @@ export class VendorsService {
     );
     return result.rows[0] ?? null;
   }
+
+  async ensureFounderVendorForUser(userId: string) {
+    const existing = await this.findByUserId(userId);
+    if (existing) {
+      return existing;
+    }
+
+    const slugFromEnv =
+      process.env.PRIMARY_VENDOR_SLUG ||
+      process.env.FOUNDER_VENDOR_SLUG ||
+      'mummyj2treats';
+    const businessNameFromEnv =
+      process.env.FOUNDER_VENDOR_NAME || 'MummyJ2Treats';
+
+    const created = await this.createVendorForUser({
+      userId,
+      businessName: businessNameFromEnv,
+      slug: slugFromEnv,
+      description: 'Founder admin store',
+      billingProvider: 'manual',
+    });
+
+    const now = new Date();
+    const future = new Date(now.getTime());
+    future.setFullYear(future.getFullYear() + 5);
+
+    await this.updateAdminFlags(created.id, {
+      isVerified: true,
+      signupFeePaid: true,
+      subscriptionStatus: 'active',
+      currentPeriodEnd: future.toISOString(),
+      trialEndsAt: now.toISOString(),
+    });
+
+    const updated = await this.findOne(created.id);
+    return updated ?? created;
+  }
 }

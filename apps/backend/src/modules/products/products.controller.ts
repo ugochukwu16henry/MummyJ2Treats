@@ -42,8 +42,11 @@ export class ProductsController {
   @Roles('vendor', 'admin')
   @Get('me')
   async listMyProducts(@Req() req: Request) {
-    const user = req.user as { userId: string };
-    const vendor = await this.vendorsService.findByUserId(user.userId);
+    const user = req.user as { userId: string; role: string };
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     if (!vendor) {
       return { data: [] };
     }
@@ -87,7 +90,10 @@ export class ProductsController {
     },
   ) {
     const user = req.user as { userId: string; role: string };
-    const vendor = await this.vendorsService.findByUserId(user.userId);
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked. Create a vendor profile to add products.');
     }

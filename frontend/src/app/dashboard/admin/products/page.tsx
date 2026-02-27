@@ -118,34 +118,23 @@ export default function AdminProductsPage() {
     );
   }
 
-  const hasVendor = !!vendor;
-
   return (
     <div className="max-w-4xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">Products</h1>
           <p className="text-sm text-zinc-600 mt-0.5">
-            {hasVendor ? "Add and manage your own products (founder vendor)." : "Link a vendor account to add your own products."}
+            Manage founder admin store products that appear on the homepage and in categories.
           </p>
         </div>
-        {hasVendor && (
-          <button
-            type="button"
-            onClick={() => setShowForm((v) => !v)}
-            className="px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800"
-          >
-            {showForm ? "Cancel" : "Add product"}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setShowForm((v) => !v)}
+          className="px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800"
+        >
+          {showForm ? "Cancel" : "Add product"}
+        </button>
       </div>
-
-      {!hasVendor && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-          You don’t have a vendor account yet. Create one to add your own products:{" "}
-          <Link href="/dashboard/vendor" className="font-medium underline">Vendor dashboard → Become a vendor</Link>
-        </div>
-      )}
 
       {message && (
         <p className={`text-sm ${message.type === "ok" ? "text-green-700" : "text-red-600"}`}>
@@ -153,7 +142,7 @@ export default function AdminProductsPage() {
         </p>
       )}
 
-      {hasVendor && showForm && (
+      {showForm && (
         <section className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-zinc-800 mb-4">New product</h2>
           <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
@@ -276,7 +265,7 @@ export default function AdminProductsPage() {
         <h2 className="text-lg font-semibold text-zinc-800 p-4 border-b border-zinc-100">Your products</h2>
         {products.length === 0 ? (
           <div className="p-8 text-center text-sm text-zinc-500">
-            {hasVendor ? "No products yet. Add one above." : "No products to show."}
+              No products yet. Add one above.
           </div>
         ) : (
           <ul className="divide-y divide-zinc-100">

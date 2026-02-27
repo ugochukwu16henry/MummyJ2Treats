@@ -20,9 +20,11 @@ export default function AdminTestimonialsPage() {
   const [items, setItems] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"pending" | "approved">("pending");
 
-  async function load() {
+  async function load(status: "pending" | "approved" = statusFilter) {
     setLoading(true);
     try {
       setError(null);
@@ -32,12 +34,12 @@ export default function AdminTestimonialsPage() {
       const token = cookie?.split("=")[1];
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
-      const res = await fetch(`${API_BASE}/testimonials?status=pending`, {
+      const res = await fetch(`${API_BASE}/testimonials?status=${status}`, {
         credentials: "include",
         headers,
       });
       if (!res.ok) {
-        let message = "Failed to load pending testimonials.";
+        let message = "Failed to load testimonials.";
         if (res.status === 401) {
           message += " You are not logged in. Please log in again as founder admin.";
         } else if (res.status === 403) {
@@ -50,6 +52,7 @@ export default function AdminTestimonialsPage() {
       }
       const data = (await res.json().catch(() => ({}))) as { data?: Testimonial[] };
       setItems(data.data ?? []);
+      setStatusFilter(status);
     } finally {
       setLoading(false);
     }
@@ -90,6 +93,37 @@ export default function AdminTestimonialsPage() {
     }
   }
 
+  async function remove(id: string) {
+    try {
+      setDeletingId(id);
+      const cookie = typeof document !== "undefined"
+        ? document.cookie.split("; ").find((c) => c.startsWith("access_token="))
+        : undefined;
+      const token = cookie?.split("=")[1];
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const res = await fetch(`${API_BASE}/testimonials/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers,
+      });
+      if (!res.ok) {
+        let message = "Failed to delete testimonial.";
+        if (res.status === 401) {
+          message += " You are not logged in.";
+        } else if (res.status === 403) {
+          message += " Your account does not have founder admin access.";
+        }
+        message += ` (HTTP ${res.status})`;
+        setError(message);
+        return;
+      }
+      await load();
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className="max-w-4xl space-y-6">
       <div>
@@ -98,12 +132,36 @@ export default function AdminTestimonialsPage() {
           Approve customer testimonials for the homepage and vendor stores.
         </p>
       </div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => load("pending")}
+          className={`text-xs px-3 py-1 rounded-md border ${
+            statusFilter === "pending"
+              ? "bg-zinc-900 text-white border-zinc-900"
+              : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+          }`}
+        >
+          Pending
+        </button>
+        <button
+          type="button"
+          onClick={() => load("approved")}
+          className={`text-xs px-3 py-1 rounded-md border ${
+            statusFilter === "approved"
+              ? "bg-zinc-900 text-white border-zinc-900"
+              : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+          }`}
+        >
+          Approved
+        </button>
+      </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loading ? (
         <p className="text-zinc-500">Loading…</p>
       ) : items.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-zinc-500">
-          No pending testimonials.
+          {statusFilter === "pending" ? "No pending testimonials." : "No approved testimonials."}
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -123,13 +181,23 @@ export default function AdminTestimonialsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {statusFilter === "pending" && (
+                    <button
+                      type="button"
+                      onClick={() => approve(t.id)}
+                      disabled={approvingId === t.id}
+                      className="text-xs px-3 py-1 rounded-md border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                    >
+                      {approvingId === t.id ? "Approving…" : "Approve"}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => approve(t.id)}
-                    disabled={approvingId === t.id}
-                    className="text-xs px-3 py-1 rounded-md border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                    onClick={() => remove(t.id)}
+                    disabled={deletingId === t.id}
+                    className="text-xs px-3 py-1 rounded-md border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
                   >
-                    {approvingId === t.id ? "Approving…" : "Approve"}
+                    {deletingId === t.id ? "Deleting…" : "Delete"}
                   </button>
                 </div>
               </li>

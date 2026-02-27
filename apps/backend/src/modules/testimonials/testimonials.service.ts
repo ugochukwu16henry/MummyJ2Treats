@@ -107,5 +107,18 @@ export class TestimonialsService {
     }
     return r.rows[0];
   }
+
+  async delete(id: string) {
+    const r = await this.db.query(
+      `DELETE FROM testimonials
+       WHERE id = $1
+       RETURNING *`,
+      [id],
+    );
+    if (!r.rows[0]) {
+      throw new BadRequestException('Testimonial not found');
+    }
+    return { success: true };
+  }
 }
 

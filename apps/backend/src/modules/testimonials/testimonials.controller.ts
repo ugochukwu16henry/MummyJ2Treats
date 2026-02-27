@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TestimonialsService } from './testimonials.service';
 import { VendorsService } from '../vendors/vendors.service';
@@ -87,6 +87,13 @@ export class TestimonialsController {
   @Patch(':id/approve')
   approve(@Param('id') id: string) {
     return this.testimonials.approve(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.testimonials.delete(id);
   }
 }
 

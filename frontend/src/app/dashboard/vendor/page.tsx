@@ -31,6 +31,35 @@ export default function VendorDashboardPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [vendorState, setVendorState] = useState<string | null>(null);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
+    const [uploadingPic, setUploadingPic] = useState(false);
+    async function fetchProfilePic() {
+      try {
+        const res = await fetch(`${API_BASE}/vendors/me/profile-picture`, { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setProfilePicUrl(data.url ?? null);
+        }
+      } catch {}
+    }
+    async function uploadProfilePic(e: React.ChangeEvent<HTMLInputElement>) {
+      if (!e.target.files?.[0]) return;
+      setUploadingPic(true);
+      const formData = new FormData();
+      formData.append("file", e.target.files[0]);
+      try {
+        const res = await fetch(`${API_BASE}/vendors/me/profile-picture`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+        if (res.ok) await fetchProfilePic();
+      } finally {
+        setUploadingPic(false);
+      }
+    }
+    useEffect(() => { fetchProfilePic(); }, []);
   const [riders, setRiders] = useState<Rider[]>([]);
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
@@ -211,43 +240,59 @@ export default function VendorDashboardPage() {
 
         {/* Vendor profile summary */}
         {vendorProfile && (
-          <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-            {vendorProfile.logo_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={vendorProfile.logo_url}
-                alt="Logo"
-                className="w-16 h-16 rounded-full object-cover border"
-              />
-            )}
-            <div className="text-center sm:text-left">
-              <h2 className="text-xl font-semibold mb-1">{vendorProfile.business_name}</h2>
-              {vendorProfile.description && (
-                <p className="text-zinc-600 text-sm mb-1">{vendorProfile.description}</p>
-              )}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 justify-center sm:justify-start">
-                <Link
-                  href="/dashboard/vendor/location"
-                  className="text-primary font-medium hover:underline"
+            <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <div className="relative">
+                <button
+                  className="absolute top-0 right-0 bg-zinc-900 text-white rounded-full p-1 text-xs"
+                  title="View profile"
+                  onClick={() => setShowProfileModal(true)}
                 >
-                  Location &amp; delivery
-                </Link>
-                <Link
-                  href="/dashboard/vendor/products"
-                  className="text-primary font-medium hover:underline"
-                >
-                  Manage products
-                </Link>
-                <Link
-                  href="/dashboard/vendor/blog"
-                  className="text-primary font-medium hover:underline"
-                >
-                  Blog: write &amp; share
-                </Link>
+                  <span className="material-icons">account_circle</span>
+                </button>
+                {profilePicUrl ? (
+                  <img src={profilePicUrl} alt="Profile" className="w-16 h-16 rounded-full object-cover border" />
+                ) : vendorProfile.logo_url ? (
+                  <img src={vendorProfile.logo_url} alt="Logo" className="w-16 h-16 rounded-full object-cover border" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-500">No photo</div>
+                )}
+                <label className="block mt-2 text-xs text-primary cursor-pointer">
+                  <input type="file" accept="image/*" className="hidden" onChange={uploadProfilePic} disabled={uploadingPic} />
+                  {uploadingPic ? "Uploading…" : "Add/Change photo"}
+                </label>
               </div>
-            </div>
-          </section>
-        )}
+              <div className="text-center sm:text-left">
+                <h2 className="text-xl font-semibold mb-1">{vendorProfile.business_name}</h2>
+                {vendorProfile.description && (
+                  <p className="text-zinc-600 text-sm mb-1">{vendorProfile.description}</p>
+                )}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 justify-center sm:justify-start">
+                  <Link href="/dashboard/vendor/location" className="text-primary font-medium hover:underline">Location &amp; delivery</Link>
+                  <Link href="/dashboard/vendor/products" className="text-primary font-medium hover:underline">Manage products</Link>
+                  <Link href="/dashboard/vendor/blog" className="text-primary font-medium hover:underline">Blog: write &amp; share</Link>
+                </div>
+              </div>
+              {showProfileModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full relative">
+                    <button className="absolute top-2 right-2 text-zinc-500 hover:text-zinc-900" onClick={() => setShowProfileModal(false)}>
+                      <span className="material-icons">close</span>
+                    </button>
+                    <div className="flex flex-col items-center gap-2">
+                      {profilePicUrl ? (
+                        <img src={profilePicUrl} alt="Profile" className="w-20 h-20 rounded-full object-cover border mb-2" />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-500 mb-2">No photo</div>
+                      )}
+                      <div className="font-bold text-lg">{vendorProfile.business_name}</div>
+                      {vendorProfile.description && <div className="text-sm text-zinc-600 mb-2">{vendorProfile.description}</div>}
+                      <div className="text-xs text-zinc-500">Joined: {/* TODO: show join date */}</div>
+                      <div className="text-xs text-zinc-500">Approved: {/* TODO: show approval date */}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
 
         {/* Basic analytics */}
         <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center">

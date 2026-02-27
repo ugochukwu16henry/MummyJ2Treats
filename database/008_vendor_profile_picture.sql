@@ -1,0 +1,15 @@
+-- VENDOR PROFILE PICTURE TABLE
+CREATE TABLE IF NOT EXISTS vendor_profile_pictures (
+  id UUID PRIMARY KEY,
+  vendor_id UUID REFERENCES vendors(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  uploaded_at TIMESTAMP DEFAULT now()
+);
+
+-- FOUNDER ADMIN PROFILE PICTURE TABLE
+CREATE TABLE IF NOT EXISTS founder_admin_profile_pictures (
+  id UUID PRIMARY KEY,
+  admin_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  uploaded_at TIMESTAMP DEFAULT now()
+);

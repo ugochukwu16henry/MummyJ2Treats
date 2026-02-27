@@ -82,15 +82,14 @@ export default function VendorProductsPage() {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: form.name.trim(),
-          description: form.description.trim() || undefined,
-          price,
-          stock: form.stock.trim() ? Number(form.stock) : undefined,
-          category: form.category.trim() || undefined,
-                setSignupFeePaid(!!profile.signup_fee_paid);
-          sizeLabel: form.sizeLabel.trim() || undefined,
-          ingredients: form.ingredients.trim() || undefined,
-          nutritionalInfo: form.nutritionalInfo.trim() || undefined,
+              name: form.name.trim(),
+              description: form.description.trim() || undefined,
+              price,
+              stock: form.stock.trim() ? Number(form.stock) : undefined,
+              category: form.category.trim() || undefined,
+              sizeLabel: form.sizeLabel.trim() || undefined,
+              ingredients: form.ingredients.trim() || undefined,
+              nutritionalInfo: form.nutritionalInfo.trim() || undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));

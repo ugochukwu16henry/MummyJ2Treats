@@ -55,8 +55,8 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-8">
-      <div className="max-w-3xl mx-auto space-y-4">
+    <main className="min-h-screen bg-zinc-50 px-4 py-8 flex flex-col">
+      <div className="max-w-3xl mx-auto space-y-4 flex-1 w-full">
         <div className="bg-white rounded-2xl shadow-md p-6 space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
@@ -118,6 +118,17 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+      <footer className="mt-8 text-center text-xs text-zinc-500">
+        Built by{" "}
+        <a
+          href="https://henry-ugochukwu-porfolio.vercel.app/"
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          Henry M. Ugochukwu
+        </a>
+      </footer>
     </main>
   );
 }

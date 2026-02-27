@@ -324,7 +324,20 @@ export default async function Home() {
             </div>
           </div>
         </div>
-        <div className="text-center text-xs text-zinc-400 mt-8">© {new Date().getFullYear()} MummyJ2Treats. All rights reserved.</div>
+        <div className="mt-8 space-y-1 text-center text-xs text-zinc-400">
+          <div>© {new Date().getFullYear()} MummyJ2Treats. All rights reserved.</div>
+          <div>
+            Built by{" "}
+            <a
+              href="https://henry-ugochukwu-porfolio.vercel.app/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-white"
+            >
+              Henry M. Ugochukwu
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );

@@ -64,7 +64,7 @@ export default async function VendorStorePage({
   }
 
   return (
-    <div className="min-h-screen w-full bg-zinc-50 font-sans">
+    <div className="min-h-screen w-full bg-zinc-50 font-sans flex flex-col">
       {/* Hero / Banner reusing homepage style */}
       <section className="relative w-full h-56 sm:h-72 md:h-80 overflow-hidden">
         {vendor.bannerUrl ? (
@@ -107,7 +107,7 @@ export default async function VendorStorePage({
       </section>
 
       {/* Product grid, similar to homepage best sellers */}
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+      <main className="flex-1 max-w-5xl mx-auto px-4 py-8 space-y-8">
         <h2 className="text-2xl font-bold mb-4">Menu</h2>
         {products.length === 0 ? (
           <p className="text-zinc-600">
@@ -199,6 +199,21 @@ export default async function VendorStorePage({
           <TestimonialForm target="vendor" vendorSlug={vendor.slug} />
         </section>
       </main>
+      <footer className="bg-zinc-900 text-white py-6 px-4 mt-4">
+        <div className="max-w-5xl mx-auto text-center text-xs text-zinc-400 space-y-1">
+          <div>
+            Built by{" "}
+            <a
+              href="https://henry-ugochukwu-porfolio.vercel.app/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-white"
+            >
+              Henry M. Ugochukwu
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

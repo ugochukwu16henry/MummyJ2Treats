@@ -15,8 +15,8 @@ export default async function VendorsPage() {
   const vendors = await fetchVendors();
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-8">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <main className="min-h-screen bg-zinc-50 px-4 py-8 flex flex-col">
+      <div className="max-w-5xl mx-auto space-y-6 flex-1 w-full">
         <header className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900">All Vendors</h1>
@@ -60,6 +60,17 @@ export default async function VendorsPage() {
           </div>
         )}
       </div>
+      <footer className="mt-8 text-center text-xs text-zinc-500">
+        Built by{" "}
+        <a
+          href="https://henry-ugochukwu-porfolio.vercel.app/"
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          Henry M. Ugochukwu
+        </a>
+      </footer>
     </main>
   );
 }

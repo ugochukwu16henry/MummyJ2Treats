@@ -150,8 +150,8 @@ export default function VendorDashboardPage() {
   const completedOrders = orders.filter(o => o.status === "DELIVERED").length;
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <main className="min-h-screen bg-zinc-50 px-4 py-8 flex flex-col">
+      <div className="max-w-4xl mx-auto space-y-6 flex-1 w-full">
 
         {/* Onboarding checklist */}
         {onboarding && onboarding.steps && onboarding.steps.length > 0 && (
@@ -306,6 +306,17 @@ export default function VendorDashboardPage() {
           )}
         </section>
       </div>
+      <footer className="mt-8 text-center text-xs text-zinc-500">
+        Built by{" "}
+        <a
+          href="https://henry-ugochukwu-porfolio.vercel.app/"
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          Henry M. Ugochukwu
+        </a>
+      </footer>
     </main>
   );
 }

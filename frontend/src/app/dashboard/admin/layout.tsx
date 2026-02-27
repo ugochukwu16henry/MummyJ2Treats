@@ -123,7 +123,20 @@ export default function AdminDashboardLayout({
         </div>
       </aside>
       <main className="flex-1 overflow-auto px-4 py-6 md:px-6 lg:px-8">
-        {children}
+        <div className="min-h-full flex flex-col">
+          <div className="flex-1">{children}</div>
+          <footer className="mt-8 text-center text-xs text-zinc-500">
+            Built by{" "}
+            <a
+              href="https://henry-ugochukwu-porfolio.vercel.app/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Henry M. Ugochukwu
+            </a>
+          </footer>
+        </div>
       </main>
     </div>
   );

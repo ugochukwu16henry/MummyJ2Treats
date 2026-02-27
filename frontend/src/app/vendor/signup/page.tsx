@@ -23,6 +23,16 @@ export default function VendorSignupPage() {
   const [certificateDetails, setCertificateDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+    const [loggedIn, setLoggedIn] = useState<boolean>(true);
+
+    // Check login status on mount
+    useState(() => {
+      fetch(`${API_BASE}/auth/me`, { credentials: "include" })
+        .then((res) => {
+          if (!res.ok) setLoggedIn(false);
+        })
+        .catch(() => setLoggedIn(false));
+    }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -88,12 +98,17 @@ export default function VendorSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+      <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="max-w-xl mx-auto py-8">
         <h1 className="text-2xl font-bold mb-2">Become a Vendor</h1>
         <p className="text-sm text-zinc-600 mb-6">
           Share a few details about you and your business. The founder admin will review and approve your profile before products go fully live.
         </p>
+          {!loggedIn ? (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg mb-6">
+              You must be logged in to become a vendor. <a href="/auth/login" className="underline">Log in</a> first.
+            </div>
+          ) : (
         <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-2xl shadow-sm p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -297,6 +312,7 @@ export default function VendorSignupPage() {
             {submitting ? "Creating vendor..." : "Create vendor account"}
           </button>
         </form>
+          )}
       </div>
     </div>
   );

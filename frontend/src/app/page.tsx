@@ -32,9 +32,8 @@ async function fetchRankedVendors() {
 }
 
 async function fetchRecommendations() {
-async function fetchFounderTestimonials() {
   try {
-    const res = await fetch(`${API_BASE}/testimonials/founder?limit=6`, {
+    const res = await fetch(`${API_BASE}/moat/recommendations?limit=4`, {
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -44,8 +43,12 @@ async function fetchFounderTestimonials() {
     return [];
   }
 }
+
+async function fetchFounderTestimonials() {
   try {
-    const res = await fetch(`${API_BASE}/moat/recommendations?limit=4`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/testimonials/founder?limit=6`, {
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     const json = await res.json();
     return json.data ?? [];

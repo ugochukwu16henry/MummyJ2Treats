@@ -55,7 +55,7 @@ export class TestimonialsController {
   @Roles('customer')
   @Post('upload-image')
   @UseInterceptors(FileInterceptor('file', { dest: 'uploads/testimonials' }))
-  async uploadImage(@UploadedFile() file?: Express.Multer.File) {
+  async uploadImage(@UploadedFile() file?: any) {
     if (!file) {
       throw new Error('File is required');
     }

@@ -671,6 +671,31 @@ export class BlogService {
     return row;
   }
 
+  async listPostsForVendor(
+    vendorId: string,
+    limit = 100,
+    offset = 0,
+  ): Promise<{ data: any[] }> {
+    await this.ensureTables();
+
+    const result = await this.db.query(
+      `
+      SELECT
+        p.*,
+        v.business_name as author_name,
+        v.slug as author_slug,
+        v.logo_url as author_avatar_url
+      FROM blog_posts p
+      JOIN vendors v ON v.id = p.vendor_id
+      WHERE v.id = $1
+      ORDER BY p.created_at DESC
+      LIMIT $2 OFFSET $3
+      `,
+      [vendorId, limit, offset],
+    );
+    return { data: result.rows };
+  }
+
   async attachUploadedMediaForVendor(
     vendorId: string,
     postId: string,

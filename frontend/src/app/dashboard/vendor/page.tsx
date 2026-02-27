@@ -238,6 +238,12 @@ export default function VendorDashboardPage() {
                 >
                   Manage products
                 </Link>
+                <Link
+                  href="/dashboard/vendor/blog"
+                  className="text-primary font-medium hover:underline"
+                >
+                  Blog: write &amp; share
+                </Link>
               </div>
             </div>
           </section>

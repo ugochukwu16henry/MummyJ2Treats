@@ -74,6 +74,29 @@ export class BlogController {
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
+  @Get('me')
+  async listMyPosts(
+    @Req() req: Request,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    const user = req.user as { userId: string; role: string } | undefined;
+    if (!user) {
+      throw new ForbiddenException('Missing user');
+    }
+    const vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    return this.blogService.listPostsForVendor(
+      vendor.id,
+      limit ? Number(limit) : 100,
+      offset ? Number(offset) : 0,
+    );
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
   @Post('me')
   async createForMe(
     @Req() req: Request,
@@ -135,7 +158,11 @@ export class BlogController {
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked.');
     }
-    return this.blogService.updateDraftForVendor(vendor.id, id, dto);
+    // Vendors can edit content and metadata, but founder admin controls final publishing.
+    // Ignore any direct status changes; use submitForReview + adminApprove instead.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { status: _ignoredStatus, ...rest } = dto;
+    return this.blogService.updateDraftForVendor(vendor.id, id, rest);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

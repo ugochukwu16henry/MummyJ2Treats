@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { DashboardLogoutButton } from "./_components/DashboardLogoutButton";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -57,10 +58,15 @@ export default async function DashboardPage() {
     <main className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="bg-white rounded-2xl shadow-md p-6 space-y-4">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-zinc-600">
-            You are logged in{role ? ` as ${role}` : ""}.
-          </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div>
+              <h1 className="text-2xl font-bold">Dashboard</h1>
+              <p className="text-sm text-zinc-600">
+                You are logged in{role ? ` as ${role}` : ""}.
+              </p>
+            </div>
+            <DashboardLogoutButton />
+          </div>
           {role === "customer" && (
             <>
               <Link

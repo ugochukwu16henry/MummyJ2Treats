@@ -19,6 +19,18 @@ export default function AdminVendorsPage() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [commissionDrafts, setCommissionDrafts] = useState<Record<string, string>>({});
+  const [showDetailsId, setShowDetailsId] = useState<string | null>(null);
+  const [details, setDetails] = useState<any | null>(null);
+  const [detailsPic, setDetailsPic] = useState<string | null>(null);
+  async function loadDetails(id: string) {
+    setDetails(null); setDetailsPic(null);
+    try {
+      const res = await fetch(`${API_BASE}/vendors/${id}/profile`, { credentials: "include" });
+      if (res.ok) setDetails(await res.json());
+      const picRes = await fetch(`${API_BASE}/vendors/${id}/profile-picture`, { credentials: "include" });
+      if (picRes.ok) { const pic = await picRes.json(); setDetailsPic(pic.url ?? null); }
+    } catch {}
+  }
 
   async function load() {
     setLoading(true);
@@ -105,6 +117,11 @@ export default function AdminVendorsPage() {
                   >
                     {v.is_verified ? "Verified" : "Pending"}
                   </span>
+                  <button
+                    type="button"
+                    className="text-xs px-2 py-1 rounded-md border border-primary text-primary hover:bg-primary/10"
+                    onClick={() => { setShowDetailsId(v.id); loadDetails(v.id); }}
+                  >View details</button>
                   {!v.is_verified && (
                     <button
                       type="button"
@@ -131,6 +148,32 @@ export default function AdminVendorsPage() {
                     onBlur={() => saveCommission(v.id, commissionDrafts[v.id])}
                   />
                 </div>
+                {showDetailsId === v.id && (
+                  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full relative">
+                      <button className="absolute top-2 right-2 text-zinc-500 hover:text-zinc-900" onClick={() => setShowDetailsId(null)}>
+                        <span className="material-icons">close</span>
+                      </button>
+                      <div className="flex flex-col items-center gap-2">
+                        {detailsPic ? (
+                          <img src={detailsPic} alt="Profile" className="w-20 h-20 rounded-full object-cover border mb-2" />
+                        ) : (
+                          <div className="w-20 h-20 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-500 mb-2">No photo</div>
+                        )}
+                        <div className="font-bold text-lg">{details?.business_name ?? v.business_name}</div>
+                        {details?.description && <div className="text-sm text-zinc-600 mb-2">{details.description}</div>}
+                        <div className="text-xs text-zinc-500">Joined: {/* TODO: show join date */}</div>
+                        <div className="text-xs text-zinc-500">Approved: {/* TODO: show approval date */}</div>
+                        {/* Show all other details from signup */}
+                        <div className="mt-2 text-xs text-zinc-700 text-left w-full">
+                          {details && Object.entries(details).map(([k, v]) => (
+                            <div key={k}><span className="font-bold">{k.replace(/_/g, " ")}: </span>{String(v)}</div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

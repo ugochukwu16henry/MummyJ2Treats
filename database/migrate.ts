@@ -1,7 +1,7 @@
 import { config as dotenvConfig } from 'dotenv';
 import { resolve } from 'path';
 
-// Always load .env from project root (works for both CJS and ESM)
+// Load .env from project root (run "npm run migrate" from repo root)
 dotenvConfig({ path: resolve(process.cwd(), '.env') });
 
 // Debug: Print DATABASE_URL with password masked
@@ -71,6 +71,14 @@ async function migrate() {
     );
     if (hasNewsletter.rows[0]?.reg) {
       files = files.filter((f) => f !== '006_newsletter_subscriptions.sql');
+    }
+
+    // If vendor_profile_pictures table already exists, skip 008_vendor_profile_picture.sql
+    const hasVendorProfilePictures = await client.query(
+      "SELECT to_regclass('public.vendor_profile_pictures') as reg",
+    );
+    if (hasVendorProfilePictures.rows[0]?.reg) {
+      files = files.filter((f) => f !== '008_vendor_profile_picture.sql');
     }
 
     for (const file of files) {

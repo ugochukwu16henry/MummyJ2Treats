@@ -293,8 +293,7 @@ export default function VendorDashboardPage() {
                 </div>
               )}
             </section>
-
-        {/* Basic analytics */}
+        )}
         <section className="bg-white rounded-2xl shadow-sm p-6 flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center">
           <div>
             <div className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</div>

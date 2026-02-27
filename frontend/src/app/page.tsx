@@ -81,7 +81,7 @@ export default async function Home() {
         <div className="flex w-full sm:w-auto justify-center sm:justify-start gap-4 sm:gap-6 text-sm sm:text-base font-medium mb-2 sm:mb-0">
           <a href="/" className="hover:text-primary">Home</a>
           <a href="/vendors" className="hover:text-primary">Vendors</a>
-          <a href="#categories" className="hover:text-primary">Categories</a>
+          <a href="/categories" className="hover:text-primary">Categories</a>
           <a href="/blog" className="hover:text-primary">Blog</a>
           <a href="/about" className="hover:text-primary">About</a>
         </div>
@@ -128,15 +128,37 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Category Grid */}
+      {/* Founder store categories */}
       <section id="categories" className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Categories</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-          {[1,2,3,4,5,6,7,8].map((cat) => (
-            <div key={cat} className="rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center hover:scale-105 transition-transform cursor-pointer">
-              <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-3" />
-              <span className="font-medium">Category {cat}</span>
-            </div>
+        <h2 className="text-2xl font-bold mb-6">Founder’s categories</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          {[
+            { name: "Parfaits", slug: "parfaits", description: "Layered yogurt, fruits, and granola parfaits.", image: "/images/categories/parfaits.jpg" },
+            { name: "Small Chops", slug: "small-chops", description: "Party-ready finger foods and platters.", image: "/images/categories/small-chops.jpg" },
+            { name: "Banana Bread", slug: "banana-bread", description: "Freshly baked banana loaves and slices.", image: "/images/categories/banana-bread.jpg" },
+          ].map((cat) => (
+            <a
+              key={cat.slug}
+              href={`/categories/${encodeURIComponent(cat.slug)}`}
+              className="rounded-2xl shadow-md bg-white dark:bg-zinc-900 overflow-hidden hover:shadow-lg transition-shadow flex flex-col"
+            >
+              <div className="relative h-32 w-full bg-zinc-100 dark:bg-zinc-800">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                <div className="absolute bottom-2 left-3 right-3">
+                  <div className="text-sm font-semibold text-white">{cat.name}</div>
+                  <div className="text-[11px] text-zinc-200 line-clamp-1">{cat.description}</div>
+                </div>
+              </div>
+              <div className="px-4 py-3 text-xs text-zinc-600 dark:text-zinc-300">
+                Shop freshly prepared {cat.name.toLowerCase()} directly from the founder’s store.
+              </div>
+            </a>
           ))}
         </div>
       </section>

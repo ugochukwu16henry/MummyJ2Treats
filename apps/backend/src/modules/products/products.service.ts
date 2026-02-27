@@ -5,19 +5,36 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ProductsService {
+  private extraColumnsEnsured = false;
+
   constructor(
     private readonly db: DatabaseService,
     private readonly vendorsService: VendorsService,
   ) {}
 
+  private async ensureExtraColumns() {
+    if (this.extraColumnsEnsured) return;
+    this.extraColumnsEnsured = true;
+    await this.db.query(`
+      ALTER TABLE products
+      ADD COLUMN IF NOT EXISTS category VARCHAR,
+      ADD COLUMN IF NOT EXISTS size_label VARCHAR,
+      ADD COLUMN IF NOT EXISTS ingredients TEXT,
+      ADD COLUMN IF NOT EXISTS nutritional_info TEXT;
+    `);
+  }
+
   async findAll(params?: {
     vendorSlug?: string;
     minPrice?: number;
     maxPrice?: number;
+    category?: string;
     isActiveOnly?: boolean;
     limit?: number;
     offset?: number;
   }) {
+    await this.ensureExtraColumns();
+
     const conditions: string[] = [];
     const values: any[] = [];
     let index = 1;
@@ -33,6 +50,10 @@ export class ProductsService {
     if (params?.maxPrice !== undefined) {
       conditions.push(`p.price <= $${index++}`);
       values.push(params.maxPrice);
+    }
+    if (params?.category) {
+      conditions.push(`LOWER(p.category) = LOWER($${index++})`);
+      values.push(params.category);
     }
     if (params?.isActiveOnly !== false) {
       conditions.push(`p.is_active = true`);
@@ -56,6 +77,10 @@ export class ProductsService {
         p.price,
         p.stock,
         p.is_active,
+        p.category,
+        p.size_label,
+        p.ingredients,
+        p.nutritional_info,
         v.id as vendor_id,
         v.business_name as vendor_name,
         v.slug as vendor_slug,
@@ -73,6 +98,7 @@ export class ProductsService {
   }
 
   async findOne(id: string) {
+    await this.ensureExtraColumns();
     const result = await this.db.query(
       `
       SELECT
@@ -91,6 +117,7 @@ export class ProductsService {
   }
 
   async findBySlug(slug: string) {
+    await this.ensureExtraColumns();
     const result = await this.db.query(
       `
       SELECT
@@ -140,7 +167,13 @@ export class ProductsService {
     description?: string;
     price: number;
     stock?: number;
+    category?: string;
+    sizeLabel?: string;
+    ingredients?: string;
+    nutritionalInfo?: string;
   }) {
+    await this.ensureExtraColumns();
+
     // Enforce: unapproved vendor cannot publish
     const vendor = await this.vendorsService.findOne(vendorId);
     const active = vendor && vendor.is_verified
@@ -155,8 +188,21 @@ export class ProductsService {
 
     const result = await this.db.query(
       `
-      INSERT INTO products (id, vendor_id, name, slug, description, price, stock, is_active)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+      INSERT INTO products (
+        id,
+        vendor_id,
+        name,
+        slug,
+        description,
+        price,
+        stock,
+        is_active,
+        category,
+        size_label,
+        ingredients,
+        nutritional_info
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $9, $10, $11)
       RETURNING *
       `,
       [
@@ -167,6 +213,10 @@ export class ProductsService {
         dto.description ?? null,
         dto.price,
         dto.stock ?? 0,
+        dto.category ?? null,
+        dto.sizeLabel ?? null,
+        dto.ingredients ?? null,
+        dto.nutritionalInfo ?? null,
       ],
     );
 
@@ -180,6 +230,8 @@ export class ProductsService {
     stock?: number;
     isActive?: boolean;
   }) {
+    await this.ensureExtraColumns();
+
     const productResult = await this.db.query(
       'SELECT * FROM products WHERE id = $1 AND vendor_id = $2',
       [productId, vendorId],
@@ -219,6 +271,33 @@ export class ProductsService {
       index += 1;
     }
 
+    const anyExtra =
+      (dto as any).category !== undefined ||
+      (dto as any).sizeLabel !== undefined ||
+      (dto as any).ingredients !== undefined ||
+      (dto as any).nutritionalInfo !== undefined;
+
+    if ((dto as any).category !== undefined) {
+      fields.push(`category = $${index}`);
+      values.push((dto as any).category);
+      index += 1;
+    }
+    if ((dto as any).sizeLabel !== undefined) {
+      fields.push(`size_label = $${index}`);
+      values.push((dto as any).sizeLabel);
+      index += 1;
+    }
+    if ((dto as any).ingredients !== undefined) {
+      fields.push(`ingredients = $${index}`);
+      values.push((dto as any).ingredients);
+      index += 1;
+    }
+    if ((dto as any).nutritionalInfo !== undefined) {
+      fields.push(`nutritional_info = $${index}`);
+      values.push((dto as any).nutritionalInfo);
+      index += 1;
+    }
+
     if (!fields.length) {
       return product;
     }
@@ -231,6 +310,7 @@ export class ProductsService {
   }
 
   async findByVendorSlug(slug: string, limit = 20, offset = 0) {
+    await this.ensureExtraColumns();
     const result = await this.db.query(
       `
       SELECT
@@ -251,6 +331,7 @@ export class ProductsService {
   }
 
   async findByVendorId(vendorId: string, limit = 100, offset = 0) {
+    await this.ensureExtraColumns();
     const result = await this.db.query(
       `
       SELECT
@@ -264,6 +345,24 @@ export class ProductsService {
       LIMIT $2 OFFSET $3
       `,
       [vendorId, limit, offset],
+    );
+    return { data: result.rows };
+  }
+
+  async listCategories() {
+    await this.ensureExtraColumns();
+    const result = await this.db.query(
+      `
+      SELECT
+        TRIM(p.category) AS name,
+        COUNT(*) AS product_count
+      FROM products p
+      WHERE p.is_active = true
+        AND p.category IS NOT NULL
+        AND TRIM(p.category) <> ''
+      GROUP BY TRIM(p.category)
+      ORDER BY COUNT(*) DESC, TRIM(p.category) ASC
+      `,
     );
     return { data: result.rows };
   }

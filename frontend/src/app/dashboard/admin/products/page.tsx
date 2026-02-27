@@ -15,6 +15,10 @@ type Product = {
   is_active: boolean;
   vendor_name: string;
   vendor_slug: string;
+  category?: string | null;
+  size_label?: string | null;
+  ingredients?: string | null;
+  nutritional_info?: string | null;
 };
 
 type VendorProfile = { business_name?: string; slug?: string } | null;
@@ -26,7 +30,16 @@ export default function AdminProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", price: "", stock: "" });
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    category: "",
+    sizeLabel: "",
+    ingredients: "",
+    nutritionalInfo: "",
+  });
 
   useEffect(() => {
     const opts = { credentials: "include" as RequestCredentials };
@@ -66,6 +79,10 @@ export default function AdminProductsPage() {
           description: form.description.trim() || undefined,
           price,
           stock: form.stock.trim() ? Number(form.stock) : undefined,
+          category: form.category.trim() || undefined,
+          sizeLabel: form.sizeLabel.trim() || undefined,
+          ingredients: form.ingredients.trim() || undefined,
+          nutritionalInfo: form.nutritionalInfo.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -74,7 +91,16 @@ export default function AdminProductsPage() {
         return;
       }
       setMessage({ type: "ok", text: "Product added." });
-      setForm({ name: "", description: "", price: "", stock: "" });
+      setForm({
+        name: "",
+        description: "",
+        price: "",
+        stock: "",
+        category: "",
+        sizeLabel: "",
+        ingredients: "",
+        nutritionalInfo: "",
+      });
       setShowForm(false);
       setProducts((prev) => [{ ...data, vendor_name: vendor?.business_name ?? "", vendor_slug: vendor?.slug ?? "" }, ...prev]);
     } catch {
@@ -153,6 +179,34 @@ export default function AdminProductsPage() {
                 rows={2}
               />
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="product-category" className="block text-sm font-medium text-zinc-700 mb-1">
+                  Category
+                </label>
+                <input
+                  id="product-category"
+                  name="category"
+                  value={form.category}
+                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-zinc-900"
+                  placeholder="Parfaits, Small Chops, Banana Bread"
+                />
+              </div>
+              <div>
+                <label htmlFor="product-size" className="block text-sm font-medium text-zinc-700 mb-1">
+                  Size / portion
+                </label>
+                <input
+                  id="product-size"
+                  name="size"
+                  value={form.sizeLabel}
+                  onChange={(e) => setForm((f) => ({ ...f, sizeLabel: e.target.value }))}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-zinc-900"
+                  placeholder="E.g. 300ml cup, family tray"
+                />
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="product-price" className="block text-sm font-medium text-zinc-700 mb-1">Price (₦) *</label>
@@ -181,6 +235,32 @@ export default function AdminProductsPage() {
                 />
               </div>
             </div>
+            <div>
+              <label htmlFor="product-ingredients" className="block text-sm font-medium text-zinc-700 mb-1">
+                Ingredients / contents
+              </label>
+              <textarea
+                id="product-ingredients"
+                value={form.ingredients}
+                onChange={(e) => setForm((f) => ({ ...f, ingredients: e.target.value }))}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                rows={2}
+                placeholder="List what you use to make this item. This builds customer trust."
+              />
+            </div>
+            <div>
+              <label htmlFor="product-nutrition" className="block text-sm font-medium text-zinc-700 mb-1">
+                Nutritional details
+              </label>
+              <textarea
+                id="product-nutrition"
+                value={form.nutritionalInfo}
+                onChange={(e) => setForm((f) => ({ ...f, nutritionalInfo: e.target.value }))}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                rows={2}
+                placeholder="Optional: calories, sugar level, allergen notes, etc."
+              />
+            </div>
             <button
               type="submit"
               disabled={submitting}
@@ -205,7 +285,19 @@ export default function AdminProductsPage() {
                 <div>
                   <span className="font-medium text-zinc-900">{p.name}</span>
                   {!p.is_active && <span className="ml-2 text-xs text-amber-600">(inactive)</span>}
-                  <p className="text-sm text-zinc-500 mt-0.5">₦{Number(p.price).toLocaleString()} · {p.vendor_name}</p>
+                    <p className="text-sm text-zinc-500 mt-0.5">
+                      ₦{Number(p.price).toLocaleString()} · {p.vendor_name}
+                    </p>
+                    <div className="text-xs text-zinc-500 mt-0.5">
+                      {p.category && <span className="mr-2">Category: {p.category}</span>}
+                      {p.size_label && <span>Size: {p.size_label}</span>}
+                    </div>
+                    {p.ingredients && (
+                      <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">
+                        <span className="font-semibold">Contents: </span>
+                        {p.ingredients}
+                      </p>
+                    )}
                 </div>
                 <Link
                   href="/dashboard/vendor"

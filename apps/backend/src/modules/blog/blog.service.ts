@@ -343,11 +343,11 @@ export class BlogService {
     await this.ensureTables();
 
     const vendor = await this.vendorsService.findOne(vendorId);
-    if (!vendor) {
-      throw new ForbiddenException('Vendor not found');
-    }
-    if (!vendor.is_verified) {
-      throw new ForbiddenException('Vendor is not verified');
+    const active = vendor && vendor.is_verified
+      ? await this.vendorsService.isVendorActive(vendorId)
+      : false;
+    if (!vendor || !vendor.is_verified || !active) {
+      throw new ForbiddenException('Vendor is not approved or active');
     }
 
     const slug = await this.generateSlug(dto.title);

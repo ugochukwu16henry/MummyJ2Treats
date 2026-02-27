@@ -13,6 +13,10 @@ type Product = {
   price: number;
   stock: number | null;
   is_active: boolean;
+  category?: string | null;
+  size_label?: string | null;
+  ingredients?: string | null;
+  nutritional_info?: string | null;
 };
 
 type VendorProfile = { business_name?: string; is_verified?: boolean } | null;
@@ -24,7 +28,16 @@ export default function VendorProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", price: "", stock: "" });
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    category: "",
+    sizeLabel: "",
+    ingredients: "",
+    nutritionalInfo: "",
+  });
 
   async function load() {
     setLoading(true);
@@ -72,6 +85,10 @@ export default function VendorProductsPage() {
           description: form.description.trim() || undefined,
           price,
           stock: form.stock.trim() ? Number(form.stock) : undefined,
+          category: form.category.trim() || undefined,
+          sizeLabel: form.sizeLabel.trim() || undefined,
+          ingredients: form.ingredients.trim() || undefined,
+          nutritionalInfo: form.nutritionalInfo.trim() || undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -80,7 +97,16 @@ export default function VendorProductsPage() {
         return;
       }
       setMessage({ type: "ok", text: "Product added." });
-      setForm({ name: "", description: "", price: "", stock: "" });
+      setForm({
+        name: "",
+        description: "",
+        price: "",
+        stock: "",
+        category: "",
+        sizeLabel: "",
+        ingredients: "",
+        nutritionalInfo: "",
+      });
       setShowForm(false);
       setProducts((prev) => [data as Product, ...prev]);
     } catch {
@@ -171,6 +197,32 @@ export default function VendorProductsPage() {
                     rows={2}
                   />
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="vendor-product-category" className="block text-sm font-medium text-zinc-700 mb-1">
+                      Category
+                    </label>
+                    <input
+                      id="vendor-product-category"
+                      value={form.category}
+                      onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                      placeholder="E.g. Parfaits, Catering, Snacks"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="vendor-product-size" className="block text-sm font-medium text-zinc-700 mb-1">
+                      Size / portion
+                    </label>
+                    <input
+                      id="vendor-product-size"
+                      value={form.sizeLabel}
+                      onChange={(e) => setForm((f) => ({ ...f, sizeLabel: e.target.value }))}
+                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                      placeholder="E.g. tray for 10, 300ml cup"
+                    />
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="vendor-product-price" className="block text-sm font-medium text-zinc-700 mb-1">
@@ -200,6 +252,32 @@ export default function VendorProductsPage() {
                       className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
                     />
                   </div>
+                </div>
+                <div>
+                  <label htmlFor="vendor-product-ingredients" className="block text-sm font-medium text-zinc-700 mb-1">
+                    Ingredients / contents
+                  </label>
+                  <textarea
+                    id="vendor-product-ingredients"
+                    value={form.ingredients}
+                    onChange={(e) => setForm((f) => ({ ...f, ingredients: e.target.value }))}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                    rows={2}
+                    placeholder="List what you use to make this item. This builds customer trust."
+                  />
+                </div>
+                <div>
+                  <label htmlFor="vendor-product-nutrition" className="block text-sm font-medium text-zinc-700 mb-1">
+                    Nutritional details
+                  </label>
+                  <textarea
+                    id="vendor-product-nutrition"
+                    value={form.nutritionalInfo}
+                    onChange={(e) => setForm((f) => ({ ...f, nutritionalInfo: e.target.value }))}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                    rows={2}
+                    placeholder="Optional: calories, sugar level, allergen notes, etc."
+                  />
                 </div>
                 <button
                   type="submit"
@@ -231,6 +309,16 @@ export default function VendorProductsPage() {
                     <div className="text-xs text-zinc-500">
                       ₦{Number(p.price).toLocaleString()} · Stock {p.stock ?? 0}
                     </div>
+                    <div className="text-[11px] text-zinc-500">
+                      {p.category && <span className="mr-2">Category: {p.category}</span>}
+                      {p.size_label && <span>Size: {p.size_label}</span>}
+                    </div>
+                    {p.ingredients && (
+                      <div className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2">
+                        <span className="font-semibold">Contents: </span>
+                        {p.ingredients}
+                      </div>
+                    )}
                   </div>
                   {!p.is_active && (
                     <span className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 self-start sm:self-auto">

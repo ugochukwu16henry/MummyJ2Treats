@@ -26,6 +26,14 @@ export function TestimonialForm({
     setSubmitting(true);
     setMessage(null);
     try {
+      const cookie = document.cookie.split("; ").find((c) => c.startsWith("access_token="));
+      const token = cookie?.split("=")[1];
+      if (!token) {
+        setMessage("Please log in as a customer to submit a testimonial.");
+        return;
+      }
+      const authHeaders: HeadersInit = { Authorization: `Bearer ${token}` };
+
       let finalImageUrl: string | undefined = imageUrl.trim() || undefined;
 
       if (file) {
@@ -34,11 +42,16 @@ export function TestimonialForm({
         const uploadRes = await fetch(`${API_BASE}/testimonials/upload-image`, {
           method: "POST",
           credentials: "include",
+          headers: authHeaders,
           body: formData,
         });
         if (!uploadRes.ok) {
           if (uploadRes.status === 401) {
-            setMessage("Please log in to submit a testimonial.");
+            setMessage("Please log in as a customer to submit a testimonial.");
+            return;
+          }
+          if (uploadRes.status === 403) {
+            setMessage("You must be logged in as a customer (not vendor/admin) to submit a testimonial.");
             return;
           }
           const b = await uploadRes.json().catch(() => ({}));
@@ -54,7 +67,7 @@ export function TestimonialForm({
       const res = await fetch(`${API_BASE}/testimonials`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({
           content,
           imageUrl: finalImageUrl,
@@ -64,7 +77,11 @@ export function TestimonialForm({
       });
       if (!res.ok) {
         if (res.status === 401) {
-          setMessage("Please log in to submit a testimonial.");
+          setMessage("Please log in as a customer to submit a testimonial.");
+          return;
+        }
+        if (res.status === 403) {
+          setMessage("You must be logged in as a customer (not vendor/admin) to submit a testimonial.");
           return;
         }
         const body = await res.json().catch(() => ({}));

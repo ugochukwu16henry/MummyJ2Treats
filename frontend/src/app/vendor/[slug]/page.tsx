@@ -158,19 +158,42 @@ export default async function VendorStorePage({
           <h3 className="text-xl font-semibold mb-3">What customers say</h3>
           <div className="flex gap-4 overflow-x-auto pb-2">
             {testimonials.length === 0 ? (
-              <p className="text-sm text-zinc-600">Testimonials for this vendor will appear here after approval.</p>
+              <p className="text-sm text-zinc-600">
+                Testimonials for this vendor will appear here after approval.
+              </p>
             ) : (
-              testimonials.map((t: any) => (
-                <div
-                  key={t.id}
-                  className="min-w-[260px] rounded-2xl shadow-md bg-white p-4 flex flex-col items-start"
-                >
-                  <p className="italic text-sm text-zinc-700 mb-2">“{t.content}”</p>
-                  <span className="text-xs text-zinc-500">
-                    {t.first_name ? `${t.first_name} ${t.last_name ?? ""}`.trim() : "Customer"}
-                  </span>
-                </div>
-              ))
+              testimonials.map((t: any) => {
+                const raw = t.image_url as string | null | undefined;
+                const imageSrc =
+                  raw && typeof raw === "string"
+                    ? raw.startsWith("http")
+                      ? raw
+                      : `${API_BASE}${raw}`
+                    : null;
+                return (
+                  <div
+                    key={t.id}
+                    className="min-w-[260px] rounded-2xl shadow-md bg-white p-4 flex flex-col items-start"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-zinc-100 mb-2 overflow-hidden flex items-center justify-center">
+                      {imageSrc ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={imageSrc}
+                          alt="Customer"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-[10px] text-zinc-500">Customer</span>
+                      )}
+                    </div>
+                    <p className="italic text-sm text-zinc-700 mb-2">“{t.content}”</p>
+                    <span className="text-xs text-zinc-500">
+                      {t.first_name ? `${t.first_name} ${t.last_name ?? ""}`.trim() : "Customer"}
+                    </span>
+                  </div>
+                );
+              })
             )}
           </div>
           <TestimonialForm target="vendor" vendorSlug={vendor.slug} />

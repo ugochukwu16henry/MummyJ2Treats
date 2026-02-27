@@ -211,27 +211,36 @@ export default async function Home() {
               Testimonials will appear here after the founder approves them.
             </p>
           ) : (
-            testimonials.map((t: any) => (
-              <div
-                key={t.id}
-                className="min-w-[320px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-6 flex flex-col items-center"
-              >
-                <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-3 overflow-hidden flex items-center justify-center">
-                  {t.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={t.image_url} alt="Customer" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xs text-zinc-500">Customer</span>
-                  )}
+            testimonials.map((t: any) => {
+              const raw = t.image_url as string | null | undefined;
+              const imageSrc =
+                raw && typeof raw === "string"
+                  ? raw.startsWith("http")
+                    ? raw
+                    : `${API_BASE}${raw}`
+                  : null;
+              return (
+                <div
+                  key={t.id}
+                  className="min-w-[320px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-6 flex flex-col items-center"
+                >
+                  <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-3 overflow-hidden flex items-center justify-center">
+                    {imageSrc ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={imageSrc} alt="Customer" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-zinc-500">Customer</span>
+                    )}
+                  </div>
+                  <p className="italic text-zinc-600 dark:text-zinc-300 mb-2 text-center">
+                    “{t.content}”
+                  </p>
+                  <span className="font-semibold">
+                    {t.first_name ? `${t.first_name} ${t.last_name ?? ""}`.trim() : "Customer"}
+                  </span>
                 </div>
-                <p className="italic text-zinc-600 dark:text-zinc-300 mb-2 text-center">
-                  “{t.content}”
-                </p>
-                <span className="font-semibold">
-                  {t.first_name ? `${t.first_name} ${t.last_name ?? ""}`.trim() : "Customer"}
-                </span>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
         <TestimonialForm target="founder" />

@@ -43,7 +43,11 @@ export function TestimonialForm({
         }
         const uploaded = (await uploadRes.json().catch(() => ({}))) as { url?: string };
         if (uploaded.url) {
-          finalImageUrl = uploaded.url;
+          const raw = uploaded.url;
+          finalImageUrl =
+            raw.startsWith("http") || raw.startsWith("https")
+              ? raw
+              : `${API_BASE}${raw}`;
         }
       }
 

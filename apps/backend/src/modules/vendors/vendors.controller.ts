@@ -18,6 +18,23 @@ export class VendorsController {
     return this.vendorsService.findOne(id);
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('admin')
+  @Patch(':id/approve')
+  adminApprove(
+    @Param('id') id: string,
+    @Body()
+    dto: {
+      isVerified?: boolean;
+      signupFeePaid?: boolean;
+      subscriptionStatus?: 'trial' | 'active' | 'paused';
+      currentPeriodEnd?: string | null;
+      trialEndsAt?: string | null;
+    },
+  ) {
+    return this.vendorsService.updateAdminFlags(id, dto);
+  }
+
   // Vendor/admin-only endpoints
   @UseGuards(AuthGuard('jwt'))
   @Roles('vendor', 'admin')

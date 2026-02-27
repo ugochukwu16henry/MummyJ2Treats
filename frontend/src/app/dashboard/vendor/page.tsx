@@ -33,6 +33,7 @@ export default function VendorDashboardPage() {
   const [vendorState, setVendorState] = useState<string | null>(null);
   const [riders, setRiders] = useState<Rider[]>([]);
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [vendorProfile, setVendorProfile] = useState<VendorProfile | null>(null);
   const [onboarding, setOnboarding] = useState<{ steps: OnboardingStep[]; complete: boolean } | null>(null);
@@ -115,6 +116,24 @@ export default function VendorDashboardPage() {
       if (res.ok) await loadOrders();
     } finally {
       setAssigningOrderId(null);
+    }
+  }
+
+  async function updateOrderStatus(orderId: string, status: string) {
+    if (!status) return;
+    try {
+      setUpdatingStatusId(orderId);
+      const res = await fetch(`${API_BASE}/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        await loadOrders();
+      }
+    } finally {
+      setUpdatingStatusId(null);
     }
   }
 
@@ -231,6 +250,18 @@ export default function VendorDashboardPage() {
                     {o.rider_id && <span className="ml-2 text-xs text-green-600">Rider assigned</span>}
                   </div>
                   <span className="font-medium">₦{Number(o.total_amount).toLocaleString()}</span>
+                  <select
+                    className="text-xs border border-zinc-300 rounded px-2 py-1"
+                    value={o.status}
+                    disabled={updatingStatusId === o.id}
+                    onChange={(e) => updateOrderStatus(o.id, e.target.value)}
+                  >
+                    {["PENDING", "PAID", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"].map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
                   {!o.rider_id && vendorState && riders.length > 0 && ["PAID", "PREPARING", "OUT_FOR_DELIVERY"].includes(o.status) && (
                     <select
                       className="text-sm border border-zinc-300 rounded px-2 py-1"

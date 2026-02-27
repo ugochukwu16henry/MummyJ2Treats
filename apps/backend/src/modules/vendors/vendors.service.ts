@@ -8,7 +8,20 @@ export class VendorsService {
 
   async findAll() {
     const result = await this.db.query(
-      'SELECT id, user_id, business_name, slug, description, logo_url, banner_url, is_verified, subscription_status FROM vendors',
+      `SELECT
+        id,
+        user_id,
+        business_name,
+        slug,
+        description,
+        logo_url,
+        banner_url,
+        is_verified,
+        subscription_status,
+        signup_fee_paid,
+        trial_ends_at,
+        current_period_end
+       FROM vendors`,
     );
     return { data: result.rows };
   }
@@ -231,5 +244,56 @@ export class VendorsService {
     }
 
     return false;
+  }
+
+  async updateAdminFlags(
+    vendorId: string,
+    dto: {
+      isVerified?: boolean;
+      signupFeePaid?: boolean;
+      subscriptionStatus?: 'trial' | 'active' | 'paused';
+      currentPeriodEnd?: string | null;
+      trialEndsAt?: string | null;
+    },
+  ) {
+    const fields: string[] = [];
+    const values: any[] = [vendorId];
+    let index = 2;
+
+    if (dto.isVerified !== undefined) {
+      fields.push(`is_verified = $${index}`);
+      values.push(dto.isVerified);
+      index += 1;
+    }
+    if (dto.signupFeePaid !== undefined) {
+      fields.push(`signup_fee_paid = $${index}`);
+      values.push(dto.signupFeePaid);
+      index += 1;
+    }
+    if (dto.subscriptionStatus !== undefined) {
+      fields.push(`subscription_status = $${index}`);
+      values.push(dto.subscriptionStatus);
+      index += 1;
+    }
+    if (dto.currentPeriodEnd !== undefined) {
+      fields.push(`current_period_end = $${index}`);
+      values.push(dto.currentPeriodEnd);
+      index += 1;
+    }
+    if (dto.trialEndsAt !== undefined) {
+      fields.push(`trial_ends_at = $${index}`);
+      values.push(dto.trialEndsAt);
+      index += 1;
+    }
+
+    if (!fields.length) {
+      return this.findOne(vendorId);
+    }
+
+    const result = await this.db.query(
+      `UPDATE vendors SET ${fields.join(', ')} WHERE id = $1 RETURNING *`,
+      values,
+    );
+    return result.rows[0] ?? null;
   }
 }

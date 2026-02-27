@@ -671,6 +671,34 @@ export class BlogService {
     return row;
   }
 
+  async attachUploadedMediaForVendor(
+    vendorId: string,
+    postId: string,
+    url: string,
+    provider?: string,
+  ) {
+    await this.ensureTables();
+
+    const existing = await this.db.query(
+      'SELECT id FROM blog_posts WHERE id = $1 AND vendor_id = $2',
+      [postId, vendorId],
+    );
+    if (!existing.rowCount) {
+      throw new ForbiddenException('Cannot attach media to this post');
+    }
+
+    const id = uuidv4();
+    await this.db.query(
+      `
+      INSERT INTO blog_media_embeds (id, post_id, provider, url)
+      VALUES ($1, $2, $3, $4)
+      `,
+      [id, postId, provider ?? 'upload', url],
+    );
+
+    return { id, url, provider: provider ?? 'upload' };
+  }
+
   async subscribeToAuthor(userId: string, vendorId: string) {
     await this.ensureTables();
 

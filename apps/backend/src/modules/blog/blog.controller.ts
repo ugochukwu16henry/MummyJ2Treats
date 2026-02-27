@@ -9,6 +9,8 @@ import {
   Req,
   UseGuards,
   ForbiddenException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BlogService, BlogPostSummary, BlogPostDetail } from './blog.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -16,6 +18,7 @@ import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
 import { VendorsService } from '../vendors/vendors.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('blog')
 export class BlogController {
@@ -148,6 +151,35 @@ export class BlogController {
       throw new ForbiddenException('No vendor account linked.');
     }
     return this.blogService.submitForReview(vendor.id, id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
+  @Post('me/:id/upload-video')
+  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/blog-videos' }))
+  async uploadVideoForPost(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @UploadedFile() file?: any,
+  ) {
+    const user = req.user as { userId: string; role: string } | undefined;
+    if (!user) {
+      throw new ForbiddenException('Missing user');
+    }
+    const vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    if (!file) {
+      throw new ForbiddenException('File is required');
+    }
+    const relative = `/uploads/blog-videos/${file.filename}`;
+    return this.blogService.attachUploadedMediaForVendor(
+      vendor.id,
+      id,
+      relative,
+      'upload',
+    );
   }
 
   // Admin moderation endpoints

@@ -71,14 +71,15 @@ export async function generateMetadata({
 }
 
 function renderEmbed(embed: { provider: string | null; url: string }) {
-  const url = embed.url;
+  const rawUrl = embed.url;
   const provider = (embed.provider ?? "").toLowerCase();
+  const resolvedUrl = rawUrl.startsWith("http") ? rawUrl : `${API_BASE}${rawUrl}`;
 
   // YouTube
-  if (provider === "youtube" || url.includes("youtube.com") || url.includes("youtu.be")) {
+  if (provider === "youtube" || resolvedUrl.includes("youtube.com") || resolvedUrl.includes("youtu.be")) {
     let videoId = "";
     try {
-      const u = new URL(url);
+      const u = new URL(resolvedUrl);
       if (u.hostname.includes("youtu.be")) {
         videoId = u.pathname.slice(1);
       } else {
@@ -103,15 +104,33 @@ function renderEmbed(embed: { provider: string | null; url: string }) {
     }
   }
 
+  // Uploaded house videos or direct video links
+  if (
+    provider === "upload" ||
+    provider === "video" ||
+    resolvedUrl.endsWith(".mp4") ||
+    resolvedUrl.endsWith(".webm") ||
+    resolvedUrl.endsWith(".ogg")
+  ) {
+    return (
+      <div className="w-full overflow-hidden rounded-xl bg-black">
+        <video controls className="w-full h-full" preload="metadata">
+          <source src={resolvedUrl} />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    );
+  }
+
   // Simple generic card for other platforms (X, TikTok, Instagram, etc.)
   return (
     <a
-      href={url}
+      href={resolvedUrl}
       target="_blank"
       rel="noreferrer"
       className="block rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-4 py-3 text-xs text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
     >
-      View media: {url}
+      View media: {resolvedUrl}
     </a>
   );
 }

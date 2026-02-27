@@ -20,13 +20,27 @@ export default function AdminTestimonialsPage() {
   const [items, setItems] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
     try {
+      setError(null);
+      const cookie = typeof document !== "undefined"
+        ? document.cookie.split("; ").find((c) => c.startsWith("access_token="))
+        : undefined;
+      const token = cookie?.split("=")[1];
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
       const res = await fetch(`${API_BASE}/testimonials?status=pending`, {
         credentials: "include",
+        headers,
       });
+      if (!res.ok) {
+        setError("Failed to load pending testimonials. Make sure you are logged in as founder admin.");
+        setItems([]);
+        return;
+      }
       const data = (await res.json().catch(() => ({}))) as { data?: Testimonial[] };
       setItems(data.data ?? []);
     } finally {
@@ -59,6 +73,7 @@ export default function AdminTestimonialsPage() {
           Approve customer testimonials for the homepage and vendor stores.
         </p>
       </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
       {loading ? (
         <p className="text-zinc-500">Loading…</p>
       ) : items.length === 0 ? (

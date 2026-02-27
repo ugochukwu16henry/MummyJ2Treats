@@ -82,6 +82,7 @@ export default async function Home() {
           <a href="/" className="hover:text-primary">Home</a>
           <a href="/vendors" className="hover:text-primary">Vendors</a>
           <a href="#categories" className="hover:text-primary">Categories</a>
+          <a href="/blog" className="hover:text-primary">Blog</a>
           <a href="/about" className="hover:text-primary">About</a>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
@@ -298,7 +299,7 @@ export default async function Home() {
             <ul className="space-y-1 text-sm">
               <li><a href="/about">About</a></li>
               <li><a href="#">Careers</a></li>
-              <li><a href="#">Blog</a></li>
+              <li><a href="/blog">Blog</a></li>
             </ul>
           </div>
           <div>

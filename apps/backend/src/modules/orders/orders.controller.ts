@@ -3,6 +3,7 @@ import { OrdersService } from './orders.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
+import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
 
 @Controller('orders')
@@ -17,7 +18,7 @@ export class OrdersController {
     return this.ordersService.findAll();
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('customer', 'vendor', 'admin')
   @Get('me')
   async myOrders(@Req() req: Request) {
@@ -30,7 +31,7 @@ export class OrdersController {
     return this.ordersService.findByVendorId(vendor.id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('customer', 'vendor', 'admin')
   @Get('me/:id')
   async myOrderDetail(@Param('id') id: string, @Req() req: Request) {
@@ -50,7 +51,7 @@ export class OrdersController {
     return this.ordersService.findOne(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Patch(':id/status')
   async updateStatus(

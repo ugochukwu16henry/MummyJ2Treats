@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
+import { RolesGuard } from '../auth/roles.guard';
 import { DataMoatService } from './data-moat.service';
 import { ReferralService } from './referral.service';
 import { LoyaltyService } from './loyalty.service';
@@ -42,14 +43,14 @@ export class MoatController {
     return this.dataMoat.getRecommendationsForCustomer(user.userId, limit ? parseInt(limit, 10) : 10);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Get('heatmap')
   getHeatmap(@Query('days') days?: string) {
     return this.dataMoat.getDeliveryHeatmap(days ? parseInt(days, 10) : 30);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Post('reliability/refresh')
   refreshReliability(@Body() body: { periodDate?: string }) {
@@ -93,7 +94,7 @@ export class MoatController {
   }
 
   // ---- Layer 2: Vendor bonuses ----
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Get('vendor-bonuses')
   async listMyBonuses(@Req() req: Request) {
@@ -103,7 +104,7 @@ export class MoatController {
     return this.vendorBonus.listForVendor(vendorId!);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Get('vendor-bonuses/suggestions')
   getBonusSuggestions(@Query('periodDate') periodDate: string) {
@@ -111,7 +112,7 @@ export class MoatController {
     return this.vendorBonus.computeSuggestions(date);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Post('vendor-bonuses')
   createBonus(@Body() body: { vendorId: string; periodDate: string; amount: number; criteria?: string }) {
@@ -119,7 +120,7 @@ export class MoatController {
   }
 
   // ---- Layer 3: Onboarding ----
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Get('onboarding')
   async getOnboarding(@Req() req: Request) {
@@ -128,7 +129,7 @@ export class MoatController {
     return this.onboarding.getStatus(vendorId);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Patch('onboarding/:stepKey')
   async completeOnboardingStep(@Req() req: Request, @Param('stepKey') stepKey: string, @Body() body?: { payload?: Record<string, unknown> }) {
@@ -138,28 +139,28 @@ export class MoatController {
   }
 
   // ---- Layer 3: Payouts ----
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Get('payout-runs')
   listPayoutRuns(@Query('limit') limit?: string) {
     return this.payout.listRuns(limit ? parseInt(limit, 10) : 20);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Get('payout-runs/:id')
   getPayoutRun(@Param('id') id: string) {
     return this.payout.getRun(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Post('payout-runs')
   createPayoutRun(@Body() body: { periodStart: string; periodEnd: string }) {
     return this.payout.createRun(body.periodStart, body.periodEnd);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Patch('payout-runs/items/:itemId/paid')
   markPayoutItemPaid(@Param('itemId') itemId: string, @Body() body: { reference: string }) {
@@ -167,7 +168,7 @@ export class MoatController {
   }
 
   // ---- Layer 3: Cancellation ----
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Post('orders/:orderId/cancel')
   async cancelOrder(

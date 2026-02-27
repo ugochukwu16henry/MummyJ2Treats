@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { TestimonialsService } from './testimonials.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { Roles } from '../auth/roles.metadata';
+import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -71,7 +72,7 @@ export class TestimonialsController {
     return this.testimonials.listApprovedForVendorSlug(slug, n);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Get()
   listForAdmin(
@@ -81,7 +82,7 @@ export class TestimonialsController {
     return this.testimonials.listForAdmin({ status, target });
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Patch(':id/approve')
   approve(@Param('id') id: string) {

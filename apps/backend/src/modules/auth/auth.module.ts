@@ -24,7 +24,7 @@ import { VendorsModule } from '../vendors/vendors.module';
   providers: [
     AuthService,
     JwtStrategy,
-    { provide: APP_GUARD, useClass: RolesGuard },
+    RolesGuard,
   ],
   exports: [AuthService],
 })

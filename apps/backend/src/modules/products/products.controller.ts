@@ -3,6 +3,7 @@ import { ProductsService } from './products.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
+import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
 
 @Controller('products')
@@ -30,7 +31,7 @@ export class ProductsController {
     });
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Get('me')
   async listMyProducts(@Req() req: Request) {
@@ -65,7 +66,7 @@ export class ProductsController {
     );
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Post('me')
   async createForMe(
@@ -86,7 +87,7 @@ export class ProductsController {
     return this.productsService.createForVendor(vendor.id, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Patch('me/:id')
   async updateForMe(

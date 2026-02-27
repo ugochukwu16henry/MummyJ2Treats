@@ -2,6 +2,7 @@ import { Controller, Get, Param, Patch, Body, Req, UseGuards } from '@nestjs/com
 import { VendorsService } from './vendors.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
+import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
 
 @Controller('vendors')
@@ -18,7 +19,7 @@ export class VendorsController {
     return this.vendorsService.findOne(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Patch(':id/approve')
   adminApprove(
@@ -37,7 +38,7 @@ export class VendorsController {
   }
 
   // Vendor/admin-only endpoints
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Get('me/profile')
   async myProfile(@Req() req: Request) {
@@ -46,7 +47,7 @@ export class VendorsController {
     return vendor;
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Patch('me/branding')
   async updateBranding(
@@ -65,7 +66,7 @@ export class VendorsController {
     return this.vendorsService.updateBranding(vendor.id, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Patch('me/location-and-delivery')
   async updateLocationAndDelivery(
@@ -91,7 +92,7 @@ export class VendorsController {
     return this.vendorsService.updateLocationAndDelivery(vendor.id, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Patch('me/payout')
   async updatePayout(

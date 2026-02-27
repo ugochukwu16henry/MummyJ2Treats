@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
+import { RolesGuard } from '../auth/roles.guard';
 import { RidersService } from './riders.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { Request } from 'express';
@@ -12,7 +13,7 @@ export class RidersController {
     private readonly vendorsService: VendorsService,
   ) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('rider')
   @Post('register')
   register(
@@ -23,7 +24,7 @@ export class RidersController {
     return this.ridersService.create(user.userId, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('rider')
   @Get('me')
   async myProfile(@Req() req: Request) {
@@ -32,7 +33,7 @@ export class RidersController {
     return rider ?? { message: 'No rider profile. POST /riders/register to create.' };
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('rider')
   @Patch('me')
   async updateProfile(
@@ -45,7 +46,7 @@ export class RidersController {
     return this.ridersService.updateProfile(rider.id, user.userId, dto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('rider')
   @Patch('me/location')
   async updateLocation(
@@ -58,7 +59,7 @@ export class RidersController {
     return this.ridersService.updateLocation(rider.id, user.userId, body.latitude, body.longitude, body.orderId);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Get('by-state')
   listByState(@Query('state') state: string, @Query('available') available?: string) {
@@ -66,14 +67,14 @@ export class RidersController {
     return this.ridersService.listByState(state, available === 'true');
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Get()
   listAll(@Query('available') available?: string) {
     return this.ridersService.listAll(available === 'true');
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Patch('orders/:orderId/assign')
   async assignRider(

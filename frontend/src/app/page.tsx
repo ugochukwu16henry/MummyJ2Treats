@@ -156,7 +156,7 @@ export default async function Home() {
               </a>
             ))
           )}
-        </div>
+                       <a href="/vendor" className="hover:text-primary">Vendors</a>
       </section>
 
       {/* Recommended for you (Data Moat: recommendations) */}
@@ -178,12 +178,12 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Best Sellers */}
-      <section id="best-sellers" className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Best Sellers</h2>
-        {bestSellers.length === 0 ? (
-          <p className="text-zinc-600">
-            Products will appear here once the admin vendor adds items.
+                         <a
+                           href="/vendor/signup"
+                           className="bg-white border border-primary text-primary px-6 py-3 rounded-full font-semibold text-lg hover:bg-primary/10 text-center"
+                         >
+                           Become a Vendor
+                         </a>
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
@@ -211,7 +211,7 @@ export default async function Home() {
                     await fetch(`${API_BASE}/cart/items`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      credentials: "include",
+                           <li><a href="/vendor/signup">Become a Vendor</a></li>
                       body: JSON.stringify({ productId: p.id, quantity: 1 }),
                     });
                   }}

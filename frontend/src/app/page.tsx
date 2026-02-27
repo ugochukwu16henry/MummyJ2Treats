@@ -313,15 +313,17 @@ export default async function Home() {
           <div>
             <h3 className="font-bold mb-2">Help</h3>
             <ul className="space-y-1 text-sm">
-              <li><a href="#">Support</a></li>
-              <li><a href="#">FAQs</a></li>
+              <li><a href="/help">Help</a></li>
+              <li><a href="/support">Support</a></li>
+              <li><a href="/faqs">FAQs</a></li>
             </ul>
           </div>
           <div>
             <h3 className="font-bold mb-2">Legal</h3>
             <ul className="space-y-1 text-sm">
-              <li><a href="#">Terms</a></li>
-              <li><a href="#">Privacy</a></li>
+              <li><a href="/legal">Legal</a></li>
+              <li><a href="/terms">Terms</a></li>
+              <li><a href="/privacy">Privacy</a></li>
             </ul>
             <div className="flex gap-3 mt-4">
               <a href="#" aria-label="Twitter"><span className="material-icons">twitter</span></a>

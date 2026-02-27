@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { TestimonialsService } from './testimonials.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { Roles } from '../auth/roles.metadata';

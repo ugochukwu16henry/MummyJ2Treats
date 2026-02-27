@@ -14,6 +14,7 @@ const nav = [
   { href: "/dashboard/admin/support", label: "Support" },
   { href: "/dashboard/admin/delivery-map", label: "Delivery map" },
   { href: "/dashboard/admin/testimonials", label: "Testimonials" },
+  { href: "/dashboard/admin/newsletter", label: "Newsletter emails" },
 ] as const;
 
 export default function AdminDashboardLayout({

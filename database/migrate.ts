@@ -65,6 +65,14 @@ async function migrate() {
       files = files.filter((f) => f !== '005_testimonials.sql');
     }
 
+    // If newsletter_subscriptions table already exists, skip 006_newsletter_subscriptions.sql
+    const hasNewsletter = await client.query(
+      "SELECT to_regclass('public.newsletter_subscriptions') as reg",
+    );
+    if (hasNewsletter.rows[0]?.reg) {
+      files = files.filter((f) => f !== '006_newsletter_subscriptions.sql');
+    }
+
     for (const file of files) {
       const sql = readFileSync(join(dir, file), 'utf8');
       console.log(`Running migration: ${file}`);

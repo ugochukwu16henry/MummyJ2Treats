@@ -119,6 +119,23 @@ export class VendorsController {
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
+  @Get('me/profile-picture')
+  async getProfilePicture(@Req() req: Request) {
+    const user = req.user as { userId: string; role: string };
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    const profile = await this.vendorsService.getProfileForVendor(vendor.id);
+    const url = (profile as { profile_image_url?: string } | null)?.profile_image_url ?? null;
+    return { url };
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
   @Post('me/profile-image')
   @UseInterceptors(FileInterceptor('file', { dest: 'uploads/vendor-profiles' }))
   async uploadProfileImage(

@@ -28,7 +28,7 @@ export default function VendorLocationPage() {
       try {
         const res = await fetch(`${API_BASE}/vendors/me/profile`, { credentials: "include" });
         if (res.status === 401) { router.push("/auth/login"); return; }
-        if (res.status === 403) { router.push("/dashboard"); return; }
+        if (res.status === 403) { setLoading(false); return; }
         if (res.ok) {
           const p = (await res.json()) as Record<string, unknown>;
           if (!cancelled) {

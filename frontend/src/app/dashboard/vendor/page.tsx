@@ -34,12 +34,14 @@ export default function VendorDashboardPage() {
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
     const [uploadingPic, setUploadingPic] = useState(false);
+    const toFullProfilePicUrl = (url: string | null) =>
+      !url ? null : url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
     async function fetchProfilePic() {
       try {
         const res = await fetch(`${API_BASE}/vendors/me/profile-picture`, { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
-          setProfilePicUrl(data.url ?? null);
+          setProfilePicUrl(toFullProfilePicUrl(data.url ?? null));
         }
       } catch {}
     }
@@ -49,7 +51,7 @@ export default function VendorDashboardPage() {
       const formData = new FormData();
       formData.append("file", e.target.files[0]);
       try {
-        const res = await fetch(`${API_BASE}/vendors/me/profile-picture`, {
+        const res = await fetch(`${API_BASE}/vendors/me/profile-image`, {
           method: "POST",
           credentials: "include",
           body: formData,
@@ -71,7 +73,10 @@ export default function VendorDashboardPage() {
   async function loadOrders() {
     const res = await fetch(`${API_BASE}/orders/me`, { credentials: "include" });
     if (res.status === 401) { router.push("/auth/login"); return; }
-    if (res.status === 403) { router.push("/dashboard"); return; }
+    if (res.status === 403) {
+      setOrders([]);
+      return;
+    }
     const data = (await res.json()) as { data?: Order[] };
     setOrders(data.data ?? []);
   }
@@ -168,9 +173,9 @@ export default function VendorDashboardPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-zinc-50 px-4 py-8">
-        <div className="max-w-4xl mx-auto text-center py-20 text-zinc-500">Loading vendor dashboard…</div>
-      </main>
+      <div className="max-w-4xl mx-auto text-center py-20 text-zinc-500">
+        Loading overview…
+      </div>
     );
   }
 
@@ -179,9 +184,7 @@ export default function VendorDashboardPage() {
   const completedOrders = orders.filter(o => o.status === "DELIVERED").length;
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-8 flex flex-col">
-      <div className="max-w-4xl mx-auto space-y-6 flex-1 w-full">
-
+    <div className="max-w-4xl mx-auto space-y-6 w-full">
         {/* Onboarding checklist */}
         {onboarding && onboarding.steps && onboarding.steps.length > 0 && (
           <section className="bg-white rounded-2xl shadow-sm p-6">
@@ -218,24 +221,8 @@ export default function VendorDashboardPage() {
             </ul>
           </section>
         )}
-        <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Vendor Dashboard</h1>
-          <div className="flex items-center gap-3 text-sm">
-            <Link href="/dashboard" className="text-zinc-600 hover:underline">← Back</Link>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
-                } catch {}
-                document.cookie = "access_token=; path=/; max-age=0";
-                router.push("/auth/login");
-              }}
-              className="px-3 py-1 rounded-md border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
-            >
-              Logout
-            </button>
-          </div>
+        <header className="pb-2">
+          <h1 className="text-2xl font-bold">Overview</h1>
         </header>
 
         {/* Vendor profile summary */}
@@ -266,10 +253,10 @@ export default function VendorDashboardPage() {
                 {vendorProfile.description && (
                   <p className="text-zinc-600 text-sm mb-1">{vendorProfile.description}</p>
                 )}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 justify-center sm:justify-start">
-                  <Link href="/dashboard/vendor/location" className="text-primary font-medium hover:underline">Location &amp; delivery</Link>
-                  <Link href="/dashboard/vendor/products" className="text-primary font-medium hover:underline">Manage products</Link>
-                  <Link href="/dashboard/vendor/blog" className="text-primary font-medium hover:underline">Blog: write &amp; share</Link>
+                <div className="flex flex-wrap gap-2 sm:gap-4 mt-2 justify-center sm:justify-start">
+                  <Link href="/dashboard/vendor/location" className="text-primary font-medium hover:underline text-sm">Location &amp; delivery</Link>
+                  <Link href="/dashboard/vendor/products" className="text-primary font-medium hover:underline text-sm">Manage products</Link>
+                  <Link href="/dashboard/vendor/blog" className="text-primary font-medium hover:underline text-sm">Blog</Link>
                 </div>
               </div>
               {showProfileModal && (
@@ -355,18 +342,6 @@ export default function VendorDashboardPage() {
             </ul>
           )}
         </section>
-      </div>
-      <footer className="mt-8 text-center text-xs text-zinc-500">
-        Built by{" "}
-        <a
-          href="https://henry-ugochukwu-porfolio.vercel.app/"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          Henry M. Ugochukwu
-        </a>
-      </footer>
-    </main>
+    </div>
   );
 }

@@ -1,14 +1,37 @@
-import { Controller, Get, Post, Query, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body, Req, UseGuards, UseInterceptors, UploadedFile, ForbiddenException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
 import { AdminService } from './admin.service';
+import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('admin')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
+
+  @Get('me/profile-picture')
+  async getProfilePicture(@Req() req: Request) {
+    const user = req.user as { userId: string };
+    const url = await this.adminService.getAdminProfilePictureUrl(user.userId);
+    if (!url) return { url: null };
+    return { url };
+  }
+
+  @Post('me/profile-picture')
+  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/founder-admin' }))
+  async uploadProfilePicture(
+    @Req() req: Request,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const user = req.user as { userId: string };
+    if (!file) throw new ForbiddenException('File is required');
+    const relative = `/uploads/founder-admin/${file.filename}`;
+    await this.adminService.setAdminProfilePicture(user.userId, relative);
+    return { url: relative };
+  }
 
   @Get('metrics')
   getMetrics() {

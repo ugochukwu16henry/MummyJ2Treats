@@ -507,4 +507,22 @@ export class AdminService {
     );
     return { data: r.rows };
   }
+
+  /** Get founder admin profile picture URL (latest by uploaded_at). */
+  async getAdminProfilePictureUrl(adminId: string): Promise<string | null> {
+    const r = await this.db.query<{ url: string }>(
+      `SELECT url FROM founder_admin_profile_pictures WHERE admin_id = $1 ORDER BY uploaded_at DESC LIMIT 1`,
+      [adminId],
+    );
+    return r.rows[0]?.url ?? null;
+  }
+
+  /** Set founder admin profile picture (insert new row). */
+  async setAdminProfilePicture(adminId: string, url: string): Promise<{ url: string }> {
+    await this.db.query(
+      `INSERT INTO founder_admin_profile_pictures (id, admin_id, url) VALUES ($1, $2, $3)`,
+      [uuidv4(), adminId, url],
+    );
+    return { url };
+  }
 }

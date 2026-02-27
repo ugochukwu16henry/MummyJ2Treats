@@ -7,18 +7,13 @@ import Link from "next/link";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 const nav = [
-  { href: "/dashboard/admin", label: "Overview" },
-  { href: "/dashboard/admin/products", label: "Products" },
-  { href: "/dashboard/admin/vendors", label: "Vendors" },
-  { href: "/dashboard/admin/orders", label: "Orders" },
-  { href: "/dashboard/admin/support", label: "Support" },
-  { href: "/dashboard/admin/delivery-map", label: "Delivery map" },
-  { href: "/dashboard/admin/testimonials", label: "Testimonials" },
-  { href: "/dashboard/admin/newsletter", label: "Newsletter emails" },
-  { href: "/dashboard/admin/blog", label: "Blog moderation" },
+  { href: "/dashboard/vendor", label: "Overview" },
+  { href: "/dashboard/vendor/products", label: "Products" },
+  { href: "/dashboard/vendor/blog", label: "Blog" },
+  { href: "/dashboard/vendor/location", label: "Location & delivery" },
 ] as const;
 
-export default function AdminDashboardLayout({
+export default function VendorDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -27,42 +22,6 @@ export default function AdminDashboardLayout({
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [unauth, setUnauth] = useState(false);
-  const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
-  const [uploadingPic, setUploadingPic] = useState(false);
-  const toFullProfilePicUrl = (url: string | null) =>
-    !url ? null : url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
-
-  useEffect(() => {
-    async function fetchProfilePic() {
-      try {
-        const res = await fetch(`${API_BASE}/admin/me/profile-picture`, { credentials: "include" });
-        if (res.ok) {
-          const data = await res.json();
-          setProfilePicUrl(toFullProfilePicUrl(data.url ?? null));
-        }
-      } catch {}
-    }
-    fetchProfilePic();
-  }, []);
-  async function uploadProfilePic(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files?.[0]) return;
-    setUploadingPic(true);
-    const formData = new FormData();
-    formData.append("file", e.target.files[0]);
-    try {
-      const res = await fetch(`${API_BASE}/admin/me/profile-picture`, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProfilePicUrl(toFullProfilePicUrl(data.url ?? null));
-      }
-    } finally {
-      setUploadingPic(false);
-    }
-  }
 
   useEffect(() => {
     const cookie = document.cookie.split("; ").find((c) => c.startsWith("access_token="));
@@ -71,8 +30,7 @@ export default function AdminDashboardLayout({
       router.push("/auth/login");
       return;
     }
-    const headers: HeadersInit = { Authorization: `Bearer ${token}` };
-    fetch(`${API_BASE}/auth/me`, { credentials: "include", headers })
+    fetch(`${API_BASE}/auth/me`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           setUnauth(true);
@@ -81,7 +39,8 @@ export default function AdminDashboardLayout({
         return res.json();
       })
       .then((me: { role?: string } | undefined) => {
-        if (me?.role !== "admin") {
+        const role = me?.role ?? "";
+        if (role !== "vendor" && role !== "admin") {
           router.push("/dashboard");
           return;
         }
@@ -104,34 +63,33 @@ export default function AdminDashboardLayout({
 
   if (!ready && !unauth) {
     return (
-      <div className="min-h-screen bg-zinc-100 flex items-center justify-center">
-        <p className="text-zinc-500">Checking access…</p>
+      <div className="min-h-screen bg-zinc-100 flex flex-col md:flex-row">
+        <aside className="w-full md:w-56 shrink-0 bg-white border-b md:border-b-0 md:border-r border-zinc-200 p-4">
+          <p className="text-sm font-medium text-zinc-500">Vendor</p>
+          <nav className="mt-2 space-y-1">
+            {nav.map((item) => (
+              <div key={item.href} className="px-3 py-2 rounded-lg text-sm text-zinc-400">
+                {item.label}
+              </div>
+            ))}
+          </nav>
+        </aside>
+        <main className="flex-1 flex items-center justify-center p-8">
+          <p className="text-zinc-500">Checking access…</p>
+        </main>
       </div>
     );
   }
 
   if (unauth) {
-    return (
-      <div className="min-h-screen bg-zinc-100 flex items-center justify-center">
-        <p className="text-zinc-500">Redirecting to login…</p>
-      </div>
-    );
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-zinc-100 flex flex-col md:flex-row">
       <aside className="w-full md:w-56 shrink-0 bg-white border-b md:border-b-0 md:border-r border-zinc-200 flex flex-col">
-        <div className="p-4 border-b border-zinc-200 flex flex-col items-center">
-          {profilePicUrl ? (
-            <img src={profilePicUrl} alt="Profile" className="w-16 h-16 rounded-full object-cover border mb-2" crossOrigin="anonymous" referrerPolicy="no-referrer" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-500 mb-2">No photo</div>
-          )}
-          <label className="block text-xs text-primary cursor-pointer mb-2">
-            <input type="file" accept="image/*" className="hidden" onChange={uploadProfilePic} disabled={uploadingPic} />
-            {uploadingPic ? "Uploading…" : "Add/Change photo"}
-          </label>
-          <h1 className="font-semibold text-zinc-900">Founder Admin</h1>
+        <div className="p-4 border-b border-zinc-200">
+          <h1 className="font-semibold text-zinc-900">Vendor</h1>
           <p className="text-xs text-zinc-500 mt-0.5">Dashboard</p>
         </div>
         <nav className="p-2 flex-1">
@@ -153,12 +111,12 @@ export default function AdminDashboardLayout({
           })}
         </nav>
         <div className="p-2 border-t border-zinc-200">
-          <a
+          <Link
             href="/dashboard"
             className="block px-3 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-100"
           >
             ← Back to Dashboard
-          </a>
+          </Link>
           <button
             type="button"
             onClick={handleLogout}

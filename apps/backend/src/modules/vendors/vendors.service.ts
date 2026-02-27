@@ -4,7 +4,35 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class VendorsService {
+  private profilesInitialized = false;
+
   constructor(private readonly db: DatabaseService) {}
+
+  private async ensureProfilesTable() {
+    if (this.profilesInitialized) return;
+    this.profilesInitialized = true;
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS vendor_profiles (
+        id UUID PRIMARY KEY,
+        vendor_id UUID UNIQUE REFERENCES vendors(id) ON DELETE CASCADE,
+        owner_first_name VARCHAR,
+        owner_last_name VARCHAR,
+        contact_email VARCHAR,
+        contact_phone VARCHAR,
+        country VARCHAR,
+        state VARCHAR,
+        city VARCHAR,
+        open_days TEXT,
+        open_time VARCHAR,
+        close_time VARCHAR,
+        has_certificate BOOLEAN,
+        certificate_details TEXT,
+        profile_image_url TEXT,
+        created_at TIMESTAMP DEFAULT now(),
+        updated_at TIMESTAMP DEFAULT now()
+      );
+    `);
+  }
 
   async findAll() {
     const result = await this.db.query(
@@ -299,6 +327,202 @@ export class VendorsService {
     const result = await this.db.query(
       `UPDATE vendors SET ${fields.join(', ')} WHERE id = $1 RETURNING *`,
       values,
+    );
+    return result.rows[0] ?? null;
+  }
+
+  async upsertProfileForVendor(
+    vendorId: string,
+    dto: {
+      ownerFirstName?: string;
+      ownerLastName?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      country?: string;
+      state?: string;
+      city?: string;
+      openDays?: string;
+      openTime?: string;
+      closeTime?: string;
+      hasCertificate?: boolean;
+      certificateDetails?: string;
+    },
+  ) {
+    await this.ensureProfilesTable();
+
+    const existing = await this.db.query(
+      'SELECT id FROM vendor_profiles WHERE vendor_id = $1',
+      [vendorId],
+    );
+
+    if (existing.rowCount && existing.rows[0]) {
+      const id = existing.rows[0].id as string;
+      const fields: string[] = [];
+      const values: any[] = [id];
+      let index = 2;
+
+      if (dto.ownerFirstName !== undefined) {
+        fields.push(`owner_first_name = $${index++}`);
+        values.push(dto.ownerFirstName);
+      }
+      if (dto.ownerLastName !== undefined) {
+        fields.push(`owner_last_name = $${index++}`);
+        values.push(dto.ownerLastName);
+      }
+      if (dto.contactEmail !== undefined) {
+        fields.push(`contact_email = $${index++}`);
+        values.push(dto.contactEmail);
+      }
+      if (dto.contactPhone !== undefined) {
+        fields.push(`contact_phone = $${index++}`);
+        values.push(dto.contactPhone);
+      }
+      if (dto.country !== undefined) {
+        fields.push(`country = $${index++}`);
+        values.push(dto.country);
+      }
+      if (dto.state !== undefined) {
+        fields.push(`state = $${index++}`);
+        values.push(dto.state);
+      }
+      if (dto.city !== undefined) {
+        fields.push(`city = $${index++}`);
+        values.push(dto.city);
+      }
+      if (dto.openDays !== undefined) {
+        fields.push(`open_days = $${index++}`);
+        values.push(dto.openDays);
+      }
+      if (dto.openTime !== undefined) {
+        fields.push(`open_time = $${index++}`);
+        values.push(dto.openTime);
+      }
+      if (dto.closeTime !== undefined) {
+        fields.push(`close_time = $${index++}`);
+        values.push(dto.closeTime);
+      }
+      if (dto.hasCertificate !== undefined) {
+        fields.push(`has_certificate = $${index++}`);
+        values.push(dto.hasCertificate);
+      }
+      if (dto.certificateDetails !== undefined) {
+        fields.push(`certificate_details = $${index++}`);
+        values.push(dto.certificateDetails);
+      }
+
+      if (fields.length === 0) {
+        const current = await this.db.query(
+          'SELECT * FROM vendor_profiles WHERE id = $1',
+          [id],
+        );
+        return current.rows[0] ?? null;
+      }
+
+      fields.push('updated_at = now()');
+
+      const result = await this.db.query(
+        `
+        UPDATE vendor_profiles
+        SET ${fields.join(', ')}
+        WHERE id = $1
+        RETURNING *
+        `,
+        values,
+      );
+      return result.rows[0] ?? null;
+    }
+
+    const id = uuidv4();
+    const result = await this.db.query(
+      `
+      INSERT INTO vendor_profiles (
+        id,
+        vendor_id,
+        owner_first_name,
+        owner_last_name,
+        contact_email,
+        contact_phone,
+        country,
+        state,
+        city,
+        open_days,
+        open_time,
+        close_time,
+        has_certificate,
+        certificate_details
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
+      )
+      RETURNING *
+      `,
+      [
+        id,
+        vendorId,
+        dto.ownerFirstName ?? null,
+        dto.ownerLastName ?? null,
+        dto.contactEmail ?? null,
+        dto.contactPhone ?? null,
+        dto.country ?? null,
+        dto.state ?? null,
+        dto.city ?? null,
+        dto.openDays ?? null,
+        dto.openTime ?? null,
+        dto.closeTime ?? null,
+        dto.hasCertificate ?? null,
+        dto.certificateDetails ?? null,
+      ],
+    );
+    return result.rows[0] ?? null;
+  }
+
+  async getProfileForVendor(vendorId: string) {
+    await this.ensureProfilesTable();
+    const result = await this.db.query(
+      `
+      SELECT *
+      FROM vendor_profiles
+      WHERE vendor_id = $1
+      `,
+      [vendorId],
+    );
+    return result.rows[0] ?? null;
+  }
+
+  async updateProfileImage(vendorId: string, url: string) {
+    await this.ensureProfilesTable();
+    const existing = await this.db.query(
+      'SELECT id FROM vendor_profiles WHERE vendor_id = $1',
+      [vendorId],
+    );
+    if (!existing.rowCount || !existing.rows[0]) {
+      await this.upsertProfileForVendor(vendorId, {});
+      // call again after profile exists
+      const created = await this.db.query(
+        'SELECT id FROM vendor_profiles WHERE vendor_id = $1',
+        [vendorId],
+      );
+      const idCreated = created.rows[0]?.id as string;
+      const resultCreated = await this.db.query(
+        `
+        UPDATE vendor_profiles
+        SET profile_image_url = $1, updated_at = now()
+        WHERE id = $2
+        RETURNING *
+        `,
+        [url, idCreated],
+      );
+      return resultCreated.rows[0] ?? null;
+    }
+    const id = existing.rows[0].id as string;
+    const result = await this.db.query(
+      `
+      UPDATE vendor_profiles
+      SET profile_image_url = $1, updated_at = now()
+      WHERE id = $2
+      RETURNING *
+      `,
+      [url, id],
     );
     return result.rows[0] ?? null;
   }

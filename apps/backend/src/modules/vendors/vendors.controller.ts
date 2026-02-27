@@ -1,9 +1,10 @@
-import { Controller, Get, Param, Patch, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Body, Req, UseGuards, UseInterceptors, UploadedFile, ForbiddenException, Post } from '@nestjs/common';
 import { VendorsService } from './vendors.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('vendors')
 export class VendorsController {
@@ -67,6 +68,84 @@ export class VendorsController {
     const vendor = await this.vendorsService.findByUserId(user.userId);
     if (!vendor) return null;
     return this.vendorsService.updateBranding(vendor.id, dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
+  @Patch('me/profile-extra')
+  async updateProfileExtra(
+    @Req() req: Request,
+    @Body()
+    dto: {
+      ownerFirstName?: string;
+      ownerLastName?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      country?: string;
+      state?: string;
+      city?: string;
+      openDays?: string;
+      openTime?: string;
+      closeTime?: string;
+      hasCertificate?: boolean;
+      certificateDetails?: string;
+    },
+  ) {
+    const user = req.user as { userId: string; role: string };
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    return this.vendorsService.upsertProfileForVendor(vendor.id, dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
+  @Get('me/profile-extra')
+  async myProfileExtra(@Req() req: Request) {
+    const user = req.user as { userId: string; role: string };
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    return this.vendorsService.getProfileForVendor(vendor.id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
+  @Post('me/profile-image')
+  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/vendor-profiles' }))
+  async uploadProfileImage(
+    @Req() req: Request,
+    @UploadedFile() file?: any,
+  ) {
+    const user = req.user as { userId: string; role: string };
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    if (!file) {
+      throw new ForbiddenException('File is required');
+    }
+    const relative = `/uploads/vendor-profiles/${file.filename}`;
+    const profile = await this.vendorsService.updateProfileImage(vendor.id, relative);
+    return { url: profile?.profile_image_url ?? relative };
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Get(':id/profile-extra')
+  async adminProfileExtra(@Param('id') id: string) {
+    return this.vendorsService.getProfileForVendor(id);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

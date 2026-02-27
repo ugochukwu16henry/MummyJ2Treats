@@ -27,6 +27,39 @@ export default function AdminDashboardLayout({
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [unauth, setUnauth] = useState(false);
+  const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
+  const [uploadingPic, setUploadingPic] = useState(false);
+  useEffect(() => {
+    async function fetchProfilePic() {
+      try {
+        const res = await fetch(`${API_BASE}/admin/me/profile-picture`, { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setProfilePicUrl(data.url ?? null);
+        }
+      } catch {}
+    }
+    fetchProfilePic();
+  }, []);
+  async function uploadProfilePic(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files?.[0]) return;
+    setUploadingPic(true);
+    const formData = new FormData();
+    formData.append("file", e.target.files[0]);
+    try {
+      const res = await fetch(`${API_BASE}/admin/me/profile-picture`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProfilePicUrl(data.url ?? null);
+      }
+    } finally {
+      setUploadingPic(false);
+    }
+  }
 
   useEffect(() => {
     const cookie = document.cookie.split("; ").find((c) => c.startsWith("access_token="));
@@ -85,7 +118,16 @@ export default function AdminDashboardLayout({
   return (
     <div className="min-h-screen bg-zinc-100 flex flex-col md:flex-row">
       <aside className="w-full md:w-56 shrink-0 bg-white border-b md:border-b-0 md:border-r border-zinc-200 flex flex-col">
-        <div className="p-4 border-b border-zinc-200">
+        <div className="p-4 border-b border-zinc-200 flex flex-col items-center">
+          {profilePicUrl ? (
+            <img src={profilePicUrl} alt="Profile" className="w-16 h-16 rounded-full object-cover border mb-2" />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-500 mb-2">No photo</div>
+          )}
+          <label className="block text-xs text-primary cursor-pointer mb-2">
+            <input type="file" accept="image/*" className="hidden" onChange={uploadProfilePic} disabled={uploadingPic} />
+            {uploadingPic ? "Uploading…" : "Add/Change photo"}
+          </label>
           <h1 className="font-semibold text-zinc-900">Founder Admin</h1>
           <p className="text-xs text-zinc-500 mt-0.5">Dashboard</p>
         </div>

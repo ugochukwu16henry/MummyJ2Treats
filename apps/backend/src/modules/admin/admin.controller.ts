@@ -1,5 +1,4 @@
 import { Controller, Get, Post, Query, Body, Req, UseGuards, UseInterceptors, UploadedFile, ForbiddenException } from '@nestjs/common';
-import { File as MulterFile } from 'multer';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
@@ -25,7 +24,7 @@ export class AdminController {
   @UseInterceptors(FileInterceptor('file', { dest: 'uploads/founder-admin' }))
   async uploadProfilePicture(
     @Req() req: Request,
-    @UploadedFile() file?: MulterFile,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     const user = req.user as { userId: string };
     if (!file) throw new ForbiddenException('File is required');

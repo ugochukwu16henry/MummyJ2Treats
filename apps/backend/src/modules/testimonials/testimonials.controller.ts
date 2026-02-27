@@ -1,5 +1,4 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { TestimonialsService } from './testimonials.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { Roles } from '../auth/roles.metadata';
@@ -13,8 +12,6 @@ export class TestimonialsController {
     private readonly vendors: VendorsService,
   ) {}
 
-  @UseGuards(AuthGuard('jwt'))
-  @Roles('customer')
   @Post()
   async create(
     @Req() req: Request,
@@ -26,7 +23,7 @@ export class TestimonialsController {
       vendorSlug?: string;
     },
   ) {
-    const user = req.user as { userId: string };
+    const user = req.user as { userId: string } | undefined;
     const target: 'founder' | 'vendor' = body.target === 'vendor' ? 'vendor' : 'founder';
     let vendorId: string | null = null;
 
@@ -43,7 +40,7 @@ export class TestimonialsController {
     }
 
     return this.testimonials.create({
-      userId: user.userId,
+      userId: user?.userId ?? null,
       target,
       vendorId,
       content: body.content,
@@ -51,8 +48,6 @@ export class TestimonialsController {
     });
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Roles('customer')
   @Post('upload-image')
   @UseInterceptors(FileInterceptor('file', { dest: 'uploads/testimonials' }))
   async uploadImage(@UploadedFile() file?: any) {

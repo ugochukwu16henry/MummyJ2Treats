@@ -7,7 +7,7 @@ export class TestimonialsService {
   constructor(private readonly db: DatabaseService) {}
 
   async create(params: {
-    userId: string;
+    userId?: string | null;
     target: 'founder' | 'vendor';
     vendorId?: string | null;
     content: string;
@@ -26,7 +26,7 @@ export class TestimonialsService {
       RETURNING *`,
       [
         uuidv4(),
-        params.userId,
+        params.userId ?? null,
         params.vendorId ?? null,
         params.target,
         params.content.trim(),

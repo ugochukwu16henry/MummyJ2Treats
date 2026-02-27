@@ -249,6 +249,13 @@ export class BlogController {
     return this.blogService.adminArchive(id);
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Post('admin/:id/delete')
+  adminDelete(@Param('id') id: string) {
+    return this.blogService.adminDelete(id);
+  }
+
   // Subscriptions
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

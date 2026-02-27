@@ -671,6 +671,24 @@ export class BlogService {
     return row;
   }
 
+  async adminDelete(postId: string) {
+    await this.ensureTables();
+
+    const result = await this.db.query(
+      `
+      DELETE FROM blog_posts
+      WHERE id = $1
+      RETURNING *
+      `,
+      [postId],
+    );
+    const row = result.rows[0];
+    if (!row) {
+      throw new NotFoundException('Post not found');
+    }
+    return row;
+  }
+
   async listPostsForVendor(
     vendorId: string,
     limit = 100,

@@ -49,7 +49,7 @@ export default function AdminBlogModerationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function mutate(id: string, action: "approve" | "reject" | "archive") {
+  async function mutate(id: string, action: "approve" | "reject" | "archive" | "delete") {
     try {
       setBusyId(id);
       const res = await fetch(`${API_BASE}/blog/admin/${id}/${action}`, {
@@ -150,16 +150,24 @@ export default function AdminBlogModerationPage() {
                       </button>
                     </>
                   )}
-                  {p.status === "PUBLISHED" && (
+                  {(p.status === "PUBLISHED" || p.status === "REJECTED" || p.status === "ARCHIVED") && (
                     <button
                       type="button"
                       disabled={busyId === p.id}
                       onClick={() => mutate(p.id, "archive")}
                       className="px-3 py-1 rounded-full border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
                     >
-                      {busyId === p.id ? "Archiving…" : "Archive"}
+                      {busyId === p.id ? "Suspending…" : "Suspend from public"}
                     </button>
                   )}
+                  <button
+                    type="button"
+                    disabled={busyId === p.id}
+                    onClick={() => mutate(p.id, "delete")}
+                    className="px-3 py-1 rounded-full border border-red-500 text-red-700 hover:bg-red-50 disabled:opacity-60"
+                  >
+                    {busyId === p.id ? "Deleting…" : "Delete post"}
+                  </button>
                 </div>
               </li>
             ))}

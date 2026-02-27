@@ -69,6 +69,7 @@ export default function VendorProductsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const price = Number(form.price);
+          const [signupFeePaid, setSignupFeePaid] = useState<boolean>(false);
     if (!form.name.trim() || Number.isNaN(price) || price < 0) {
       setMessage({ type: "err", text: "Name and a valid price are required." });
       return;
@@ -86,6 +87,7 @@ export default function VendorProductsPage() {
           price,
           stock: form.stock.trim() ? Number(form.stock) : undefined,
           category: form.category.trim() || undefined,
+                setSignupFeePaid(!!profile.signup_fee_paid);
           sizeLabel: form.sizeLabel.trim() || undefined,
           ingredients: form.ingredients.trim() || undefined,
           nutritionalInfo: form.nutritionalInfo.trim() || undefined,

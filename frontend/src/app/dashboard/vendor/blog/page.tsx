@@ -28,6 +28,7 @@ export default function VendorBlogPage() {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
   const [embedUrl, setEmbedUrl] = useState("");
+  const [signupFeePaid, setSignupFeePaid] = useState<boolean>(false);
 
   async function loadPosts() {
     setLoading(true);
@@ -46,6 +47,11 @@ export default function VendorBlogPage() {
 
   useEffect(() => {
     loadPosts();
+    // Check vendor profile for signup fee
+    fetch(`${API_BASE}/vendors/me/profile`, { credentials: "include" })
+      .then((res) => res.ok ? res.json() : null)
+      .then((profile) => setSignupFeePaid(!!profile?.signup_fee_paid))
+      .catch(() => setSignupFeePaid(false));
   }, []);
 
   async function createDraft(e: React.FormEvent) {
@@ -149,6 +155,11 @@ export default function VendorBlogPage() {
 
         <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
           <h2 className="text-lg font-semibold">Create new post</h2>
+          {!signupFeePaid && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 mb-4">
+              You must pay the ₦20,000 vendor signup fee before posting blogs. Please contact admin for payment instructions.
+            </div>
+          )}
           <form onSubmit={createDraft} className="space-y-3 text-sm">
             <div>
               <label className="block text-xs font-medium text-zinc-700 mb-1">
@@ -208,7 +219,7 @@ export default function VendorBlogPage() {
             </div>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || !signupFeePaid}
               className="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
             >
               {saving ? "Saving draft…" : "Save draft"}

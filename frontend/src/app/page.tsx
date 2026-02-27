@@ -117,7 +117,13 @@ export default async function Home() {
           </div>
         </div>
         <div className="flex-1 flex justify-center">
-          <Image src="/hero-food.png" alt="Food Spread" width={320} height={240} className="rounded-2xl shadow-xl object-cover w-full max-w-xs sm:max-w-md md:max-w-lg" />
+          <Image
+            src="/mummyj2banner.png"
+            alt="MummyJ2Treats hero banner"
+            width={640}
+            height={400}
+            className="rounded-2xl shadow-xl object-cover w-full max-w-xs sm:max-w-md md:max-w-lg"
+          />
         </div>
       </section>
 

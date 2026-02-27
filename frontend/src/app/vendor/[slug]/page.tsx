@@ -16,10 +16,19 @@ async function fetchVendorStore(slug: string) {
       return { vendor: null, products: [] };
     }
     const first = products[0];
+    // Fetch vendor profile picture
+    let profilePicUrl: string | null = null;
+    try {
+      const picRes = await fetch(`${API_BASE}/vendors/${first.vendor_id}/profile-picture`, { cache: "no-store" });
+      if (picRes.ok) {
+        const pic = await picRes.json();
+        profilePicUrl = pic.url ?? null;
+      }
+    } catch {}
     const vendor = {
       name: first.vendor_name as string,
       slug: first.vendor_slug as string,
-      logoUrl: first.vendor_logo_url as string | null,
+      logoUrl: profilePicUrl || (first.vendor_logo_url as string | null),
       bannerUrl: first.vendor_banner_url as string | null,
     };
     return { vendor, products };

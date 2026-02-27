@@ -82,8 +82,8 @@ export default function AdminDashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-100 flex">
-      <aside className="w-56 shrink-0 bg-white border-r border-zinc-200 flex flex-col">
+    <div className="min-h-screen bg-zinc-100 flex flex-col md:flex-row">
+      <aside className="w-full md:w-56 shrink-0 bg-white border-b md:border-b-0 md:border-r border-zinc-200 flex flex-col">
         <div className="p-4 border-b border-zinc-200">
           <h1 className="font-semibold text-zinc-900">Founder Admin</h1>
           <p className="text-xs text-zinc-500 mt-0.5">Dashboard</p>

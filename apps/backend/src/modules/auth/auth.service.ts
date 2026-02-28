@@ -141,9 +141,65 @@ export class AuthService {
     if (!lastName) throw new BadRequestException('Last name is required');
     if (!businessName) throw new BadRequestException('Business name is required');
 
-    const existing = await this.usersService.findByEmail(email);
+    const existing = await this.usersService.findByEmailIgnoreCase(email);
     if (existing) {
-      throw new BadRequestException('Email is already registered');
+      const existingVendor = await this.vendorsService.findByUserId(existing.id);
+      if (existingVendor) {
+        throw new BadRequestException('This email is already registered. Log in to your account.');
+      }
+      // User exists but has no vendor – complete vendor signup (verify password, then create vendor + profile)
+      const passwordValid = await argon2.verify(existing.password_hash, password);
+      if (!passwordValid) {
+        throw new BadRequestException('This email is already registered. Use the correct password or log in first.');
+      }
+      const finalBusinessName = businessName || `${firstName} ${lastName}`.trim() || existing.email.split('@')[0];
+      const slugBase = finalBusinessName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || `vendor-${existing.id.slice(0, 8)}`;
+      let slug = slugBase;
+      let suffix = 1;
+      for (;;) {
+        const existingSlug = await this.vendorsService.findBySlug(slug);
+        if (!existingSlug) break;
+        slug = `${slugBase}-${suffix++}`;
+      }
+      const vendor = await this.vendorsService.createVendorForUser({
+        userId: existing.id,
+        businessName: finalBusinessName,
+        slug,
+        description: typeof dto.description === 'string' ? dto.description.trim() || undefined : undefined,
+      });
+      const safeStr = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : undefined);
+      await this.vendorsService.upsertProfileForVendor(vendor.id, {
+        ownerFirstName: firstName,
+        ownerLastName: lastName,
+        contactEmail: email,
+        contactPhone: safeStr(dto.phone),
+        country: safeStr(dto.country),
+        state: safeStr(dto.state),
+        city: safeStr(dto.city),
+        openDays: safeStr(dto.openDays),
+        openTime: safeStr(dto.openTime),
+        closeTime: safeStr(dto.closeTime),
+        hasCertificate: dto.hasCertificate === true || (typeof dto.hasCertificate === 'string' && dto.hasCertificate === 'true'),
+        certificateDetails: safeStr(dto.certificateDetails),
+      });
+      if (existing.role !== 'vendor') {
+        await this.usersService.update(existing.id, { role: 'vendor' });
+      }
+      const tokens = await this.issueTokens(existing.id, 'vendor');
+      return {
+        user: {
+          id: existing.id,
+          firstName: existing.first_name,
+          lastName: existing.last_name,
+          email: existing.email,
+          role: 'vendor',
+        },
+        vendor: { id: vendor.id, businessName: vendor.business_name, slug: vendor.slug },
+        ...tokens,
+      };
     }
 
     let user: { id: string; first_name: string; last_name: string; email: string };
@@ -151,10 +207,11 @@ export class AuthService {
 
     try {
       const passwordHash = await argon2.hash(password);
+      const emailLower = email.toLowerCase();
       user = await this.usersService.createUser({
       firstName,
       lastName,
-      email,
+      email: emailLower,
       phone: typeof dto.phone === 'string' ? dto.phone.trim() || undefined : undefined,
       role: 'vendor',
       passwordHash,
@@ -214,15 +271,19 @@ export class AuthService {
     };
     } catch (err: any) {
       const code = err?.code;
+      const constraint = (err?.constraint ?? '') as string;
       const msg = err?.message ?? '';
       if (code === '23505') {
-        throw new BadRequestException('Email or business slug already in use. Try a different email or business name.');
+        if (constraint.includes('email') || constraint.includes('users')) {
+          throw new BadRequestException('This email is already registered. Log in or use a different email.');
+        }
+        throw new BadRequestException('This business name is already in use. Choose a different business name.');
       }
       if (code === '23502') {
         throw new BadRequestException('A required field is missing or invalid.');
       }
       if (err instanceof BadRequestException) throw err;
-      console.error('registerVendor error:', code, msg);
+      console.error('registerVendor error:', code, constraint, msg);
       throw new BadRequestException(msg || 'Could not create vendor account. Please try again.');
     }
   }

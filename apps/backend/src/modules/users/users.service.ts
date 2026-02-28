@@ -49,6 +49,12 @@ export class UsersService {
     return result.rows[0] ?? null;
   }
 
+  /** Case-insensitive lookup so we detect existing accounts regardless of email casing. */
+  async findByEmailIgnoreCase(email: string) {
+    const result = await this.db.query('SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))', [email]);
+    return result.rows[0] ?? null;
+  }
+
   /** Admin only: delete a user (e.g. customer) by id. */
   async deleteUser(id: string): Promise<boolean> {
     const r = await this.db.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
@@ -169,11 +175,12 @@ export class UsersService {
     passwordHash: string;
   }) {
     const id = uuidv4();
+    const emailLower = params.email.trim().toLowerCase();
     const result = await this.db.query(
       `INSERT INTO users (id, role, first_name, last_name, email, phone, password_hash, is_active)
        VALUES ($1, $2, $3, $4, $5, $6, $7, true)
        RETURNING id, role, first_name, last_name, email, phone, is_active`,
-      [id, params.role, params.firstName, params.lastName, params.email, params.phone ?? null, params.passwordHash],
+      [id, params.role, params.firstName, params.lastName, emailLower, params.phone ?? null, params.passwordHash],
     );
     return result.rows[0];
   }

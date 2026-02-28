@@ -3,7 +3,7 @@ import Link from "next/link";
 const qa = [
   { q: "How do I place an order?", a: "Browse the homepage or any vendor store, add items to your cart, go to Cart and checkout. Enter delivery details and pay online via Paystack. Once payment is confirmed, your order is placed." },
   { q: "What payment methods do you accept?", a: "We accept online payments through Paystack (card, bank transfer, and other methods supported in your region). Payments are secure and processed at checkout." },
-  { q: "How do I become a vendor?", a: "Click Become a Vendor (homepage or footer), sign up or log in, then complete the vendor signup form. After admin approves your account, you can add products and start receiving orders from your vendor dashboard." },
+  { q: "How do I become a vendor?", a: "Click Become a Vendor (homepage or footer), fill in the vendor signup form with your details and password to create your account. After admin approves your account, you can add products and start receiving orders from your vendor dashboard." },
   { q: "How do I become a rider?", a: "Register as a rider via the rider registration flow. Once your profile is set (state, cities, transport type), vendors and admin can assign you to orders for delivery in your area." },
   { q: "How is delivery handled?", a: "Delivery address and fees are collected at checkout. Vendors or admin can assign riders to orders. Track order status in My orders (customers) or in your dashboard (vendors)." },
   { q: "Can I cancel or change my order?", a: "Order cancellation and changes depend on order status. Check your order details in the dashboard; for specific cases, use support for assistance." },

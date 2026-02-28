@@ -120,16 +120,25 @@ export default function VendorDashboardPage() {
 
   useEffect(() => {
     let cancelled = false;
+    const timeoutMs = 15000;
     async function run() {
       try {
-        // Ensure this user has a vendor account and vendor tokens; backend upgrades customer → vendor here.
-        await fetch(`${API_BASE}/auth/become-vendor`, {
-          method: "POST",
-          credentials: "include",
-        }).catch(() => {});
-        await Promise.all([loadOrders(), loadProfileAndRiders()]);
+        const timeoutPromise = new Promise<void>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), timeoutMs)
+        );
+        const work = (async () => {
+          await fetch(`${API_BASE}/auth/become-vendor`, {
+            method: "POST",
+            credentials: "include",
+          }).catch(() => {});
+          await Promise.all([loadOrders(), loadProfileAndRiders()]);
+        })();
+        await Promise.race([work, timeoutPromise]);
       } catch {
-        if (!cancelled) setOrders([]);
+        if (!cancelled) {
+          setOrders([]);
+          setVendorProfile(null);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

@@ -31,8 +31,11 @@ export default function VendorDashboardLayout({
       router.push("/auth/login");
       return;
     }
-    fetch(`${API_BASE}/auth/me`, { credentials: "include" })
+    const ac = new AbortController();
+    const timeoutId = setTimeout(() => ac.abort(), 12000);
+    fetch(`${API_BASE}/auth/me`, { credentials: "include", signal: ac.signal })
       .then((res) => {
+        clearTimeout(timeoutId);
         if (!res.ok) {
           setUnauth(true);
           return;
@@ -47,7 +50,14 @@ export default function VendorDashboardLayout({
         }
         setReady(true);
       })
-      .catch(() => setUnauth(true));
+      .catch(() => {
+        clearTimeout(timeoutId);
+        setUnauth(true);
+      });
+    return () => {
+      clearTimeout(timeoutId);
+      ac.abort();
+    };
   }, [router]);
 
   useEffect(() => {

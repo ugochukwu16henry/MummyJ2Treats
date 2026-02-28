@@ -111,6 +111,88 @@ export class AuthService {
     }
   }
 
+  /** Public vendor registration: create user (role vendor) + vendor profile in one step. No prior login. */
+  async registerVendor(dto: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    businessName: string;
+    description?: string;
+    phone?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    openDays?: string;
+    openTime?: string;
+    closeTime?: string;
+    hasCertificate?: boolean;
+    certificateDetails?: string;
+  }) {
+    const existing = await this.usersService.findByEmail(dto.email.trim());
+    if (existing) {
+      throw new BadRequestException('Email is already registered');
+    }
+
+    const passwordHash = await argon2.hash(dto.password);
+    const user = await this.usersService.createUser({
+      firstName: dto.firstName.trim(),
+      lastName: dto.lastName.trim(),
+      email: dto.email.trim(),
+      phone: dto.phone?.trim(),
+      role: 'vendor',
+      passwordHash,
+    });
+
+    const businessName = dto.businessName?.trim() || `${dto.firstName} ${dto.lastName}`.trim() || user.email.split('@')[0];
+    const slugBase = businessName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `vendor-${user.id.slice(0, 8)}`;
+    let slug = slugBase;
+    let suffix = 1;
+    for (;;) {
+      const existingSlug = await this.vendorsService.findBySlug(slug);
+      if (!existingSlug) break;
+      slug = `${slugBase}-${suffix++}`;
+    }
+
+    const vendor = await this.vendorsService.createVendorForUser({
+      userId: user.id,
+      businessName,
+      slug,
+      description: dto.description?.trim() || undefined,
+    });
+
+    await this.vendorsService.upsertProfileForVendor(vendor.id, {
+      ownerFirstName: dto.firstName.trim(),
+      ownerLastName: dto.lastName.trim(),
+      contactEmail: dto.email.trim(),
+      contactPhone: dto.phone?.trim(),
+      country: dto.country?.trim(),
+      state: dto.state?.trim(),
+      city: dto.city?.trim(),
+      openDays: dto.openDays?.trim(),
+      openTime: dto.openTime?.trim(),
+      closeTime: dto.closeTime?.trim(),
+      hasCertificate: dto.hasCertificate,
+      certificateDetails: dto.certificateDetails?.trim(),
+    });
+
+    const tokens = await this.issueTokens(user.id, 'vendor');
+    return {
+      user: {
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        role: 'vendor',
+      },
+      vendor,
+      ...tokens,
+    };
+  }
+
   /** Upgrade a logged-in user to vendor: create vendor row + switch role + issue new tokens */
   async becomeVendor(userId: string) {
     const user = await this.usersService.findOne(userId);

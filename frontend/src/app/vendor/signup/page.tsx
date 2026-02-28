@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -12,6 +12,8 @@ export default function VendorSignupPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("Nigeria");
   const [state, setState] = useState("");
@@ -23,16 +25,6 @@ export default function VendorSignupPage() {
   const [certificateDetails, setCertificateDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-    const [loggedIn, setLoggedIn] = useState<boolean>(true);
-
-    // Check login status on mount
-    useEffect(() => {
-      fetch(`${API_BASE}/auth/me`, { credentials: "include" })
-        .then((res) => {
-          if (!res.ok) setLoggedIn(false);
-        })
-        .catch(() => setLoggedIn(false));
-    }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,43 +33,28 @@ export default function VendorSignupPage() {
       setMessage("Business name, first name, last name, and email are required.");
       return;
     }
+    if (!password || password.length < 6) {
+      setMessage("Password must be at least 6 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMessage("Passwords do not match.");
+      return;
+    }
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/become-vendor`, {
+      const res = await fetch(`${API_BASE}/auth/register-vendor`, {
         method: "POST",
         credentials: "include",
-      });
-      if (res.status === 401) {
-        setMessage("Please log in first to become a vendor.");
-        router.push("/auth/login");
-        return;
-      }
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setMessage(body.message ?? "Could not create vendor account.");
-        return;
-      }
-
-      await fetch(`${API_BASE}/vendors/me/branding`, {
-        method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          email: email.trim(),
+          password,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           businessName: businessName.trim(),
           description: description.trim() || undefined,
-        }),
-      }).catch(() => {});
-
-      // Extra profile info for founder admin review
-      await fetch(`${API_BASE}/vendors/me/profile-extra`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ownerFirstName: firstName.trim() || undefined,
-          ownerLastName: lastName.trim() || undefined,
-          contactEmail: email.trim() || undefined,
-          contactPhone: phone.trim() || undefined,
+          phone: phone.trim() || undefined,
           country: country.trim() || undefined,
           state: state.trim() || undefined,
           city: city.trim() || undefined,
@@ -87,8 +64,12 @@ export default function VendorSignupPage() {
           hasCertificate,
           certificateDetails: certificateDetails.trim() || undefined,
         }),
-      }).catch(() => {});
-
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setMessage((body as { message?: string }).message ?? "Could not create vendor account.");
+        return;
+      }
       router.push("/dashboard/vendor");
     } catch {
       setMessage("Something went wrong. Please try again.");
@@ -102,13 +83,11 @@ export default function VendorSignupPage() {
       <div className="max-w-xl mx-auto py-8">
         <h1 className="text-2xl font-bold mb-2">Become a Vendor</h1>
         <p className="text-sm text-zinc-600 mb-6">
-          Share a few details about you and your business. The founder admin will review and approve your profile before products go fully live.
+          Create your vendor account. Fill in your details and password. The founder admin will review and approve your profile before products go fully live.
         </p>
-          {!loggedIn ? (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg mb-6">
-              You must be logged in to become a vendor. <a href="/auth/login" className="underline">Log in</a> first.
-            </div>
-          ) : (
+        {message && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg mb-6">{message}</div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-2xl shadow-sm p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -169,9 +148,41 @@ export default function VendorSignupPage() {
               />
             </div>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium mb-1">
+                Password * <span className="text-zinc-400">(min 6 characters)</span>
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                minLength={6}
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
+                Confirm password *
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                minLength={6}
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+          </div>
           <div>
             <label htmlFor="businessName" className="block text-sm font-medium mb-1">
-              Business Name
+              Business Name *
             </label>
             <input
               id="businessName"
@@ -303,16 +314,14 @@ export default function VendorSignupPage() {
               />
             )}
           </div>
-          {message && <p className="text-xs text-zinc-600">{message}</p>}
           <button
             type="submit"
             disabled={submitting}
             className="w-full bg-primary text-white font-semibold py-3 rounded disabled:opacity-60"
           >
-            {submitting ? "Creating vendor..." : "Create vendor account"}
+            {submitting ? "Creating vendor account…" : "Create vendor account"}
           </button>
         </form>
-          )}
       </div>
     </div>
   );

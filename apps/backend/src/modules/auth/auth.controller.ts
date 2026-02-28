@@ -14,6 +14,13 @@ export class AuthController {
     return result;
   }
 
+  @Post('register-vendor')
+  async registerVendor(@Body() dto: any, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.registerVendor(dto);
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    return result;
+  }
+
   @Post('login')
   async login(@Body() dto: any, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(dto);

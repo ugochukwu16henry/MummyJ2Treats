@@ -7,8 +7,10 @@ import { ProductsService } from '../products/products.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { UsersService } from '../users/users.service';
 import { RidersService } from '../riders/riders.service';
+import { StorageService } from '../storage/storage.service';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
 
 @Controller('admin')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -20,6 +22,7 @@ export class AdminController {
     private readonly vendorsService: VendorsService,
     private readonly usersService: UsersService,
     private readonly ridersService: RidersService,
+    private readonly storageService: StorageService,
   ) {}
 
   @Get('me/profile-picture')
@@ -31,16 +34,21 @@ export class AdminController {
   }
 
   @Post('me/profile-picture')
-  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/founder-admin' }))
+  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
   async uploadProfilePicture(
     @Req() req: Request,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     const user = req.user as { userId: string };
-    if (!file) throw new ForbiddenException('File is required');
-    const relative = `/uploads/founder-admin/${file.filename}`;
-    await this.adminService.setAdminProfilePicture(user.userId, relative);
-    return { url: relative };
+    if (!file || !file.buffer) throw new ForbiddenException('File is required');
+    const url = await this.storageService.upload(
+      file.buffer,
+      'founder-admin',
+      file.originalname || 'image',
+      file.mimetype,
+    );
+    await this.adminService.setAdminProfilePicture(user.userId, url);
+    return { url };
   }
 
   @Get('metrics')
@@ -190,15 +198,20 @@ export class AdminController {
   }
 
   @Post('founder-categories/:id/image')
-  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/founder-categories' }))
+  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
   async uploadFounderCategoryImage(
     @Param('id') id: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    if (!file) throw new ForbiddenException('File is required');
-    const relative = `/uploads/founder-categories/${file.filename}`;
-    const updated = await this.adminService.updateFounderCategory(id, { imageUrl: relative });
+    if (!file || !file.buffer) throw new ForbiddenException('File is required');
+    const url = await this.storageService.upload(
+      file.buffer,
+      'founder-categories',
+      file.originalname || 'image',
+      file.mimetype,
+    );
+    const updated = await this.adminService.updateFounderCategory(id, { imageUrl: url });
     if (!updated) throw new ForbiddenException('Category not found');
-    return { url: relative };
+    return { url };
   }
 }

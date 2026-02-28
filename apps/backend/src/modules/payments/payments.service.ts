@@ -13,14 +13,16 @@ export class PaymentsService {
     private readonly referral: ReferralService,
   ) {}
 
-  async handleBankTransferReceipt(paymentId: string, filePath: string) {
-    // Save receipt path
+  async handleBankTransferReceipt(
+    paymentId: string,
+    receiptUrl: string,
+    bufferForOcr?: Buffer,
+  ) {
     await this.db.query(
       'UPDATE payments SET receipt_url = $2 WHERE id = $1',
-      [paymentId, filePath],
+      [paymentId, receiptUrl],
     );
 
-    // Load order total and customer for loyalty/referral
     const result = await this.db.query(
       `
       SELECT p.id, p.provider, p.status, o.id as order_id, o.customer_id, o.total_amount
@@ -37,7 +39,9 @@ export class PaymentsService {
 
     let ocrAmount: number | null = null;
     try {
-      const ocr = await Tesseract.recognize(filePath, 'eng');
+      const ocr = bufferForOcr
+        ? await Tesseract.recognize(bufferForOcr, 'eng')
+        : await Tesseract.recognize(receiptUrl, 'eng');
       const text = ocr.data.text || '';
       const matches = text.match(
         /([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?|[0-9]+(?:\.[0-9]{2})?)/g,

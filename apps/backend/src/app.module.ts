@@ -17,11 +17,13 @@ import { RidersModule } from './modules/riders/riders.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { NewsletterModule } from './modules/newsletter/newsletter.module';
 import { BlogModule } from './modules/blog/blog.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   controllers: [AppController, HealthController],
   imports: [
     DatabaseModule,
+    StorageModule,
     AuthModule,
     UsersModule,
     VendorsModule,

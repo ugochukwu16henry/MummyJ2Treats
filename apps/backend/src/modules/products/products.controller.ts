@@ -1,17 +1,20 @@
 import { Controller, Get, Param, Query, Body, Post, Patch, Delete, Req, UseGuards, UseInterceptors, UploadedFile, ForbiddenException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { VendorsService } from '../vendors/vendors.service';
+import { StorageService } from '../storage/storage.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
 
 @Controller('products')
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly vendorsService: VendorsService,
+    private readonly storageService: StorageService,
   ) {}
 
   @Get()
@@ -157,7 +160,7 @@ export class ProductsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Post('me/:id/image')
-  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/products' }))
+  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
   async uploadProductImage(
     @Req() req: Request,
     @Param('id') id: string,
@@ -169,10 +172,15 @@ export class ProductsController {
       vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
     }
     if (!vendor) throw new ForbiddenException('No vendor account linked.');
-    if (!file) throw new ForbiddenException('File is required');
-    const relative = `/uploads/products/${file.filename}`;
-    const updated = await this.productsService.updateForVendor(vendor.id, id, { imageUrl: relative });
+    if (!file || !file.buffer) throw new ForbiddenException('File is required');
+    const url = await this.storageService.upload(
+      file.buffer,
+      'products',
+      file.originalname || 'image',
+      file.mimetype,
+    );
+    const updated = await this.productsService.updateForVendor(vendor.id, id, { imageUrl: url });
     if (!updated) throw new ForbiddenException('Product not found or not yours.');
-    return { url: relative };
+    return { url };
   }
 }

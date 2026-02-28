@@ -1,14 +1,19 @@
 import { Controller, Get, Param, Patch, Body, Req, UseGuards, UseInterceptors, UploadedFile, ForbiddenException, Post } from '@nestjs/common';
 import { VendorsService } from './vendors.service';
+import { StorageService } from '../storage/storage.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
 
 @Controller('vendors')
 export class VendorsController {
-  constructor(private readonly vendorsService: VendorsService) {}
+  constructor(
+    private readonly vendorsService: VendorsService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Get()
   findAll() {
@@ -137,10 +142,10 @@ export class VendorsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Post('me/profile-image')
-  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/vendor-profiles' }))
+  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
   async uploadProfileImage(
     @Req() req: Request,
-    @UploadedFile() file?: any,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     const user = req.user as { userId: string; role: string };
     let vendor = await this.vendorsService.findByUserId(user.userId);
@@ -150,12 +155,17 @@ export class VendorsController {
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked.');
     }
-    if (!file) {
+    if (!file || !file.buffer) {
       throw new ForbiddenException('File is required');
     }
-    const relative = `/uploads/vendor-profiles/${file.filename}`;
-    const profile = await this.vendorsService.updateProfileImage(vendor.id, relative);
-    return { url: profile?.profile_image_url ?? relative };
+    const url = await this.storageService.upload(
+      file.buffer,
+      'vendor-profiles',
+      file.originalname || 'image',
+      file.mimetype,
+    );
+    const profile = await this.vendorsService.updateProfileImage(vendor.id, url);
+    return { url: profile?.profile_image_url ?? url };
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

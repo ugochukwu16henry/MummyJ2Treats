@@ -2,16 +2,19 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuard
 import { AuthGuard } from '@nestjs/passport';
 import { TestimonialsService } from './testimonials.service';
 import { VendorsService } from '../vendors/vendors.service';
+import { StorageService } from '../storage/storage.service';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
 
 @Controller('testimonials')
 export class TestimonialsController {
   constructor(
     private readonly testimonials: TestimonialsService,
     private readonly vendors: VendorsService,
+    private readonly storageService: StorageService,
   ) {}
 
   @Post()
@@ -51,13 +54,18 @@ export class TestimonialsController {
   }
 
   @Post('upload-image')
-  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/testimonials' }))
-  async uploadImage(@UploadedFile() file?: any) {
-    if (!file) {
+  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
+  async uploadImage(@UploadedFile() file?: Express.Multer.File) {
+    if (!file || !file.buffer) {
       throw new Error('File is required');
     }
-    const relative = `/uploads/testimonials/${file.filename}`;
-    return { url: relative };
+    const url = await this.storageService.upload(
+      file.buffer,
+      'testimonials',
+      file.originalname || 'image',
+      file.mimetype,
+    );
+    return { url };
   }
 
   @Get('founder')

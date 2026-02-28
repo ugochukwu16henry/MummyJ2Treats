@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
 
-function toFullAvatarUrl(url: string | null | undefined): string | null {
+function toFullUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  return url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
+  return url.startsWith("http") ? url : `${API_BASE}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
 type BlogPostDetail = {
@@ -78,7 +78,7 @@ export async function generateMetadata({
 function renderEmbed(embed: { provider: string | null; url: string }) {
   const rawUrl = embed.url;
   const provider = (embed.provider ?? "").toLowerCase();
-  const resolvedUrl = rawUrl.startsWith("http") ? rawUrl : `${API_BASE}${rawUrl}`;
+  const resolvedUrl = rawUrl.startsWith("http") ? rawUrl : `${API_BASE}${rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`}`;
 
   // YouTube
   if (provider === "youtube" || resolvedUrl.includes("youtube.com") || resolvedUrl.includes("youtu.be")) {
@@ -117,10 +117,18 @@ function renderEmbed(embed: { provider: string | null; url: string }) {
     resolvedUrl.endsWith(".webm") ||
     resolvedUrl.endsWith(".ogg")
   ) {
+    const ext = resolvedUrl.split(/[#?]/)[0].split(".").pop()?.toLowerCase();
+    const mime = ext === "webm" ? "video/webm" : ext === "ogg" ? "video/ogg" : "video/mp4";
     return (
-      <div className="w-full overflow-hidden rounded-xl bg-black">
-        <video controls className="w-full h-full" preload="metadata">
-          <source src={resolvedUrl} />
+      <div className="w-full overflow-hidden rounded-xl bg-black aspect-video">
+        <video
+          controls
+          className="w-full h-full object-contain"
+          preload="metadata"
+          crossOrigin="anonymous"
+          playsInline
+        >
+          <source src={resolvedUrl} type={mime} />
           Your browser does not support the video tag.
         </video>
       </div>
@@ -189,9 +197,10 @@ export default async function BlogPostPage({
                 {post.author_avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={toFullAvatarUrl(post.author_avatar_url) ?? post.author_avatar_url}
+                    src={toFullUrl(post.author_avatar_url) ?? post.author_avatar_url}
                     alt={post.author_name ?? "Author"}
                     className="w-full h-full object-cover"
+                    crossOrigin="anonymous"
                   />
                 ) : (
                   <span className="text-[11px] font-semibold">
@@ -223,9 +232,10 @@ export default async function BlogPostPage({
             <div className="mb-6 rounded-3xl overflow-hidden bg-zinc-200 dark:bg-zinc-900">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={post.featured_image_url}
+                src={toFullUrl(post.featured_image_url) ?? post.featured_image_url}
                 alt={post.title}
                 className="w-full h-full max-h-[420px] object-cover"
+                crossOrigin="anonymous"
               />
             </div>
           )}
@@ -242,8 +252,8 @@ export default async function BlogPostPage({
             <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
               Embedded media
             </h2>
-            {post.media_embeds.map((embed) => (
-              <div key={embed.url}>{renderEmbed(embed)}</div>
+            {post.media_embeds.map((embed, idx) => (
+              <div key={`embed-${idx}-${embed.url}`}>{renderEmbed(embed)}</div>
             ))}
           </section>
         )}

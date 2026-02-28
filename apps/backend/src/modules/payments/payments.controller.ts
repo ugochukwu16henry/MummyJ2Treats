@@ -9,15 +9,21 @@ import {
   UploadedFile,
   UseInterceptors,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
+import { StorageService } from '../storage/storage.service';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
 import { Request, Response } from 'express';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly storageService: StorageService,
+  ) {}
 
   /** Paystack webhook (no auth; verify X-Paystack-Signature) */
   @Post('webhook/paystack')
@@ -40,14 +46,22 @@ export class PaymentsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':paymentId/receipt')
-  @UseInterceptors(FileInterceptor('receipt'))
-  uploadReceipt(
+  @UseInterceptors(FileInterceptor('receipt', { storage: multer.memoryStorage() }))
+  async uploadReceipt(
     @Param('paymentId') paymentId: string,
-    @UploadedFile() file: any,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
+    if (!file || !file.buffer) throw new ForbiddenException('File is required');
+    const url = await this.storageService.upload(
+      file.buffer,
+      'receipts',
+      file.originalname || 'receipt',
+      file.mimetype,
+    );
     return this.paymentsService.handleBankTransferReceipt(
       paymentId,
-      file.path,
+      url,
+      file.buffer,
     );
   }
 }

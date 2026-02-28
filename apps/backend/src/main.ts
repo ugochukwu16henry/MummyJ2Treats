@@ -6,7 +6,15 @@ import { mkdirSync } from 'fs';
 
 async function bootstrap() {
   const uploadsRoot = join(process.cwd(), 'uploads');
-  for (const sub of ['founder-admin', 'products', 'founder-categories']) {
+  for (const sub of [
+    'founder-admin',
+    'products',
+    'founder-categories',
+    'blog-videos',
+    'vendor-profiles',
+    'testimonials',
+    'receipts',
+  ]) {
     try {
       mkdirSync(join(uploadsRoot, sub), { recursive: true });
     } catch {

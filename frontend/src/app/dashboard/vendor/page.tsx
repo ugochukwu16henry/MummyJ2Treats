@@ -10,6 +10,7 @@ type VendorProfile = {
   business_name: string;
   description?: string;
   logo_url?: string;
+  slug?: string;
 };
 
 type Order = {
@@ -89,6 +90,7 @@ export default function VendorDashboardPage() {
         business_name: profile.business_name ?? "",
         description: profile.description ?? "",
         logo_url: profile.logo_url ?? undefined,
+        slug: profile.slug ?? undefined,
       });
       const state = profile.operating_state?.trim();
       setVendorState(state ?? null);
@@ -263,6 +265,11 @@ export default function VendorDashboardPage() {
                   <p className="text-zinc-600 text-sm mb-1">{vendorProfile.description}</p>
                 )}
                 <div className="flex flex-wrap gap-2 sm:gap-4 mt-2 justify-center sm:justify-start">
+                  {vendorProfile.slug && (
+                    <Link href={`/vendor/${vendorProfile.slug}`} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline text-sm">
+                      View my store page →
+                    </Link>
+                  )}
                   <Link href="/dashboard/vendor/location" className="text-primary font-medium hover:underline text-sm">Location &amp; delivery</Link>
                   <Link href="/dashboard/vendor/products" className="text-primary font-medium hover:underline text-sm">Manage products</Link>
                   <Link href="/dashboard/vendor/blog" className="text-primary font-medium hover:underline text-sm">Blog</Link>

@@ -1,7 +1,25 @@
-
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const PRIMARY_VENDOR_SLUG = process.env.NEXT_PUBLIC_PRIMARY_VENDOR_SLUG ?? "mummyj2treats";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { TestimonialForm } from "../../_components/TestimonialForm";
+
+async function addToCartAction(productId: string, vendorSlug: string) {
+  "use server";
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
+  const res = await fetch(`${API_BASE}/cart/items`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Cookie: `access_token=${token}` } : {}),
+    },
+    body: JSON.stringify({ productId, quantity: 1 }),
+  });
+  if (res.status === 401) {
+    redirect("/auth/login?next=" + encodeURIComponent("/vendor/" + vendorSlug));
+  }
+}
 
 function toFullUrl(url: string | null | undefined): string | null {
   if (!url) return null;
@@ -157,17 +175,7 @@ export default async function VendorStorePage({
                 <span className="text-xs text-zinc-500 mb-1">
                   ₦{Number(p.price).toLocaleString()}
                 </span>
-                <form
-                  action={async () => {
-                    "use server";
-                    await fetch(`${API_BASE}/cart/items`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      credentials: "include",
-                      body: JSON.stringify({ productId: p.id, quantity: 1 }),
-                    });
-                  }}
-                >
+                <form action={() => addToCartAction(p.id, vendor.slug)}>
                   <button
                     type="submit"
                     className="mt-auto px-3 py-1 bg-primary text-white rounded-full text-xs sm:text-sm"

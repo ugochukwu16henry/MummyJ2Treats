@@ -30,6 +30,9 @@ export default async function DashboardPage() {
   if (role === "admin") {
     redirect("/dashboard/admin");
   }
+  if (role === "vendor") {
+    redirect("/dashboard/vendor");
+  }
   if (role === "rider") {
     redirect("/dashboard/rider");
   }
@@ -83,11 +86,6 @@ export default async function DashboardPage() {
                 Become a vendor →
               </Link>
             </>
-          )}
-          {role === "vendor" && (
-            <Link href="/dashboard/vendor" className="inline-block text-primary font-medium hover:underline">
-              Go to Vendor Dashboard →
-            </Link>
           )}
           {role === "rider" && (
             <Link href="/dashboard/rider" className="inline-block text-primary font-medium hover:underline">

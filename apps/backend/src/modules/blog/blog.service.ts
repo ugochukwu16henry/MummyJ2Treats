@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { UsersService } from '../users/users.service';
@@ -34,16 +34,17 @@ export interface BlogPostDetail extends BlogPostSummary {
 }
 
 @Injectable()
-export class BlogService {
+export class BlogService implements OnModuleInit {
   private initialized = false;
 
   constructor(
     private readonly db: DatabaseService,
     private readonly vendorsService: VendorsService,
     private readonly usersService: UsersService,
-  ) {
-    // Best-effort lazy schema initialization
-    void this.ensureTables();
+  ) {}
+
+  async onModuleInit() {
+    await this.ensureTables();
   }
 
   /** Founder admin user id from FOUNDER_ADMIN_EMAIL (for avatar override). */

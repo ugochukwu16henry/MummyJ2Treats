@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { DeleteMyAccountSection } from "../_components/DeleteMyAccountSection";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -235,6 +236,7 @@ export default function RiderDashboardPage() {
             </div>
           </div>
         )}
+        <DeleteMyAccountSection />
       </div>
       <footer className="mt-8 text-center text-xs text-zinc-500">
         Built by{" "}

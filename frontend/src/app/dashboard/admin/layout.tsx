@@ -10,11 +10,14 @@ const nav = [
   { href: "/dashboard/admin", label: "Overview" },
   { href: "/dashboard/admin/products", label: "Products" },
   { href: "/dashboard/admin/vendors", label: "Vendors" },
+  { href: "/dashboard/admin/customers", label: "Customers" },
+  { href: "/dashboard/admin/riders", label: "Riders" },
   { href: "/dashboard/admin/orders", label: "Orders" },
   { href: "/dashboard/admin/support", label: "Support" },
   { href: "/dashboard/admin/delivery-map", label: "Delivery map" },
   { href: "/dashboard/admin/testimonials", label: "Testimonials" },
   { href: "/dashboard/admin/newsletter", label: "Newsletter emails" },
+  { href: "/dashboard/admin/my-blog", label: "My blog" },
   { href: "/dashboard/admin/blog", label: "Blog moderation" },
 ] as const;
 

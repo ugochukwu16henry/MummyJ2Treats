@@ -3,6 +3,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
 import { AdminService } from './admin.service';
+import { ProductsService } from '../products/products.service';
+import { VendorsService } from '../vendors/vendors.service';
+import { UsersService } from '../users/users.service';
+import { RidersService } from '../riders/riders.service';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -10,7 +14,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly productsService: ProductsService,
+    private readonly vendorsService: VendorsService,
+    private readonly usersService: UsersService,
+    private readonly ridersService: RidersService,
+  ) {}
 
   @Get('me/profile-picture')
   async getProfilePicture(@Req() req: Request) {
@@ -117,9 +127,44 @@ export class AdminController {
     return this.adminService.getDeliveryMapData();
   }
 
+  @Get('products')
+  listAllProducts() {
+    return this.productsService.findAll({
+      isActiveOnly: false,
+      limit: 5000,
+      offset: 0,
+    });
+  }
+
   @Get('founder-categories')
   listFounderCategories() {
     return this.adminService.listFounderCategories();
+  }
+
+  @Delete('vendors/:id')
+  async deleteVendor(@Param('id') id: string) {
+    const ok = await this.vendorsService.deleteVendor(id);
+    if (!ok) throw new ForbiddenException('Vendor not found');
+    return { ok: true };
+  }
+
+  @Delete('users/:id')
+  async deleteUser(@Param('id') id: string) {
+    const ok = await this.usersService.deleteUser(id);
+    if (!ok) throw new ForbiddenException('User not found');
+    return { ok: true };
+  }
+
+  @Delete('riders/:id')
+  async deleteRider(@Param('id') id: string) {
+    const ok = await this.ridersService.deleteRider(id);
+    if (!ok) throw new ForbiddenException('Rider not found');
+    return { ok: true };
+  }
+
+  @Post('purge-scheduled-deletions')
+  async purgeScheduledDeletions() {
+    return this.usersService.purgeScheduledDeletions();
   }
 
   @Post('founder-categories')

@@ -742,6 +742,32 @@ export class BlogService {
     return row;
   }
 
+  async getPostForVendor(vendorId: string, postId: string): Promise<any | null> {
+    await this.ensureTables();
+
+    const result = await this.db.query(
+      `
+      SELECT
+        p.*,
+        v.business_name as author_name,
+        v.slug as author_slug,
+        v.logo_url as author_avatar_url
+      FROM blog_posts p
+      JOIN vendors v ON v.id = p.vendor_id
+      WHERE p.id = $1 AND p.vendor_id = $2
+      `,
+      [postId, vendorId],
+    );
+    const row = result.rows[0];
+    if (!row) return null;
+
+    const embeds = await this.db.query<{ provider: string | null; url: string }>(
+      'SELECT provider, url FROM blog_media_embeds WHERE post_id = $1 ORDER BY created_at ASC',
+      [postId],
+    );
+    return { ...row, media_embeds: embeds.rows };
+  }
+
   async listPostsForVendor(
     vendorId: string,
     limit = 100,

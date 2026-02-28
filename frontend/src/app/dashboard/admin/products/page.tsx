@@ -75,7 +75,7 @@ export default function AdminProductsPage() {
   function loadData() {
     setLoading(true);
     Promise.all([
-      fetch(`${API_BASE}/products/me`, opts()),
+      fetch(`${API_BASE}/admin/products`, opts()),
       fetch(`${API_BASE}/vendors/me/profile`, opts()),
       fetch(`${API_BASE}/admin/founder-categories`, opts()),
     ])
@@ -93,6 +93,8 @@ export default function AdminProductsPage() {
       })
       .finally(() => setLoading(false));
   }
+
+  const founderSlug = vendor?.slug ?? null;
 
   useEffect(() => {
     loadData();
@@ -286,7 +288,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">Products &amp; Categories</h1>
           <p className="text-sm text-zinc-600 mt-0.5">
-            Manage founder store products and the categories shown on the homepage.
+            View all products from all vendors. You can only edit and delete your own products. Homepage categories are yours; you can add, edit, and delete them.
           </p>
         </div>
       </div>
@@ -547,34 +549,40 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingProductId(p.id);
-                      setForm({
-                        name: p.name,
-                        description: p.description ?? "",
-                        price: String(p.price),
-                        stock: p.stock != null ? String(p.stock) : "",
-                        category: p.category ?? "",
-                        sizeLabel: p.size_label ?? "",
-                        ingredients: p.ingredients ?? "",
-                        nutritionalInfo: p.nutritional_info ?? "",
-                      });
-                      setShowForm(true);
-                    }}
-                    className="text-sm text-zinc-600 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteProduct(p.id)}
-                    disabled={deletingProductId === p.id}
-                    className="text-sm text-red-600 hover:underline disabled:opacity-50"
-                  >
-                    {deletingProductId === p.id ? "…" : "Delete"}
-                  </button>
+                  {founderSlug && p.vendor_slug === founderSlug ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingProductId(p.id);
+                          setForm({
+                            name: p.name,
+                            description: p.description ?? "",
+                            price: String(p.price),
+                            stock: p.stock != null ? String(p.stock) : "",
+                            category: p.category ?? "",
+                            sizeLabel: p.size_label ?? "",
+                            ingredients: p.ingredients ?? "",
+                            nutritionalInfo: p.nutritional_info ?? "",
+                          });
+                          setShowForm(true);
+                        }}
+                        className="text-sm text-zinc-600 hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProduct(p.id)}
+                        disabled={deletingProductId === p.id}
+                        className="text-sm text-red-600 hover:underline disabled:opacity-50"
+                      >
+                        {deletingProductId === p.id ? "…" : "Delete"}
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-xs text-zinc-400">Vendor: {p.vendor_slug}</span>
+                  )}
                 </div>
               </li>
             ))}

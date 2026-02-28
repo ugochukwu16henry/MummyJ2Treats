@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { DeleteMyAccountSection } from "../_components/DeleteMyAccountSection";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -110,7 +111,7 @@ export default function VendorDashboardLayout({
             );
           })}
         </nav>
-        <div className="p-2 border-t border-zinc-200">
+        <div className="p-2 border-t border-zinc-200 space-y-2">
           <Link
             href="/dashboard"
             className="block px-3 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-100"
@@ -124,6 +125,9 @@ export default function VendorDashboardLayout({
           >
             Logout
           </button>
+          <div className="pt-2 border-t border-zinc-100">
+            <DeleteMyAccountSection />
+          </div>
         </div>
       </aside>
       <main className="flex-1 overflow-auto px-4 py-6 md:px-6 lg:px-8">

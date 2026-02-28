@@ -78,6 +78,12 @@ export class VendorsService {
     return result.rows[0] ?? null;
   }
 
+  /** Admin only: delete a vendor by id. */
+  async deleteVendor(id: string): Promise<boolean> {
+    const r = await this.db.query('DELETE FROM vendors WHERE id = $1 RETURNING id', [id]);
+    return (r.rowCount ?? 0) > 0;
+  }
+
   async createVendorForUser(params: {
     userId: string;
     businessName: string;

@@ -22,6 +22,15 @@ export default function AdminVendorsPage() {
   const [showDetailsId, setShowDetailsId] = useState<string | null>(null);
   const [details, setDetails] = useState<any | null>(null);
   const [detailsPic, setDetailsPic] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const getAuthHeaders = (): HeadersInit => {
+    const cookie = document.cookie.split("; ").find((c) => c.startsWith("access_token="));
+    const token = cookie?.replace(/^access_token=/, "").trim();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+  const opts = () => ({ credentials: "include" as RequestCredentials, headers: getAuthHeaders() });
+
   async function loadDetails(id: string) {
     setDetails(null); setDetailsPic(null);
     try {
@@ -80,6 +89,17 @@ export default function AdminVendorsPage() {
       await load();
     } finally {
       setSavingId(null);
+    }
+  }
+
+  async function deleteVendor(id: string) {
+    if (!confirm("Permanently delete this vendor and their data? This cannot be undone.")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`${API_BASE}/admin/vendors/${id}`, { method: "DELETE", ...opts() });
+      if (res.ok) await load();
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -147,6 +167,14 @@ export default function AdminVendorsPage() {
                     }
                     onBlur={() => saveCommission(v.id, commissionDrafts[v.id])}
                   />
+                  <button
+                    type="button"
+                    onClick={() => deleteVendor(v.id)}
+                    disabled={deletingId === v.id}
+                    className="text-xs px-2 py-1 rounded-md border border-red-500 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {deletingId === v.id ? "…" : "Delete"}
+                  </button>
                 </div>
                 {showDetailsId === v.id && (
                   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

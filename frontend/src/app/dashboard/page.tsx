@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { DashboardLogoutButton } from "./_components/DashboardLogoutButton";
+import { DeleteMyAccountSection } from "./_components/DeleteMyAccountSection";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -99,6 +100,9 @@ export default async function DashboardPage() {
             </p>
           )}
         </div>
+        {role === "customer" && (
+          <DeleteMyAccountSection />
+        )}
         {role === "customer" && (referralCode != null || loyaltyPoints != null) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {referralCode != null && (

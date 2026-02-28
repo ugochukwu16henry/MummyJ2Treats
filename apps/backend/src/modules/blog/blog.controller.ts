@@ -100,6 +100,28 @@ export class BlogController {
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
+  @Get('me/:id')
+  async getMyPost(@Req() req: Request, @Param('id') id: string) {
+    const user = req.user as { userId: string; role: string } | undefined;
+    if (!user) {
+      throw new ForbiddenException('Missing user');
+    }
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    const post = await this.blogService.getPostForVendor(vendor.id, id);
+    if (!post) {
+      throw new ForbiddenException('Post not found.');
+    }
+    return post;
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
   @Post('me')
   async createForMe(
     @Req() req: Request,

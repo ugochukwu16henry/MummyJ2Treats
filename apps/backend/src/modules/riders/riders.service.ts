@@ -138,4 +138,10 @@ export class RidersService {
     );
     return { data: r.rows };
   }
+
+  /** Admin only: delete a rider profile by id. */
+  async deleteRider(id: string): Promise<boolean> {
+    const r = await this.db.query('DELETE FROM riders WHERE id = $1 RETURNING id', [id]);
+    return (r.rowCount ?? 0) > 0;
+  }
 }

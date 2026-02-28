@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { VendorsService } from '../vendors/vendors.service';
+import { shouldUpdateMediaUrl } from '../../utils/media-preservation';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -301,7 +302,7 @@ export class ProductsService {
       values.push(dto.nutritionalInfo);
       index += 1;
     }
-    if (dto.imageUrl !== undefined) {
+    if (shouldUpdateMediaUrl(dto.imageUrl)) {
       fields.push(`image_url = $${index}`);
       values.push(dto.imageUrl);
       index += 1;

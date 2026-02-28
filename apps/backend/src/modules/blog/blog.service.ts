@@ -2,6 +2,7 @@ import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/commo
 import { DatabaseService } from '../../database/database.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { UsersService } from '../users/users.service';
+import { shouldUpdateMediaUrl } from '../../utils/media-preservation';
 import { v4 as uuidv4 } from 'uuid';
 
 type BlogStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED';
@@ -530,7 +531,7 @@ export class BlogService {
       values.push(dto.locationCity);
       index += 1;
     }
-    if (dto.featuredImageUrl !== undefined) {
+    if (shouldUpdateMediaUrl(dto.featuredImageUrl)) {
       fields.push(`featured_image_url = $${index}`);
       values.push(dto.featuredImageUrl);
       index += 1;
@@ -550,7 +551,7 @@ export class BlogService {
       values.push(dto.seoDescription);
       index += 1;
     }
-    if (dto.ogImageUrl !== undefined) {
+    if (shouldUpdateMediaUrl(dto.ogImageUrl)) {
       fields.push(`og_image_url = $${index}`);
       values.push(dto.ogImageUrl);
       index += 1;
@@ -581,8 +582,8 @@ export class BlogService {
       updated = post;
     }
 
-    if (dto.mediaEmbeds) {
-      // Replace embeds for this post
+    // Only replace media embeds when a non-empty list is provided; never clear existing videos on partial update
+    if (Array.isArray(dto.mediaEmbeds) && dto.mediaEmbeds.length > 0) {
       await this.db.query('DELETE FROM blog_media_embeds WHERE post_id = $1', [postId]);
       for (const embed of dto.mediaEmbeds) {
         if (!embed.url) continue;

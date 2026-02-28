@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { shouldUpdateMediaUrl } from '../../utils/media-preservation';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -592,7 +593,7 @@ export class AdminService {
       updates.push(`description = $${i++}`);
       values.push(dto.description.trim() || null);
     }
-    if (dto.imageUrl !== undefined) {
+    if (shouldUpdateMediaUrl(dto.imageUrl)) {
       updates.push(`image_url = $${i++}`);
       values.push(dto.imageUrl);
     }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Body, Req, UseGuards, UseInterceptors, UploadedFile, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, Req, UseGuards, UseInterceptors, UploadedFile, ForbiddenException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
@@ -115,5 +115,45 @@ export class AdminController {
   @Get('delivery-map')
   getDeliveryMap() {
     return this.adminService.getDeliveryMapData();
+  }
+
+  @Get('founder-categories')
+  listFounderCategories() {
+    return this.adminService.listFounderCategories();
+  }
+
+  @Post('founder-categories')
+  createFounderCategory(
+    @Body() dto: { name: string; slug: string; description?: string; imageUrl?: string },
+  ) {
+    return this.adminService.createFounderCategory(dto);
+  }
+
+  @Patch('founder-categories/:id')
+  updateFounderCategory(
+    @Param('id') id: string,
+    @Body() dto: { name?: string; slug?: string; description?: string; imageUrl?: string },
+  ) {
+    return this.adminService.updateFounderCategory(id, dto);
+  }
+
+  @Delete('founder-categories/:id')
+  async deleteFounderCategory(@Param('id') id: string) {
+    const ok = await this.adminService.deleteFounderCategory(id);
+    if (!ok) throw new ForbiddenException('Category not found');
+    return { ok: true };
+  }
+
+  @Post('founder-categories/:id/image')
+  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/founder-categories' }))
+  async uploadFounderCategoryImage(
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) throw new ForbiddenException('File is required');
+    const relative = `/uploads/founder-categories/${file.filename}`;
+    const updated = await this.adminService.updateFounderCategory(id, { imageUrl: relative });
+    if (!updated) throw new ForbiddenException('Category not found');
+    return { url: relative };
   }
 }

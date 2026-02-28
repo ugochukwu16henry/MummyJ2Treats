@@ -6,11 +6,12 @@ import { mkdirSync } from 'fs';
 
 async function bootstrap() {
   const uploadsRoot = join(process.cwd(), 'uploads');
-  const founderAdminDir = join(uploadsRoot, 'founder-admin');
-  try {
-    mkdirSync(founderAdminDir, { recursive: true });
-  } catch {
-    // ignore if already exists or permission issue
+  for (const sub of ['founder-admin', 'products', 'founder-categories']) {
+    try {
+      mkdirSync(join(uploadsRoot, sub), { recursive: true });
+    } catch {
+      // ignore
+    }
   }
 
   const app = await NestFactory.create(AppModule);

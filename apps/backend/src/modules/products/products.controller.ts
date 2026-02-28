@@ -1,10 +1,11 @@
-import { Controller, Get, Param, Query, Body, Post, Patch, Req, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Param, Query, Body, Post, Patch, Delete, Req, UseGuards, UseInterceptors, UploadedFile, ForbiddenException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { VendorsService } from '../vendors/vendors.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.metadata';
 import { RolesGuard } from '../auth/roles.guard';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('products')
 export class ProductsController {
@@ -87,6 +88,11 @@ export class ProductsController {
       description?: string;
       price: number;
       stock?: number;
+      category?: string;
+      sizeLabel?: string;
+      ingredients?: string;
+      nutritionalInfo?: string;
+      imageUrl?: string;
     },
   ) {
     const user = req.user as { userId: string; role: string };
@@ -113,13 +119,60 @@ export class ProductsController {
       price?: number;
       stock?: number;
       isActive?: boolean;
+      category?: string;
+      sizeLabel?: string;
+      ingredients?: string;
+      nutritionalInfo?: string;
+      imageUrl?: string;
     },
   ) {
     const user = req.user as { userId: string; role: string };
-    const vendor = await this.vendorsService.findByUserId(user.userId);
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
     if (!vendor) {
       throw new ForbiddenException('No vendor account linked.');
     }
     return this.productsService.updateForVendor(vendor.id, id, dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
+  @Delete('me/:id')
+  async deleteForMe(@Req() req: Request, @Param('id') id: string) {
+    const user = req.user as { userId: string; role: string };
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
+    if (!vendor) {
+      throw new ForbiddenException('No vendor account linked.');
+    }
+    const deleted = await this.productsService.deleteForVendor(vendor.id, id);
+    if (!deleted) throw new ForbiddenException('Product not found or not yours.');
+    return { ok: true };
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('vendor', 'admin')
+  @Post('me/:id/image')
+  @UseInterceptors(FileInterceptor('file', { dest: 'uploads/products' }))
+  async uploadProductImage(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const user = req.user as { userId: string; role: string };
+    let vendor = await this.vendorsService.findByUserId(user.userId);
+    if (!vendor && user.role === 'admin') {
+      vendor = await this.vendorsService.ensureFounderVendorForUser(user.userId);
+    }
+    if (!vendor) throw new ForbiddenException('No vendor account linked.');
+    if (!file) throw new ForbiddenException('File is required');
+    const relative = `/uploads/products/${file.filename}`;
+    const updated = await this.productsService.updateForVendor(vendor.id, id, { imageUrl: relative });
+    if (!updated) throw new ForbiddenException('Product not found or not yours.');
+    return { url: relative };
   }
 }

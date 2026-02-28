@@ -525,4 +525,79 @@ export class AdminService {
     );
     return { url };
   }
+
+  private founderCategoriesInitialized = false;
+  private async ensureFounderCategoriesTable() {
+    if (this.founderCategoriesInitialized) return;
+    this.founderCategoriesInitialized = true;
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS founder_categories (
+        id UUID PRIMARY KEY,
+        name VARCHAR NOT NULL,
+        slug VARCHAR UNIQUE NOT NULL,
+        description TEXT,
+        image_url TEXT,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT now()
+      )
+    `);
+  }
+
+  async listFounderCategories() {
+    await this.ensureFounderCategoriesTable();
+    const r = await this.db.query(
+      `SELECT id, name, slug, description, image_url, sort_order, created_at FROM founder_categories ORDER BY sort_order ASC, name ASC`,
+    );
+    return { data: r.rows };
+  }
+
+  async createFounderCategory(dto: { name: string; slug: string; description?: string; imageUrl?: string }) {
+    await this.ensureFounderCategoriesTable();
+    const id = uuidv4();
+    await this.db.query(
+      `INSERT INTO founder_categories (id, name, slug, description, image_url) VALUES ($1, $2, $3, $4, $5)`,
+      [id, dto.name.trim(), dto.slug.trim().toLowerCase().replace(/\s+/g, '-'), dto.description?.trim() ?? null, dto.imageUrl ?? null],
+    );
+    const r = await this.db.query(`SELECT * FROM founder_categories WHERE id = $1`, [id]);
+    return r.rows[0];
+  }
+
+  async updateFounderCategory(id: string, dto: { name?: string; slug?: string; description?: string; imageUrl?: string }) {
+    await this.ensureFounderCategoriesTable();
+    const updates: string[] = [];
+    const values: any[] = [];
+    let i = 1;
+    if (dto.name !== undefined) {
+      updates.push(`name = $${i++}`);
+      values.push(dto.name.trim());
+    }
+    if (dto.slug !== undefined) {
+      updates.push(`slug = $${i++}`);
+      values.push(dto.slug.trim().toLowerCase().replace(/\s+/g, '-'));
+    }
+    if (dto.description !== undefined) {
+      updates.push(`description = $${i++}`);
+      values.push(dto.description.trim() || null);
+    }
+    if (dto.imageUrl !== undefined) {
+      updates.push(`image_url = $${i++}`);
+      values.push(dto.imageUrl);
+    }
+    if (updates.length === 0) {
+      const r = await this.db.query(`SELECT * FROM founder_categories WHERE id = $1`, [id]);
+      return r.rows[0] ?? null;
+    }
+    values.push(id);
+    const r = await this.db.query(
+      `UPDATE founder_categories SET ${updates.join(', ')} WHERE id = $${i} RETURNING *`,
+      values,
+    );
+    return r.rows[0] ?? null;
+  }
+
+  async deleteFounderCategory(id: string): Promise<boolean> {
+    await this.ensureFounderCategoriesTable();
+    const r = await this.db.query(`DELETE FROM founder_categories WHERE id = $1 RETURNING id`, [id]);
+    return (r.rowCount ?? 0) > 0;
+  }
 }

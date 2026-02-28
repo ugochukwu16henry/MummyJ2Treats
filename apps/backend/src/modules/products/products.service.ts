@@ -20,7 +20,8 @@ export class ProductsService {
       ADD COLUMN IF NOT EXISTS category VARCHAR,
       ADD COLUMN IF NOT EXISTS size_label VARCHAR,
       ADD COLUMN IF NOT EXISTS ingredients TEXT,
-      ADD COLUMN IF NOT EXISTS nutritional_info TEXT;
+      ADD COLUMN IF NOT EXISTS nutritional_info TEXT,
+      ADD COLUMN IF NOT EXISTS image_url TEXT;
     `);
   }
 
@@ -81,6 +82,7 @@ export class ProductsService {
         p.size_label,
         p.ingredients,
         p.nutritional_info,
+        p.image_url,
         v.id as vendor_id,
         v.business_name as vendor_name,
         v.slug as vendor_slug,
@@ -171,6 +173,7 @@ export class ProductsService {
     sizeLabel?: string;
     ingredients?: string;
     nutritionalInfo?: string;
+    imageUrl?: string;
   }) {
     await this.ensureExtraColumns();
 
@@ -200,9 +203,10 @@ export class ProductsService {
         category,
         size_label,
         ingredients,
-        nutritional_info
+        nutritional_info,
+        image_url
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $9, $10, $11, $12)
       RETURNING *
       `,
       [
@@ -217,6 +221,7 @@ export class ProductsService {
         dto.sizeLabel ?? null,
         dto.ingredients ?? null,
         dto.nutritionalInfo ?? null,
+        dto.imageUrl ?? null,
       ],
     );
 
@@ -229,6 +234,11 @@ export class ProductsService {
     price?: number;
     stock?: number;
     isActive?: boolean;
+    category?: string;
+    sizeLabel?: string;
+    ingredients?: string;
+    nutritionalInfo?: string;
+    imageUrl?: string;
   }) {
     await this.ensureExtraColumns();
 
@@ -271,30 +281,29 @@ export class ProductsService {
       index += 1;
     }
 
-    const anyExtra =
-      (dto as any).category !== undefined ||
-      (dto as any).sizeLabel !== undefined ||
-      (dto as any).ingredients !== undefined ||
-      (dto as any).nutritionalInfo !== undefined;
-
-    if ((dto as any).category !== undefined) {
+    if (dto.category !== undefined) {
       fields.push(`category = $${index}`);
-      values.push((dto as any).category);
+      values.push(dto.category);
       index += 1;
     }
-    if ((dto as any).sizeLabel !== undefined) {
+    if (dto.sizeLabel !== undefined) {
       fields.push(`size_label = $${index}`);
-      values.push((dto as any).sizeLabel);
+      values.push(dto.sizeLabel);
       index += 1;
     }
-    if ((dto as any).ingredients !== undefined) {
+    if (dto.ingredients !== undefined) {
       fields.push(`ingredients = $${index}`);
-      values.push((dto as any).ingredients);
+      values.push(dto.ingredients);
       index += 1;
     }
-    if ((dto as any).nutritionalInfo !== undefined) {
+    if (dto.nutritionalInfo !== undefined) {
       fields.push(`nutritional_info = $${index}`);
-      values.push((dto as any).nutritionalInfo);
+      values.push(dto.nutritionalInfo);
+      index += 1;
+    }
+    if (dto.imageUrl !== undefined) {
+      fields.push(`image_url = $${index}`);
+      values.push(dto.imageUrl);
       index += 1;
     }
 
@@ -347,6 +356,15 @@ export class ProductsService {
       [vendorId, limit, offset],
     );
     return { data: result.rows };
+  }
+
+  async deleteForVendor(vendorId: string, productId: string): Promise<boolean> {
+    await this.ensureExtraColumns();
+    const r = await this.db.query(
+      'DELETE FROM products WHERE id = $1 AND vendor_id = $2 RETURNING id',
+      [productId, vendorId],
+    );
+    return (r.rowCount ?? 0) > 0;
   }
 
   async listCategories() {

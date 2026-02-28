@@ -8,7 +8,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   constructor() {
     this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      connectionTimeoutMillis: 10000, // 10s – fail fast if DB unreachable
+      connectionTimeoutMillis: 8000, // 8s – fail fast if DB unreachable (keeps deploy from hanging)
       idleTimeoutMillis: 30000,
     });
   }

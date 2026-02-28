@@ -184,13 +184,20 @@ export default function AdminMyBlogPage() {
     try {
       const form = new FormData();
       form.append("file", file);
+      // Do not set Content-Type: browser must set multipart/form-data with boundary
+      const opts = getOpts();
       const res = await fetch(`${API_BASE}/blog/me/${id}/upload-video`, {
         method: "POST",
-        ...getOpts(),
+        credentials: opts.credentials,
+        headers: opts.headers as Record<string, string>,
         body: form,
         signal: ac.signal,
       });
       clearTimeout(timeoutId);
+      if (res.status === 413) {
+        setError("Video file is too large. Try a smaller file (max 100MB).");
+        return;
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError((data as { message?: string }).message ?? "Could not upload video.");

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -220,7 +221,12 @@ export class BlogController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('vendor', 'admin')
   @Post('me/:id/upload-video')
-  @UseInterceptors(FileInterceptor('file', { storage: multer.memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 100 * 1024 * 1024 }, // 100MB for video
+    }),
+  )
   async uploadVideoForPost(
     @Req() req: Request,
     @Param('id') id: string,
@@ -238,14 +244,20 @@ export class BlogController {
       throw new ForbiddenException('No vendor account linked.');
     }
     if (!file || !file.buffer) {
-      throw new ForbiddenException('File is required');
+      throw new ForbiddenException('File is required. Choose a video file (e.g. MP4, WebM).');
     }
-    const url = await this.storageService.upload(
-      file.buffer,
-      'blog-videos',
-      file.originalname || 'video',
-      file.mimetype,
-    );
+    let url: string;
+    try {
+      url = await this.storageService.upload(
+        file.buffer,
+        'blog-videos',
+        file.originalname || 'video.mp4',
+        file.mimetype,
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Upload failed';
+      throw new BadRequestException(`Video upload failed: ${msg}`);
+    }
     return this.blogService.attachUploadedMediaForVendor(
       vendor.id,
       id,

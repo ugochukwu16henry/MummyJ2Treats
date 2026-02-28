@@ -1,25 +1,20 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Pool, QueryResultRow } from 'pg';
 
 @Injectable()
-export class DatabaseService implements OnModuleInit, OnModuleDestroy {
+export class DatabaseService implements OnModuleDestroy {
   private readonly pool: Pool;
 
   constructor() {
     this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      connectionTimeoutMillis: 8000, // 8s – fail fast if DB unreachable (keeps deploy from hanging)
+      connectionTimeoutMillis: 8000,
       idleTimeoutMillis: 30000,
     });
-  }
-
-  async onModuleInit() {
-    try {
-      await this.pool.query('SELECT 1');
-    } catch (err) {
-      console.error('Database connection failed at startup:', err instanceof Error ? err.message : err);
-      throw err;
-    }
+    // Don't block startup: first request will establish connection
+    void this.pool.query('SELECT 1').catch((err) => {
+      console.error('Database connection check failed:', err instanceof Error ? err.message : err);
+    });
   }
 
   async onModuleDestroy() {

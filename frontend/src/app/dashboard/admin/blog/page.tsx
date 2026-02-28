@@ -17,23 +17,33 @@ type AdminBlogPost = {
   author_slug: string | null;
 };
 
+function getOpts(): RequestInit {
+  const cookie = document.cookie.split("; ").find((c) => c.startsWith("access_token="));
+  const token = cookie?.replace(/^access_token=/, "").trim();
+  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+  return { credentials: "include", headers };
+}
+
 export default function AdminBlogModerationPage() {
   const [posts, setPosts] = useState<AdminBlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<BlogStatus | "ALL">("PENDING_REVIEW");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function loadPosts(nextStatus: BlogStatus | "ALL" = statusFilter) {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (nextStatus !== "ALL") {
         params.set("status", nextStatus);
       }
-      const res = await fetch(`${API_BASE}/blog/admin/posts?${params.toString()}`, {
-        credentials: "include",
-      });
+      const res = await fetch(`${API_BASE}/blog/admin/posts?${params.toString()}`, getOpts());
       if (!res.ok) {
+        if (res.status === 401) {
+          setError("Please log in again as founder admin.");
+        }
         setPosts([]);
         return;
       }
@@ -52,11 +62,14 @@ export default function AdminBlogModerationPage() {
   async function mutate(id: string, action: "approve" | "reject" | "archive" | "delete") {
     try {
       setBusyId(id);
+      setError(null);
       const res = await fetch(`${API_BASE}/blog/admin/${id}/${action}`, {
         method: "POST",
-        credentials: "include",
+        ...getOpts(),
       });
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { message?: string }).message ?? "Action failed.");
         return;
       }
       await loadPosts();
@@ -73,6 +86,12 @@ export default function AdminBlogModerationPage() {
           Review and approve vendor and founder blog posts, videos, and images before they appear on the public blog.
         </p>
       </div>
+
+      {error && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-2 rounded-lg">
+          {error}
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between gap-4">
         <div className="text-xs text-zinc-600">

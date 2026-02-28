@@ -51,6 +51,11 @@ export class AdminController {
     return { url };
   }
 
+  @Get('storage-check')
+  async storageCheck() {
+    return this.storageService.checkConnection();
+  }
+
   @Get('metrics')
   getMetrics() {
     return this.adminService.getMetrics();

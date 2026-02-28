@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import { join } from 'path';
 import { writeFileSync, mkdirSync } from 'fs';
@@ -69,5 +69,30 @@ export class StorageService {
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, name), buffer);
     return `/uploads/${folder}/${name}`;
+  }
+
+  /**
+   * Check if S3 bucket is reachable and writable. Returns { ok: true } or { ok: false, error: string }.
+   */
+  async checkConnection(): Promise<{ ok: boolean; error?: string; mode?: 's3' | 'local' }> {
+    if (!this.useS3 || !this.s3) {
+      return { ok: true, mode: 'local' };
+    }
+    try {
+      await this.s3.send(new HeadBucketCommand({ Bucket: this.bucket }));
+      const testKey = `_test/connectivity-${Date.now()}.txt`;
+      await this.s3.send(
+        new PutObjectCommand({
+          Bucket: this.bucket,
+          Key: testKey,
+          Body: Buffer.from('MummyJ2Treats storage check'),
+          ContentType: 'text/plain',
+        }),
+      );
+      return { ok: true, mode: 's3' };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { ok: false, error: message, mode: 's3' };
+    }
   }
 }

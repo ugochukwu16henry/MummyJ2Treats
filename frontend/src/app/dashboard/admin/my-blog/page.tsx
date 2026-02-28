@@ -179,6 +179,8 @@ export default function AdminMyBlogPage() {
     if (!file) return;
     setFileUploadingId(id);
     setError(null);
+    const ac = new AbortController();
+    const timeoutId = setTimeout(() => ac.abort(), 5 * 60 * 1000); // 5 min for large videos
     try {
       const form = new FormData();
       form.append("file", file);
@@ -186,13 +188,26 @@ export default function AdminMyBlogPage() {
         method: "POST",
         ...getOpts(),
         body: form,
+        signal: ac.signal,
       });
+      clearTimeout(timeoutId);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError((data as { message?: string }).message ?? "Could not upload video.");
         return;
       }
       await loadPosts();
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err instanceof Error) {
+        if (err.name === "AbortError") {
+          setError("Upload timed out. Try a smaller video or check your connection.");
+        } else {
+          setError(err.message || "Could not upload video.");
+        }
+      } else {
+        setError("Could not upload video.");
+      }
     } finally {
       setFileUploadingId(null);
     }
@@ -396,7 +411,14 @@ export default function AdminMyBlogPage() {
                       type="file"
                       accept="video/mp4,video/webm,video/ogg"
                       className="hidden"
-                      onChange={(e) => uploadVideo(p.id, e.target.files?.[0] ?? null)}
+                      disabled={fileUploadingId === p.id}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        const input = e.target;
+                        uploadVideo(p.id, file).finally(() => {
+                          input.value = "";
+                        });
+                      }}
                     />
                   </label>
                   <a

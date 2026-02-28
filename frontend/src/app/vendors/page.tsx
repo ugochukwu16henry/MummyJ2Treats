@@ -1,4 +1,5 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const PRIMARY_VENDOR_SLUG = process.env.NEXT_PUBLIC_PRIMARY_VENDOR_SLUG ?? "mummyj2treats";
 
 async function fetchVendors() {
   try {
@@ -32,10 +33,13 @@ export default async function VendorsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {vendors.map((v: any) => (
+            {vendors.map((v: any) => {
+              const isFounderStore = v.slug && v.slug.toLowerCase() === PRIMARY_VENDOR_SLUG.toLowerCase();
+              const storeHref = isFounderStore ? "/" : (v.slug ? `/vendor/${v.slug}` : "#");
+              return (
               <a
                 key={v.id}
-                href={v.slug ? `/vendor/${v.slug}` : "#"}
+                href={storeHref}
                 className="rounded-2xl bg-white shadow-sm p-5 flex flex-col justify-between hover:shadow-md transition-shadow"
               >
                 <div>
@@ -56,7 +60,8 @@ export default async function VendorsPage() {
                   </span>
                 </div>
               </a>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>

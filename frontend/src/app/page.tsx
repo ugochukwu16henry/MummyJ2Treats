@@ -149,10 +149,13 @@ export default async function Home() {
           {rankedVendors.length === 0 ? (
             <p className="text-zinc-600">No vendor data yet. Orders will drive our smart ranking.</p>
           ) : (
-            rankedVendors.map((v: { vendorId: string; businessName: string; slug: string; fulfillmentRate: number }) => (
+            rankedVendors.map((v: { vendorId: string; businessName: string; slug: string; fulfillmentRate: number }) => {
+              const isFounderStore = v.slug && v.slug.toLowerCase() === PRIMARY_VENDOR_SLUG.toLowerCase();
+              const storeHref = isFounderStore ? "/" : (v.slug ? `/vendor/${v.slug}` : "#");
+              return (
               <a
                 key={v.vendorId}
-                href={v.slug ? `/vendor/${v.slug}` : "#"}
+                href={storeHref}
                 className="min-w-[220px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center hover:shadow-lg transition-shadow"
               >
                 <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-2 flex items-center justify-center text-lg font-bold text-primary">
@@ -162,7 +165,8 @@ export default async function Home() {
                 <span className="text-amber-500 text-sm">{Math.round(v.fulfillmentRate)}% delivered</span>
                 <span className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm">View Store</span>
               </a>
-            ))
+            );
+            })
           )}
         </div>
         {rankedVendors.length > 0 && (

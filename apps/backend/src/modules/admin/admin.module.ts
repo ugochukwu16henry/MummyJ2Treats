@@ -3,10 +3,11 @@ import { DatabaseModule } from '../../database/database.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { FounderCategoriesPublicController } from './founder-categories.public.controller';
+import { FounderPublicController } from './founder.public.controller';
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [AdminController, FounderCategoriesPublicController],
+  controllers: [AdminController, FounderCategoriesPublicController, FounderPublicController],
   providers: [AdminService],
 })
 export class AdminModule {}

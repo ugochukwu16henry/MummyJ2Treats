@@ -526,6 +526,19 @@ export class AdminService {
     return { url };
   }
 
+  /** Get founder admin profile picture URL for public display (e.g. blog, vendor page). Uses FOUNDER_ADMIN_EMAIL. */
+  async getFounderProfilePictureUrl(): Promise<string | null> {
+    const email = (process.env.FOUNDER_ADMIN_EMAIL || '').trim().toLowerCase();
+    if (!email) return null;
+    const userResult = await this.db.query<{ id: string }>(
+      `SELECT id FROM users WHERE LOWER(TRIM(email)) = $1 AND role = 'admin' LIMIT 1`,
+      [email],
+    );
+    const userId = userResult.rows[0]?.id;
+    if (!userId) return null;
+    return this.getAdminProfilePictureUrl(userId);
+  }
+
   private founderCategoriesInitialized = false;
   private async ensureFounderCategoriesTable() {
     if (this.founderCategoriesInitialized) return;

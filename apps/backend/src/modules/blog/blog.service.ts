@@ -45,6 +45,55 @@ export class BlogService {
     void this.ensureTables();
   }
 
+  /** Founder admin user id from FOUNDER_ADMIN_EMAIL (for avatar override). */
+  private async getFounderUserId(): Promise<string | null> {
+    const email = (process.env.FOUNDER_ADMIN_EMAIL || '').trim().toLowerCase();
+    if (!email) return null;
+    const r = await this.db.query<{ id: string }>(
+      `SELECT id FROM users WHERE LOWER(TRIM(email)) = $1 AND role = 'admin' LIMIT 1`,
+      [email],
+    );
+    return r.rows[0]?.id ?? null;
+  }
+
+  /** Founder's vendor id (so we can use founder profile picture as author_avatar_url). */
+  private async getFounderVendorId(): Promise<string | null> {
+    const userId = await this.getFounderUserId();
+    if (!userId) return null;
+    const r = await this.db.query<{ id: string }>(
+      `SELECT id FROM vendors WHERE user_id = $1 LIMIT 1`,
+      [userId],
+    );
+    return r.rows[0]?.id ?? null;
+  }
+
+  private async getFounderProfilePictureUrl(): Promise<string | null> {
+    const userId = await this.getFounderUserId();
+    if (!userId) return null;
+    const r = await this.db.query<{ url: string }>(
+      `SELECT url FROM founder_admin_profile_pictures WHERE admin_id = $1 ORDER BY uploaded_at DESC LIMIT 1`,
+      [userId],
+    );
+    return r.rows[0]?.url ?? null;
+  }
+
+  /** Override author_avatar_url with founder profile picture when post is by founder. */
+  private async enrichAuthorAvatarForFounder(
+    rows: { vendor_id?: string; author_avatar_url?: string | null }[],
+  ): Promise<void> {
+    if (rows.length === 0) return;
+    const [founderVendorId, founderPicUrl] = await Promise.all([
+      this.getFounderVendorId(),
+      this.getFounderProfilePictureUrl(),
+    ]);
+    if (!founderVendorId || !founderPicUrl) return;
+    for (const row of rows) {
+      if (row.vendor_id === founderVendorId) {
+        row.author_avatar_url = founderPicUrl;
+      }
+    }
+  }
+
   private async ensureTables() {
     if (this.initialized) return;
     this.initialized = true;
@@ -203,6 +252,7 @@ export class BlogService {
       `
       SELECT
         p.id,
+        p.vendor_id,
         p.title,
         p.slug,
         p.excerpt,
@@ -225,7 +275,7 @@ export class BlogService {
       `,
       [...values, limit, offset],
     );
-
+    await this.enrichAuthorAvatarForFounder(result.rows);
     return { data: result.rows };
   }
 
@@ -249,6 +299,7 @@ export class BlogService {
     if (!row) {
       return null;
     }
+    await this.enrichAuthorAvatarForFounder([row]);
 
     // Increment view count asynchronously (fire and forget)
     void this.db.query('UPDATE blog_posts SET views_count = views_count + 1 WHERE id = $1', [
@@ -293,10 +344,11 @@ export class BlogService {
   ): Promise<{ data: BlogPostSummary[] }> {
     await this.ensureTables();
 
-    const result = await this.db.query<BlogPostSummary>(
+    const result = await this.db.query<BlogPostSummary & { vendor_id?: string }>(
       `
       SELECT
         p.id,
+        p.vendor_id,
         p.title,
         p.slug,
         p.excerpt,
@@ -319,7 +371,7 @@ export class BlogService {
       `,
       [vendorSlug, limit, offset],
     );
-
+    await this.enrichAuthorAvatarForFounder(result.rows);
     return { data: result.rows };
   }
 
@@ -711,6 +763,7 @@ export class BlogService {
       `,
       [vendorId, limit, offset],
     );
+    await this.enrichAuthorAvatarForFounder(result.rows);
     return { data: result.rows };
   }
 

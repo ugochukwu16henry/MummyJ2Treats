@@ -3,6 +3,11 @@ import Image from "next/image";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
+function toFullAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
+}
+
 type BlogPostCard = {
   id: string;
   title: string;
@@ -159,7 +164,7 @@ export default async function BlogPage({
                     <div className="mt-3 flex items-center gap-2 text-xs opacity-80">
                       {featured.author_avatar_url ? (
                         <Image
-                          src={featured.author_avatar_url}
+                          src={toFullAvatarUrl(featured.author_avatar_url) ?? featured.author_avatar_url}
                           alt={featured.author_name ?? "Author"}
                           width={28}
                           height={28}

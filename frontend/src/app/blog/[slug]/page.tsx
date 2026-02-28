@@ -3,6 +3,11 @@ import Link from "next/link";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
+function toFullAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
+}
+
 type BlogPostDetail = {
   id: string;
   title: string;
@@ -184,7 +189,7 @@ export default async function BlogPostPage({
                 {post.author_avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={post.author_avatar_url}
+                    src={toFullAvatarUrl(post.author_avatar_url) ?? post.author_avatar_url}
                     alt={post.author_name ?? "Author"}
                     className="w-full h-full object-cover"
                   />

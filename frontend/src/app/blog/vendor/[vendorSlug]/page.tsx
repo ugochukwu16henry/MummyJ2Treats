@@ -2,6 +2,11 @@ import Link from "next/link";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
+function toFullAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
+}
+
 type BlogPostCard = {
   id: string;
   title: string;
@@ -44,7 +49,7 @@ export default async function AuthorBlogPage({
 
   const authorName = first?.author_name ?? params.vendorSlug.replace(/-/g, " ");
   const avatarLetter = authorName.slice(0, 1).toUpperCase();
-  const avatarUrl = first?.author_avatar_url ?? null;
+  const avatarUrl = toFullAvatarUrl(first?.author_avatar_url ?? null) ?? first?.author_avatar_url ?? null;
   const state = first?.location_state ?? null;
   const city = first?.location_city ?? null;
 

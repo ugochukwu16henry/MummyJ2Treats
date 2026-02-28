@@ -1,6 +1,12 @@
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const PRIMARY_VENDOR_SLUG = process.env.NEXT_PUBLIC_PRIMARY_VENDOR_SLUG ?? "mummyj2treats";
 import { TestimonialForm } from "../../_components/TestimonialForm";
+
+function toFullUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
+}
 
 async function fetchVendorStore(slug: string) {
   try {
@@ -16,19 +22,31 @@ async function fetchVendorStore(slug: string) {
       return { vendor: null, products: [] };
     }
     const first = products[0];
-    // Fetch vendor profile picture
+    const isFounderStore = slug.toLowerCase() === PRIMARY_VENDOR_SLUG.toLowerCase();
     let profilePicUrl: string | null = null;
-    try {
-      const picRes = await fetch(`${API_BASE}/vendors/${first.vendor_id}/profile-picture`, { cache: "no-store" });
-      if (picRes.ok) {
-        const pic = await picRes.json();
-        profilePicUrl = pic.url ?? null;
-      }
-    } catch {}
+    if (isFounderStore) {
+      try {
+        const founderRes = await fetch(`${API_BASE}/founder/profile-picture`, { cache: "no-store" });
+        if (founderRes.ok) {
+          const pic = await founderRes.json();
+          profilePicUrl = toFullUrl(pic.url ?? null) ?? pic.url ?? null;
+        }
+      } catch {}
+    }
+    if (!profilePicUrl) {
+      try {
+        const picRes = await fetch(`${API_BASE}/vendors/${first.vendor_id}/profile-picture`, { cache: "no-store" });
+        if (picRes.ok) {
+          const pic = await picRes.json();
+          const raw = pic.url ?? null;
+          profilePicUrl = toFullUrl(raw) ?? raw;
+        }
+      } catch {}
+    }
     const vendor = {
       name: first.vendor_name as string,
       slug: first.vendor_slug as string,
-      logoUrl: profilePicUrl || (first.vendor_logo_url as string | null),
+      logoUrl: profilePicUrl || toFullUrl(first.vendor_logo_url as string | null) || (first.vendor_logo_url as string | null),
       bannerUrl: first.vendor_banner_url as string | null,
     };
     return { vendor, products };

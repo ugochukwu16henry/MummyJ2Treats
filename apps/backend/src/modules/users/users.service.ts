@@ -13,11 +13,8 @@ export class UsersService {
   private async ensureDeletionColumns() {
     if (this.deletionColumnsEnsured) return;
     this.deletionColumnsEnsured = true;
-    await this.db.query(`
-      ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS deletion_requested_at TIMESTAMP NULL,
-      ADD COLUMN IF NOT EXISTS delete_after TIMESTAMP NULL
-    `);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_requested_at TIMESTAMP NULL`);
+    await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS delete_after TIMESTAMP NULL`);
   }
 
   async findAll() {

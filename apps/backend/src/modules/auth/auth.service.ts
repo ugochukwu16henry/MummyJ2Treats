@@ -113,11 +113,11 @@ export class AuthService {
 
   /** Public vendor registration: create user (role vendor) + vendor profile in one step. No prior login. */
   async registerVendor(dto: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    businessName: string;
+    email?: string;
+    password?: string;
+    firstName?: string;
+    lastName?: string;
+    businessName?: string;
     description?: string;
     phone?: string;
     country?: string;
@@ -129,23 +129,39 @@ export class AuthService {
     hasCertificate?: boolean;
     certificateDetails?: string;
   }) {
-    const existing = await this.usersService.findByEmail(dto.email.trim());
+    const email = typeof dto.email === 'string' ? dto.email.trim() : '';
+    const password = typeof dto.password === 'string' ? dto.password : '';
+    const firstName = typeof dto.firstName === 'string' ? dto.firstName.trim() : '';
+    const lastName = typeof dto.lastName === 'string' ? dto.lastName.trim() : '';
+    const businessName = typeof dto.businessName === 'string' ? dto.businessName.trim() : '';
+
+    if (!email) throw new BadRequestException('Email is required');
+    if (!password || password.length < 6) throw new BadRequestException('Password must be at least 6 characters');
+    if (!firstName) throw new BadRequestException('First name is required');
+    if (!lastName) throw new BadRequestException('Last name is required');
+    if (!businessName) throw new BadRequestException('Business name is required');
+
+    const existing = await this.usersService.findByEmail(email);
     if (existing) {
       throw new BadRequestException('Email is already registered');
     }
 
-    const passwordHash = await argon2.hash(dto.password);
-    const user = await this.usersService.createUser({
-      firstName: dto.firstName.trim(),
-      lastName: dto.lastName.trim(),
-      email: dto.email.trim(),
-      phone: dto.phone?.trim(),
+    let user: { id: string; first_name: string; last_name: string; email: string };
+    let vendor: { id: string; business_name: string; slug: string };
+
+    try {
+      const passwordHash = await argon2.hash(password);
+      user = await this.usersService.createUser({
+      firstName,
+      lastName,
+      email,
+      phone: typeof dto.phone === 'string' ? dto.phone.trim() || undefined : undefined,
       role: 'vendor',
       passwordHash,
-    });
+    }) as typeof user;
 
-    const businessName = dto.businessName?.trim() || `${dto.firstName} ${dto.lastName}`.trim() || user.email.split('@')[0];
-    const slugBase = businessName
+    const finalBusinessName = businessName || `${firstName} ${lastName}`.trim() || user.email.split('@')[0];
+    const slugBase = finalBusinessName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || `vendor-${user.id.slice(0, 8)}`;
@@ -157,26 +173,27 @@ export class AuthService {
       slug = `${slugBase}-${suffix++}`;
     }
 
-    const vendor = await this.vendorsService.createVendorForUser({
+    vendor = await this.vendorsService.createVendorForUser({
       userId: user.id,
-      businessName,
+      businessName: finalBusinessName,
       slug,
-      description: dto.description?.trim() || undefined,
-    });
+      description: typeof dto.description === 'string' ? dto.description.trim() || undefined : undefined,
+    }) as typeof vendor;
 
+    const safeStr = (v: unknown) => (typeof v === 'string' ? v.trim() || undefined : undefined);
     await this.vendorsService.upsertProfileForVendor(vendor.id, {
-      ownerFirstName: dto.firstName.trim(),
-      ownerLastName: dto.lastName.trim(),
-      contactEmail: dto.email.trim(),
-      contactPhone: dto.phone?.trim(),
-      country: dto.country?.trim(),
-      state: dto.state?.trim(),
-      city: dto.city?.trim(),
-      openDays: dto.openDays?.trim(),
-      openTime: dto.openTime?.trim(),
-      closeTime: dto.closeTime?.trim(),
-      hasCertificate: dto.hasCertificate,
-      certificateDetails: dto.certificateDetails?.trim(),
+      ownerFirstName: firstName,
+      ownerLastName: lastName,
+      contactEmail: email,
+      contactPhone: safeStr(dto.phone),
+      country: safeStr(dto.country),
+      state: safeStr(dto.state),
+      city: safeStr(dto.city),
+      openDays: safeStr(dto.openDays),
+      openTime: safeStr(dto.openTime),
+      closeTime: safeStr(dto.closeTime),
+      hasCertificate: dto.hasCertificate === true || (typeof dto.hasCertificate === 'string' && dto.hasCertificate === 'true'),
+      certificateDetails: safeStr(dto.certificateDetails),
     });
 
     const tokens = await this.issueTokens(user.id, 'vendor');
@@ -188,9 +205,26 @@ export class AuthService {
         email: user.email,
         role: 'vendor',
       },
-      vendor,
+      vendor: {
+        id: vendor.id,
+        businessName: vendor.business_name,
+        slug: vendor.slug,
+      },
       ...tokens,
     };
+    } catch (err: any) {
+      const code = err?.code;
+      const msg = err?.message ?? '';
+      if (code === '23505') {
+        throw new BadRequestException('Email or business slug already in use. Try a different email or business name.');
+      }
+      if (code === '23502') {
+        throw new BadRequestException('A required field is missing or invalid.');
+      }
+      if (err instanceof BadRequestException) throw err;
+      console.error('registerVendor error:', code, msg);
+      throw new BadRequestException(msg || 'Could not create vendor account. Please try again.');
+    }
   }
 
   /** Upgrade a logged-in user to vendor: create vendor row + switch role + issue new tokens */

@@ -2,8 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { join } from 'path';
+import { mkdirSync } from 'fs';
 
 async function bootstrap() {
+  const uploadsRoot = join(process.cwd(), 'uploads');
+  const founderAdminDir = join(uploadsRoot, 'founder-admin');
+  try {
+    mkdirSync(founderAdminDir, { recursive: true });
+  } catch {
+    // ignore if already exists or permission issue
+  }
+
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
 
@@ -26,7 +35,6 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
   // Serve uploaded testimonial images (and other future assets)
-  const uploadsRoot = join(process.cwd(), 'uploads');
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.use('/uploads', require('express').static(uploadsRoot));

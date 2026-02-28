@@ -29,13 +29,24 @@ export default function AdminDashboardLayout({
   const [unauth, setUnauth] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [uploadingPic, setUploadingPic] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const toFullProfilePicUrl = (url: string | null) =>
     !url ? null : url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
+
+  const getAuthHeaders = (): HeadersInit => {
+    const cookie = document.cookie.split("; ").find((c) => c.startsWith("access_token="));
+    const token = cookie?.replace(/^access_token=/, "").trim();
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
+  };
 
   useEffect(() => {
     async function fetchProfilePic() {
       try {
-        const res = await fetch(`${API_BASE}/admin/me/profile-picture`, { credentials: "include" });
+        const res = await fetch(`${API_BASE}/admin/me/profile-picture`, {
+          credentials: "include",
+          headers: getAuthHeaders(),
+        });
         if (res.ok) {
           const data = await res.json();
           setProfilePicUrl(toFullProfilePicUrl(data.url ?? null));
@@ -45,22 +56,35 @@ export default function AdminDashboardLayout({
     fetchProfilePic();
   }, []);
   async function uploadProfilePic(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files?.[0]) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please choose an image file.");
+      return;
+    }
+    setUploadError(null);
     setUploadingPic(true);
     const formData = new FormData();
-    formData.append("file", e.target.files[0]);
+    formData.append("file", file);
     try {
       const res = await fetch(`${API_BASE}/admin/me/profile-picture`, {
         method: "POST",
         credentials: "include",
+        headers: getAuthHeaders(),
         body: formData,
       });
       if (res.ok) {
         const data = await res.json();
         setProfilePicUrl(toFullProfilePicUrl(data.url ?? null));
+      } else {
+        const text = await res.text();
+        setUploadError(res.status === 401 ? "Please log in again." : text || "Upload failed.");
       }
+    } catch (err) {
+      setUploadError("Upload failed. Check your connection.");
     } finally {
       setUploadingPic(false);
+      e.target.value = "";
     }
   }
 
@@ -131,6 +155,7 @@ export default function AdminDashboardLayout({
             <input type="file" accept="image/*" className="hidden" onChange={uploadProfilePic} disabled={uploadingPic} />
             {uploadingPic ? "Uploading…" : "Add/Change photo"}
           </label>
+          {uploadError && <p className="text-xs text-red-600 mb-2">{uploadError}</p>}
           <h1 className="font-semibold text-zinc-900">Founder Admin</h1>
           <p className="text-xs text-zinc-500 mt-0.5">Dashboard</p>
         </div>

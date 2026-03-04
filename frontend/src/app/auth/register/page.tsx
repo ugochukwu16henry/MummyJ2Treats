@@ -48,7 +48,7 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const { confirmPassword, ...payload } = parsed.data;
-      const res = await fetch(`${API_BASE}/auth/register`, {
+      const res = await fetch(`${API_BASE}/auth/register/customer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -8,18 +8,21 @@ using MummyJ2Treats.Api.Storefront;
 using MummyJ2Treats.Api.Orders;
 using MummyJ2Treats.Api.Payments;
 using MummyJ2Treats.Api.Carts;
+using MummyJ2Treats.Api.Admin;
 using MummyJ2Treats.Application.Auth;
 using MummyJ2Treats.Application.Common;
 using MummyJ2Treats.Application.Products;
 using MummyJ2Treats.Application.Orders;
 using MummyJ2Treats.Application.Payments;
 using MummyJ2Treats.Application.Carts;
+using MummyJ2Treats.Application.Riders;
 using MummyJ2Treats.Infrastructure.Auth;
 using MummyJ2Treats.Infrastructure.Persistence;
 using MummyJ2Treats.Infrastructure.Products;
 using MummyJ2Treats.Infrastructure.Orders;
 using MummyJ2Treats.Infrastructure.Payments;
 using MummyJ2Treats.Infrastructure.Carts;
+using MummyJ2Treats.Infrastructure.Riders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,6 +104,12 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Cart
 builder.Services.AddScoped<ICartService, CartService>();
 
+// Admin orders
+builder.Services.AddScoped<IAdminOrderService, AdminOrderService>();
+
+// Riders
+builder.Services.AddScoped<IRiderService, RiderService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -120,5 +129,7 @@ app.MapProductEndpoints();
 app.MapOrderEndpoints();
 app.MapPaymentEndpoints();
 app.MapCartEndpoints();
+app.MapAdminOrderEndpoints();
+app.MapAdminRiderEndpoints();
 
 app.Run();

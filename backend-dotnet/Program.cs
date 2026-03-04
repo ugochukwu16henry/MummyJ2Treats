@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication;
 using System.Text;
 using MummyJ2Treats.Api.Auth;
 using MummyJ2Treats.Api.Storefront;
@@ -50,6 +51,21 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSection["Issuer"] ?? "MummyJ2Treats",
         ValidAudience = jwtSection["Audience"] ?? "MummyJ2Treats.Frontend",
         IssuerSigningKey = signingKey
+    };
+
+    // Allow tokens to be sent via access_token cookie (frontend already sets this)
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Cookies["access_token"];
+            if (!string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+            }
+
+            return Task.CompletedTask;
+        }
     };
 });
 

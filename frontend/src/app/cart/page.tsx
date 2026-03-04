@@ -118,49 +118,71 @@ export default function CartPage() {
       const deliveryAddress =
         address.trim() ||
         [deliveryStreet, deliveryLandmark, deliveryLga, deliveryCity, deliveryState].filter(Boolean).join(", ");
-      const body: Record<string, unknown> = {
-        paymentMethod,
-        deliveryAddress: deliveryAddress || undefined,
-        deliveryState: deliveryState.trim() || undefined,
-        deliveryCity: deliveryCity.trim() || undefined,
-        deliveryLga: deliveryLga.trim() || undefined,
-        deliveryStreet: deliveryStreet.trim() || undefined,
-        deliveryLandmark: deliveryLandmark.trim() || undefined,
-        deliveryNotes: deliveryNotes.trim() || undefined,
+
+      const itemsForOrder =
+        (data?.items ?? []).map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })) ?? [];
+
+      const createOrderPayload = {
+        items: itemsForOrder,
+        addressLine1: deliveryAddress || deliveryStreet || "Delivery address",
+        addressLine2: deliveryLandmark || null,
+        city: deliveryCity || null,
+        state: deliveryState || null,
+        country: "Nigeria",
+        postalCode: null as string | null,
+        latitude: latitude ?? 0,
+        longitude: longitude ?? 0,
+        deliveryFee: 0, // TODO: compute from distance pricing
       };
-      if (latitude != null && longitude != null) {
-        body.latitude = latitude;
-        body.longitude = longitude;
-      }
-      const res = await fetch(`${API_BASE}/orders/checkout`, {
+
+      const orderRes = await fetch(`${API_BASE}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(body),
+        body: JSON.stringify(createOrderPayload),
       });
-      const json = await res.json().catch(() => ({} as any));
-      if (!res.ok) {
-        setError(json?.message ?? "Checkout failed.");
+      const orderJson = await orderRes.json().catch(() => ({} as any));
+      if (!orderRes.ok) {
+        setError(orderJson?.message ?? "Checkout failed while creating order.");
         return;
       }
-      if (paymentMethod === "bank_transfer") {
-        setPendingPaymentId(json?.payment?.id ?? null);
-      }
-      if (paymentMethod === "paystack" && json?.paystack?.authorizationUrl) {
-        window.location.href = json.paystack.authorizationUrl as string;
+
+      const orderId = orderJson?.id as string | undefined;
+      if (!orderId) {
+        setError("Order was created but an ID was not returned.");
         return;
       }
-      if (paymentMethod === "bank_transfer") {
-        const bank = json?.bankTransfer;
-        if (bank?.bankAccountNumber) {
-          alert(
-            `Please transfer ₦${(data?.subtotal ?? 0).toLocaleString()} to:\n` +
-              `${bank.bankAccountName || "Account name"}\n` +
-              `${bank.bankAccountNumber} (${bank.bankName || "Bank"})`,
-          );
+
+      if (paymentMethod === "paystack") {
+        const initRes = await fetch(`${API_BASE}/payments/initialize`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ orderId, provider: "paystack" }),
+        });
+        const initJson = await initRes.json().catch(() => ({} as any));
+        if (!initRes.ok || !initJson?.paymentUrl) {
+          setError(initJson?.message ?? "Failed to initialize online payment.");
+          return;
         }
+        window.location.href = initJson.paymentUrl as string;
+        return;
       }
-      router.push("/"); // later: redirect to order confirmation page
+
+      if (paymentMethod === "bank_transfer") {
+        setPendingPaymentId(orderId);
+        alert(
+          `Order created successfully.\n\nPlease transfer ₦${(data?.subtotal ?? 0).toLocaleString()} to:\n` +
+            `Account name: Marylou Ihechi Okechukwu\n` +
+            `Bank: Opay\n` +
+            `Account number: 9068042947\n\n` +
+            `After payment, upload your transfer receipt here so we can verify and confirm your order.`,
+        );
+      }
+      // For bank transfer we stay on the page so user can upload receipt.
     } catch {
       setError("Checkout failed.");
     } finally {
@@ -401,32 +423,45 @@ export default function CartPage() {
                         setUploadingReceipt(true);
                         setError(null);
                         const form = new FormData();
-                        form.append("receipt", receiptFile);
-                        const res = await fetch(
-                          `${API_BASE}/payments/${pendingPaymentId}/receipt`,
-                          {
-                            method: "POST",
-                            credentials: "include",
-                            body: form,
-                          },
-                        );
+                        form.append("file", receiptFile);
+
+                        // In this version, the frontend is responsible for uploading the file
+                        // (e.g. to your bucket) and then passing the resulting URL to the API.
+                        // For now, we assume a helper endpoint or client upload that returns a URL.
+                        const uploadRes = await fetch(`${API_BASE}/uploads/receipts`, {
+                          method: "POST",
+                          credentials: "include",
+                          body: form,
+                        });
+                        const uploadJson = await uploadRes.json().catch(() => ({} as any));
+                        if (!uploadRes.ok || !uploadJson?.url) {
+                          setError(
+                            uploadJson?.message ??
+                              "Failed to upload receipt image. Please try again.",
+                          );
+                          return;
+                        }
+
+                        const res = await fetch(`${API_BASE}/payments/bank-transfer`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "include",
+                          body: JSON.stringify({
+                            orderId: pendingPaymentId,
+                            receiptUrl: uploadJson.url as string,
+                          }),
+                        });
                         const body = await res.json().catch(() => ({}));
                         if (!res.ok) {
                           setError(
                             body.message ??
-                              "Failed to upload receipt. Please try again.",
+                              "Failed to record bank transfer. Please try again.",
                           );
                           return;
                         }
-                        if (body.autoVerified) {
-                          alert(
-                            "Receipt uploaded and payment auto-verified. Thank you!",
-                          );
-                        } else {
-                          alert(
-                            "Receipt uploaded. Admin will confirm your payment shortly.",
-                          );
-                        }
+                        alert(
+                          "Receipt uploaded. Admin will confirm your payment shortly.",
+                        );
                       } catch {
                         setError(
                           "Failed to upload receipt. Please try again later.",

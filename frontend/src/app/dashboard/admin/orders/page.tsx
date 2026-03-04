@@ -11,9 +11,11 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/orders`, { credentials: "include" })
-      .then((res) => res.ok ? res.json() : { data: [] })
-      .then((data: { data?: Order[] }) => setOrders(data.data ?? []))
+    fetch(`${API_BASE}/admin/orders`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Order[] | { data?: Order[] }) =>
+        Array.isArray(data) ? setOrders(data) : setOrders(data.data ?? []),
+      )
       .finally(() => setLoading(false));
   }, []);
 

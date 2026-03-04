@@ -22,15 +22,23 @@ public sealed class AdminOrderService : IAdminOrderService
         var query = _db.Orders
             .AsNoTracking()
             .Where(o => !o.IsDeleted)
-            .OrderByDescending(o => o.CreatedAt)
-            .Select(o => new AdminOrderListItem(
-                Id: o.Id.ToString(),
-                OrderNumber: o.Id.ToString()[..8], // simple short id for now
-                Status: o.Status.ToString(),
-                TotalAmount: o.Total,
-                CreatedAt: o.CreatedAt));
+            .OrderByDescending(o => o.CreatedAt);
 
-        return await query.ToListAsync(cancellationToken);
+        var list = await query.ToListAsync(cancellationToken);
+
+        return list
+            .Select(o =>
+            {
+                var idText = o.Id.ToString();
+                var shortId = idText.Length > 8 ? idText.Substring(0, 8) : idText;
+                return new AdminOrderListItem(
+                    Id: idText,
+                    OrderNumber: shortId,
+                    Status: o.Status.ToString(),
+                    TotalAmount: o.Total,
+                    CreatedAt: o.CreatedAt);
+            })
+            .ToList();
     }
 }
 

@@ -5,14 +5,17 @@ using System.Text;
 using MummyJ2Treats.Api.Auth;
 using MummyJ2Treats.Api.Storefront;
 using MummyJ2Treats.Api.Orders;
+using MummyJ2Treats.Api.Payments;
 using MummyJ2Treats.Application.Auth;
 using MummyJ2Treats.Application.Common;
 using MummyJ2Treats.Application.Products;
 using MummyJ2Treats.Application.Orders;
+using MummyJ2Treats.Application.Payments;
 using MummyJ2Treats.Infrastructure.Auth;
 using MummyJ2Treats.Infrastructure.Persistence;
 using MummyJ2Treats.Infrastructure.Products;
 using MummyJ2Treats.Infrastructure.Orders;
+using MummyJ2Treats.Infrastructure.Payments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +61,9 @@ builder.Services.AddScoped<IProductQueryService, ProductQueryService>();
 // Orders
 builder.Services.AddScoped<IOrderService, OrderService>();
 
+// Payments
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -74,5 +80,6 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapProductEndpoints();
 app.MapOrderEndpoints();
+app.MapPaymentEndpoints();
 
 app.Run();

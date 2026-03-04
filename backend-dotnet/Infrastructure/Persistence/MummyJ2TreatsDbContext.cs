@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MummyJ2Treats.Domain.Blog;
+using MummyJ2Treats.Domain.Carts;
 using MummyJ2Treats.Domain.Locations;
 using MummyJ2Treats.Domain.Orders;
 using MummyJ2Treats.Domain.Payments;
@@ -27,6 +28,8 @@ public class MummyJ2TreatsDbContext : DbContext
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<BlogMedia> BlogMedia => Set<BlogMedia>();
+    public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<CartItem> CartItems => Set<CartItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +49,13 @@ public class MummyJ2TreatsDbContext : DbContext
 
         modelBuilder.Entity<BlogPost>()
             .HasIndex(b => b.Slug)
+            .IsUnique();
+
+        modelBuilder.Entity<Cart>()
+            .HasIndex(c => c.CustomerId);
+
+        modelBuilder.Entity<CartItem>()
+            .HasIndex(ci => new { ci.CartId, ci.ProductId })
             .IsUnique();
     }
 }

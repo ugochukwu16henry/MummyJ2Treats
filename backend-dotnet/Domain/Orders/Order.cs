@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MummyJ2Treats.Domain.Common;
 using MummyJ2Treats.Domain.Products;
+using MummyJ2Treats.Domain.Locations;
 using MummyJ2Treats.Domain.Users;
 
 namespace MummyJ2Treats.Domain.Orders;
@@ -19,6 +20,9 @@ public class Order : BaseEntity
 {
     public Guid CustomerId { get; set; }
     public User? Customer { get; set; }
+
+    public Guid? DeliveryLocationId { get; set; }
+    public Location? DeliveryLocation { get; set; }
 
     public decimal Subtotal { get; set; }
     public decimal DeliveryFee { get; set; }

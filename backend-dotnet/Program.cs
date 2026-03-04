@@ -4,12 +4,15 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using MummyJ2Treats.Api.Auth;
 using MummyJ2Treats.Api.Storefront;
+using MummyJ2Treats.Api.Orders;
 using MummyJ2Treats.Application.Auth;
 using MummyJ2Treats.Application.Common;
 using MummyJ2Treats.Application.Products;
+using MummyJ2Treats.Application.Orders;
 using MummyJ2Treats.Infrastructure.Auth;
 using MummyJ2Treats.Infrastructure.Persistence;
 using MummyJ2Treats.Infrastructure.Products;
+using MummyJ2Treats.Infrastructure.Orders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,8 +50,13 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddAuthorization();
+
 // Products
 builder.Services.AddScoped<IProductQueryService, ProductQueryService>();
+
+// Orders
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 var app = builder.Build();
 
@@ -65,5 +73,6 @@ app.UseAuthorization();
 // Minimal API endpoints
 app.MapAuthEndpoints();
 app.MapProductEndpoints();
+app.MapOrderEndpoints();
 
 app.Run();

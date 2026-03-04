@@ -233,7 +233,7 @@ export default async function VendorStorePage({
           </div>
           <TestimonialForm target="vendor" vendorSlug={vendor.slug} />
         </section>
-      </main>
+    </main>
       <footer className="bg-zinc-900 text-white py-6 px-4 mt-4">
         <div className="max-w-5xl mx-auto text-center text-xs text-zinc-400 space-y-1">
           <div>

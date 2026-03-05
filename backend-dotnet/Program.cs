@@ -77,10 +77,8 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "https://www.mummyj2treats.com",
-                "https://mummyj2treats.com")
+        policy
+            .SetIsOriginAllowed(_ => true) // allow all origins
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

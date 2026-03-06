@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MummyJ2Treats.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e2c1381a9af9ea4f45ae6140092231c11fdc859d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8c30f986d0328a3ef50fb9376a48495a3fc6f389")]
 [assembly: System.Reflection.AssemblyProductAttribute("MummyJ2Treats.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MummyJ2Treats.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -24,7 +24,10 @@ export function SiteHeader() {
                 Home
               </Link>
               <Link href="/categories" className="text-sm font-medium transition-colors hover:opacity-80 py-1" style={{ color: "var(--foreground)" }}>
-                Shop
+                Shop all
+              </Link>
+              <Link href="/search" className="text-sm font-medium transition-colors hover:opacity-80 py-1" style={{ color: "var(--foreground)" }}>
+                Search
               </Link>
               <Link href="/blog" className="text-sm font-medium transition-colors hover:opacity-80 py-1" style={{ color: "var(--foreground)" }}>
                 Blog

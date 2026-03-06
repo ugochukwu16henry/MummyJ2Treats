@@ -176,15 +176,9 @@ export default function CartPage() {
 
       if (paymentMethod === "bank_transfer") {
         setPendingPaymentId(orderId);
-        alert(
-          `Order created successfully.\n\nPlease transfer ₦${(data?.subtotal ?? 0).toLocaleString()} to:\n` +
-            `Account name: Marylou Ihechi Okechukwu\n` +
-            `Bank: Opay\n` +
-            `Account number: 9068042947\n\n` +
-            `After payment, upload your transfer receipt here so we can verify and confirm your order.`,
-        );
+        router.push(`/checkout/success?orderId=${orderId}&payment=bank_transfer`);
+        return;
       }
-      // For bank transfer we stay on the page so user can upload receipt.
     } catch {
       setError("Checkout failed.");
     } finally {
@@ -210,8 +204,11 @@ export default function CartPage() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8" style={{ background: "var(--background)" }}>
-        <div className="max-w-4xl mx-auto w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-4 sm:p-6 space-y-4" style={{ background: "var(--background)" }}>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>Your Cart</h1>
+        <div className="max-w-4xl mx-auto w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-4 sm:p-6 space-y-6" style={{ background: "var(--background)" }}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>Your cart</h1>
+            <Link href="/categories" className="text-sm font-medium" style={{ color: "var(--primary)" }}>← Continue shopping</Link>
+          </div>
           {error && (
             <div className="text-sm px-3 py-2 rounded-lg" style={{ backgroundColor: "var(--error)", color: "white" }}>
               {error}
@@ -223,7 +220,10 @@ export default function CartPage() {
             </p>
           ) : (
           <>
-            <div className="space-y-3">
+            {/* Cart summary: list and update/remove */}
+            <section aria-labelledby="cart-items-heading">
+              <h2 id="cart-items-heading" className="sr-only">Cart items</h2>
+              <div className="space-y-3">
               {items.map((item) => (
                 <div
                   key={item.productId}
@@ -268,11 +268,21 @@ export default function CartPage() {
                     <div className="w-20 text-right font-semibold sm:text-right" style={{ color: "var(--foreground)" }}>
                       ₦{item.lineTotal.toLocaleString()}
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.productId, 0)}
+                      className="text-xs font-medium opacity-80 hover:opacity-100 ml-1"
+                      style={{ color: "var(--error)" }}
+                      title="Remove"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
+            </section>
+            <div className="flex justify-between items-center pt-4 border-t border-zinc-100 dark:border-zinc-800">
               <div className="text-sm text-zinc-600">
                 Subtotal:{" "}
                 <span className="font-semibold text-zinc-900">
@@ -280,10 +290,12 @@ export default function CartPage() {
                 </span>
               </div>
             </div>
-            <div className="space-y-3 pt-2">
+            {/* Checkout: delivery → payment → review */}
+            <section className="space-y-4 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+              <h2 className="text-lg font-semibold" style={{ color: "var(--foreground)" }}>Checkout</h2>
               <div>
-                <span className="block text-sm font-medium mb-1">
-                  Payment method
+                <span className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
+                  1. Payment method
                 </span>
                 <div className="flex flex-col sm:flex-row gap-2 text-sm">
                   <label className="flex items-center gap-2">
@@ -309,7 +321,7 @@ export default function CartPage() {
                 </div>
               </div>
               <div className="space-y-3">
-                <span className="block text-sm font-medium">Delivery address</span>
+                <span className="block text-sm font-medium" style={{ color: "var(--foreground)" }}>2. Delivery address</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <label htmlFor="checkout-state" className="sr-only">State</label>
                   <input
@@ -410,6 +422,10 @@ export default function CartPage() {
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
+              <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <p className="text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>3. Order summary</p>
+                <p className="text-sm opacity-90" style={{ color: "var(--foreground)" }}>Subtotal: ₦{(data?.subtotal ?? 0).toLocaleString()}</p>
+              </div>
               {paymentMethod === "bank_transfer" && pendingPaymentId && (
                 <div className="space-y-2 border border-dashed border-zinc-200 rounded-md p-3">
                   <p className="text-xs text-zinc-600">
@@ -495,9 +511,9 @@ export default function CartPage() {
                 className="w-full py-3 rounded-lg text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60 transition-opacity"
                 style={{ backgroundColor: "var(--primary)" }}
               >
-                {checkoutLoading ? "Processing…" : "Checkout"}
+                {checkoutLoading ? "Processing…" : "Place order"}
               </button>
-            </div>
+            </section>
           </>
         )}
         </div>

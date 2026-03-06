@@ -82,6 +82,24 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* Trust strip: delivery & freshness */}
+        <section className="border-y border-zinc-200 dark:border-zinc-800 py-4 px-4 sm:px-6 lg:px-8" style={{ background: "var(--background)" }}>
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-sm">
+            <span className="flex items-center gap-2 opacity-90" style={{ color: "var(--foreground)" }}>
+              <span className="material-icons text-lg" style={{ color: "var(--primary)" }}>local_shipping</span>
+              Delivery in Lagos
+            </span>
+            <span className="flex items-center gap-2 opacity-90" style={{ color: "var(--foreground)" }}>
+              <span className="material-icons text-lg" style={{ color: "var(--primary)" }}>favorite</span>
+              Fresh daily
+            </span>
+            <span className="flex items-center gap-2 opacity-90" style={{ color: "var(--foreground)" }}>
+              <span className="material-icons text-lg" style={{ color: "var(--primary)" }}>verified</span>
+              Handcrafted with care
+            </span>
+          </div>
+        </section>
+
         <FounderCategoriesSection categories={categories} />
 
         {/* Featured products */}
@@ -122,6 +140,51 @@ export default async function Home() {
               </Link>
             </div>
           )}
+        </section>
+
+        {/* Newsletter */}
+        <section className="py-8 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-2xl mx-auto w-full text-center">
+          <h2 className="text-xl sm:text-2xl font-bold mb-3" style={{ color: "var(--foreground)" }}>
+            Get the best treats in your inbox
+          </h2>
+          <p className="text-sm opacity-90 mb-4" style={{ color: "var(--foreground)" }}>
+            New flavours, offers and delivery updates.
+          </p>
+          <form
+            className="flex flex-col sm:flex-row gap-2 justify-center"
+            action={async (formData: FormData) => {
+              "use server";
+              const email = String(formData.get("email") ?? "").trim();
+              if (!email) return;
+              try {
+                await fetch(`${API_BASE}/newsletter/subscribe`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email }),
+                });
+              } catch {
+                // ignore
+              }
+            }}
+          >
+            <label htmlFor="newsletter-email" className="sr-only">Email</label>
+            <input
+              id="newsletter-email"
+              name="email"
+              type="email"
+              placeholder="Your email"
+              className="px-4 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-600 w-full sm:w-64 text-sm"
+              style={{ background: "var(--background)", color: "var(--foreground)" }}
+              required
+            />
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-lg font-semibold text-white text-sm"
+              style={{ backgroundColor: "var(--primary)" }}
+            >
+              Subscribe
+            </button>
+          </form>
         </section>
 
         {/* How it works */}

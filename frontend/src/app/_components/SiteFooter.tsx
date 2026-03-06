@@ -3,10 +3,10 @@ import Link from "next/link";
 export function SiteFooter() {
   return (
     <footer
-      className="py-10 sm:py-12 px-4 sm:px-6 mt-12 text-white"
+      className="py-8 sm:py-10 lg:py-12 px-4 sm:px-6 lg:px-8 mt-12 text-white"
       style={{ backgroundColor: "var(--secondary)" }}
     >
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
         <div>
           <h3 className="font-bold mb-3 text-white">Company</h3>
           <ul className="space-y-2 text-sm text-white/90">
@@ -95,7 +95,7 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/20 text-center text-xs text-white/70 space-y-1">
+      <div className="max-w-7xl mx-auto mt-8 sm:mt-10 pt-6 border-t border-white/20 text-center text-xs text-white/70 space-y-1 px-0">
         <div>© {new Date().getFullYear()} MummyJ2Treats. All rights reserved.</div>
         <div>
           Built by{" "}

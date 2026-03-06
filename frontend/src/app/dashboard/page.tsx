@@ -59,41 +59,34 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-8 flex flex-col">
+    <main className="min-h-screen px-4 py-8 flex flex-col" style={{ background: "var(--background)" }}>
       <div className="max-w-3xl mx-auto space-y-4 flex-1 w-full">
-        <div className="bg-white rounded-2xl shadow-md p-6 space-y-4">
+        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-6 space-y-4" style={{ background: "var(--background)" }}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <h1 className="text-2xl font-bold">Dashboard</h1>
-              <p className="text-sm text-zinc-600">
+              <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>Dashboard</h1>
+              <p className="text-sm opacity-80" style={{ color: "var(--foreground)" }}>
                 You are logged in{role ? ` as ${role}` : ""}.
               </p>
             </div>
             <DashboardLogoutButton />
           </div>
           {role === "customer" && (
-            <>
-              <Link
-                href="/dashboard/orders"
-                className="inline-block text-primary font-medium hover:underline mr-4"
-              >
-                My orders →
-              </Link>
-              <Link
-                href="/dashboard/vendor"
-                className="inline-block text-primary font-medium hover:underline"
-              >
-                Become a vendor →
-              </Link>
-            </>
+            <Link
+              href="/dashboard/orders"
+              className="inline-block font-medium hover:underline"
+              style={{ color: "var(--primary)" }}
+            >
+              My orders →
+            </Link>
           )}
           {role === "rider" && (
-            <Link href="/dashboard/rider" className="inline-block text-primary font-medium hover:underline">
+            <Link href="/dashboard/rider" className="inline-block font-medium hover:underline" style={{ color: "var(--primary)" }}>
               Go to Rider Dashboard →
             </Link>
           )}
           {!role && (
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs opacity-70" style={{ color: "var(--foreground)" }}>
               (Load profile to see role-based links.)
             </p>
           )}
@@ -104,23 +97,23 @@ export default async function DashboardPage() {
         {role === "customer" && (referralCode != null || loyaltyPoints != null) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {referralCode != null && (
-              <div className="bg-white rounded-2xl shadow-md p-4">
-                <h2 className="font-semibold text-zinc-800 mb-2">Your referral code</h2>
-                <p className="font-mono text-lg bg-zinc-100 px-3 py-2 rounded">{referralCode}</p>
-                <p className="text-xs text-zinc-500 mt-1">Share it; when friends order, you earn 50 points.</p>
+              <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-4" style={{ background: "var(--background)" }}>
+                <h2 className="font-semibold mb-2" style={{ color: "var(--foreground)" }}>Your referral code</h2>
+                <p className="font-mono text-lg px-3 py-2 rounded bg-zinc-100 dark:bg-zinc-800" style={{ color: "var(--foreground)" }}>{referralCode}</p>
+                <p className="text-xs opacity-70 mt-1" style={{ color: "var(--foreground)" }}>Share it; when friends order, you earn 50 points.</p>
               </div>
             )}
             {loyaltyPoints != null && (
-              <div className="bg-white rounded-2xl shadow-md p-4">
-                <h2 className="font-semibold text-zinc-800 mb-2">Loyalty points</h2>
-                <p className="text-2xl font-bold text-primary">{loyaltyPoints}</p>
-                <p className="text-xs text-zinc-500 mt-1">Earn 1 point per ₦100 spent.</p>
+              <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-4" style={{ background: "var(--background)" }}>
+                <h2 className="font-semibold mb-2" style={{ color: "var(--foreground)" }}>Loyalty points</h2>
+                <p className="text-2xl font-bold" style={{ color: "var(--primary)" }}>{loyaltyPoints}</p>
+                <p className="text-xs opacity-70 mt-1" style={{ color: "var(--foreground)" }}>Earn 1 point per ₦100 spent.</p>
               </div>
             )}
           </div>
         )}
       </div>
-      <footer className="mt-8 text-center text-xs text-zinc-500">
+      <footer className="mt-8 text-center text-xs opacity-70" style={{ color: "var(--foreground)" }}>
         Built by{" "}
         <a
           href="https://henry-ugochukwu-porfolio.vercel.app/"

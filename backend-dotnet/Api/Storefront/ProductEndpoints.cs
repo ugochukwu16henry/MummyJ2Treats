@@ -9,6 +9,13 @@ public static class ProductEndpoints
     {
         var group = app.MapGroup("/products").WithTags("Products");
 
+        group.MapGet("/categories", async (IProductQueryService service, CancellationToken ct) =>
+        {
+            var categories = await service.GetCategoriesAsync(ct);
+            return Results.Ok(categories);
+        })
+        .WithSummary("Get all categories with product counts");
+
         group.MapGet("/featured", async (IProductQueryService service, CancellationToken ct) =>
         {
             var products = await service.GetFeaturedAsync(ct);

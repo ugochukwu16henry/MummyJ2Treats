@@ -60,5 +60,18 @@ public sealed class ProductQueryService : IProductQueryService
                 p.Category != null ? p.Category.Name : string.Empty))
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<CategoryListDto>> GetCategoriesAsync(CancellationToken cancellationToken = default)
+    {
+        return await _db.Categories
+            .OrderBy(c => c.Name)
+            .Select(c => new CategoryListDto(
+                c.Id.ToString(),
+                c.Name,
+                c.Slug,
+                c.Description,
+                c.Products.Count(p => p.IsActive && !p.IsDeleted)))
+            .ToListAsync(cancellationToken);
+    }
 }
 

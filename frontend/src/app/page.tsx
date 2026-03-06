@@ -1,358 +1,155 @@
-
 import Image from "next/image";
-import { TestimonialForm } from "./_components/TestimonialForm";
+import Link from "next/link";
+import { SiteHeader } from "./_components/SiteHeader";
+import { SiteFooter } from "./_components/SiteFooter";
 import { FounderCategoriesSection } from "./_components/FounderCategoriesSection";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-const PRIMARY_VENDOR_SLUG =
-  process.env.NEXT_PUBLIC_PRIMARY_VENDOR_SLUG ?? "mummyj2treats";
 
-async function fetchHomeProducts() {
+type ProductSummary = { id: string; name: string; slug: string; description?: string | null; price: number };
+type CategoryItem = { id: string; name: string; slug: string; description?: string | null; productCount: number };
+
+async function fetchFeatured() {
   try {
-    const res = await fetch(
-      `${API_BASE}/products?vendorSlug=${PRIMARY_VENDOR_SLUG}&limit=8`,
-      { cache: "no-store" },
-    );
+    const res = await fetch(`${API_BASE}/products/featured`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
-    return json.data ?? [];
+    return (Array.isArray(json) ? json : []) as ProductSummary[];
   } catch {
     return [];
   }
 }
 
-async function fetchRankedVendors() {
+async function fetchCategories(): Promise<CategoryItem[]> {
   try {
-    const res = await fetch(`${API_BASE}/moat/vendors/ranked?limit=6`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE}/products/categories`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
-    return json.data ?? [];
-  } catch {
-    return [];
-  }
-}
-
-async function fetchRecommendations() {
-  try {
-    const res = await fetch(`${API_BASE}/moat/recommendations?limit=4`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data ?? [];
-  } catch {
-    return [];
-  }
-}
-
-async function fetchFounderTestimonials() {
-  try {
-    const res = await fetch(`${API_BASE}/testimonials/founder?limit=6`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data ?? [];
-  } catch {
-    return [];
-  }
-}
-
-async function fetchFounderCategories() {
-  try {
-    const res = await fetch(`${API_BASE}/founder-categories`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data ?? [];
+    return (Array.isArray(json) ? json : []) as CategoryItem[];
   } catch {
     return [];
   }
 }
 
 export default async function Home() {
-  const [bestSellers, rankedVendors, recommendations, testimonials, founderCategories] = await Promise.all([
-    fetchHomeProducts(),
-    fetchRankedVendors(),
-    fetchRecommendations(),
-    fetchFounderTestimonials(),
-    fetchFounderCategories(),
-  ]);
+  const [featured, categories] = await Promise.all([fetchFeatured(), fetchCategories()]);
 
   return (
-    <div className="min-h-screen w-full bg-zinc-50 font-sans dark:bg-black">
-      {/* Announcement Bar */}
-      <div className="h-10 flex items-center justify-center bg-[#1E1E2F] text-white text-sm font-medium">
-        Fresh homemade treats delivered in Uyo 🚚
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader />
 
-      {/* Navbar */}
-      <nav className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur flex flex-col sm:flex-row items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-0">
-          <Image src="/mummyj2logo.png" alt="MummyJ2Treats Logo" width={64} height={64} />
-          <span className="text-2xl md:text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">MummyJ2Treats</span>
-        </div>
-        <div className="flex w-full sm:w-auto justify-center sm:justify-start gap-4 sm:gap-6 text-sm sm:text-base font-medium mb-2 sm:mb-0">
-          <a href="/" className="hover:text-primary">Home</a>
-          <a href="/vendors" className="hover:text-primary">Vendors</a>
-          <a href="/categories" className="hover:text-primary">Categories</a>
-          <a href="/blog" className="hover:text-primary">Blog</a>
-          <a href="/about" className="hover:text-primary">About</a>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-4">
-          <button className="hidden md:block"><span className="material-icons">search</span></button>
-          <a href="/auth/login" className="text-sm font-medium">Login</a>
-          <a href="/cart" className="relative">
-            <span className="material-icons">shopping_cart</span>
-          </a>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="flex flex-col-reverse md:flex-row items-center justify-between gap-6 sm:gap-8 px-4 py-12 sm:py-20 md:py-24 bg-gradient-to-b from-white to-zinc-50 dark:from-black dark:to-zinc-900">
-        <div className="flex-1 flex flex-col gap-4 sm:gap-6 items-start">
-          <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold leading-tight text-zinc-900 dark:text-white">Bringing Homemade Excellence to Your Table</h1>
-          <p className="text-base sm:text-lg md:text-xl text-zinc-600 dark:text-zinc-300">Order delicious, trusted homemade meals from Uyo’s best home cooks and caterers.</p>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 w-full">
-            <a href="#best-sellers" className="bg-primary text-white px-6 py-3 rounded-full font-semibold text-lg shadow hover:bg-primary/90 text-center">
-              Order Now
-            </a>
-            <a
-              href="/vendor/signup"
-              className="bg-white border border-primary text-primary px-6 py-3 rounded-full font-semibold text-lg hover:bg-primary/10 text-center"
+      <main className="flex-1">
+        {/* Hero */}
+        <section
+          className="flex flex-col-reverse md:flex-row items-center justify-between gap-8 px-4 sm:px-6 py-12 sm:py-16 md:py-20 max-w-7xl mx-auto"
+          style={{ background: "var(--background)" }}
+        >
+          <div className="flex-1 flex flex-col gap-4 sm:gap-5">
+            <h1
+              className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight"
+              style={{ color: "var(--foreground)" }}
             >
-              Become a Vendor
-            </a>
-            <a
-              href="/auth/register/rider"
-              className="bg-white border border-amber-500 text-amber-600 px-6 py-3 rounded-full font-semibold text-lg hover:bg-amber-50 text-center"
-            >
-              Become a Rider
-            </a>
+              Homemade treats, delivered to you
+            </h1>
+            <p className="text-base sm:text-lg opacity-90" style={{ color: "var(--foreground)" }}>
+              Order fresh, trusted homemade goodies from MummyJ2Treats—one store, one passion for quality.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-2">
+              <Link
+                href="#featured"
+                className="inline-flex items-center justify-center rounded-full px-6 py-3 text-lg font-semibold text-white shadow hover:opacity-95 transition-opacity"
+                style={{ backgroundColor: "var(--primary)" }}
+              >
+                Shop now
+              </Link>
+              <Link
+                href="/categories"
+                className="inline-flex items-center justify-center rounded-full px-6 py-3 text-lg font-semibold border-2 transition-colors"
+                style={{ borderColor: "var(--primary)", color: "var(--primary)" }}
+              >
+                Browse categories
+              </Link>
+            </div>
           </div>
-        </div>
-        <div className="flex-1 flex justify-center">
-          <Image
-            src="/mummyj2banner.png"
-            alt="MummyJ2Treats hero banner"
-            width={640}
-            height={400}
-            className="rounded-2xl shadow-xl object-cover w-full max-w-xs sm:max-w-md md:max-w-lg"
-          />
-        </div>
-      </section>
+          <div className="flex-1 flex justify-center">
+            <Image
+              src="/mummyj2banner.png"
+              alt="MummyJ2Treats"
+              width={560}
+              height={360}
+              className="rounded-2xl shadow-xl object-cover w-full max-w-md"
+            />
+          </div>
+        </section>
 
-      <FounderCategoriesSection categories={founderCategories} />
-      {/* Top Rated Vendors (Data Moat: smart ranking) */}
-      <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Top Rated Vendors</h2>
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-2">
-          {rankedVendors.length === 0 ? (
-            <p className="text-zinc-600">No vendor data yet. Orders will drive our smart ranking.</p>
+        <FounderCategoriesSection categories={categories} />
+
+        {/* Featured products */}
+        <section id="featured" className="py-10 sm:py-14 px-4 sm:px-6 max-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--foreground)" }}>
+            Featured treats
+          </h2>
+          {featured.length === 0 ? (
+            <p className="opacity-70" style={{ color: "var(--foreground)" }}>
+              New treats coming soon. Check back or browse categories.
+            </p>
           ) : (
-            rankedVendors.map((v: { vendorId: string; businessName: string; slug: string; fulfillmentRate: number }) => {
-              const isFounderStore = v.slug && v.slug.toLowerCase() === PRIMARY_VENDOR_SLUG.toLowerCase();
-              const storeHref = isFounderStore ? "/" : (v.slug ? `/vendor/${v.slug}` : "#");
-              return (
-              <a
-                key={v.vendorId}
-                href={storeHref}
-                className="min-w-[220px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center hover:shadow-lg transition-shadow"
-              >
-                <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-2 flex items-center justify-center text-lg font-bold text-primary">
-                  {v.businessName?.slice(0, 1) ?? "V"}
-                </div>
-                <span className="font-semibold text-center line-clamp-1">{v.businessName}</span>
-                <span className="text-amber-500 text-sm">{Math.round(v.fulfillmentRate)}% delivered</span>
-                <span className="mt-2 px-4 py-1 bg-primary text-white rounded-full text-sm">View Store</span>
-              </a>
-            );
-            })
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+              {featured.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/shop/${encodeURIComponent(p.slug)}`}
+                  className="rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col gap-2 hover:shadow-lg transition-shadow border border-zinc-100 dark:border-zinc-800"
+                >
+                  <span className="font-semibold line-clamp-2 text-sm sm:text-base" style={{ color: "var(--foreground)" }}>
+                    {p.name}
+                  </span>
+                  <span className="font-bold text-lg mt-auto" style={{ color: "var(--primary)" }}>
+                    ₦{Number(p.price).toLocaleString()}
+                  </span>
+                </Link>
+              ))}
+            </div>
           )}
-        </div>
-        {rankedVendors.length > 0 && (
-          <div className="mt-4 text-right">
-            <a href="/vendors" className="text-primary text-sm hover:underline">
-              See all vendors →
-            </a>
-          </div>
-        )}
-      </section>
-
-      {/* Recommended for you (Data Moat: recommendations) */}
-      {recommendations.length > 0 && (
-        <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-7xl mx-auto">
-          <h2 className="text-2xl font-bold mb-6">Recommended for you</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {recommendations.map((p: { productId: string; name: string; slug: string; vendorSlug: string; price: number }) => (
-              <a
-                key={p.productId}
-                href={p.vendorSlug ? `/vendor/${p.vendorSlug}#${p.slug}` : "/"}
-                className="rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-4 flex flex-col items-center hover:shadow-lg transition-shadow"
+          {featured.length > 0 && (
+            <div className="mt-6 text-center">
+              <Link
+                href="/categories"
+                className="text-sm font-medium hover:underline"
+                style={{ color: "var(--primary)" }}
               >
-                <span className="font-semibold line-clamp-2 text-center">{p.name}</span>
-                <span className="font-bold text-lg mt-1">₦{Number(p.price).toLocaleString()}</span>
-              </a>
+                View all categories →
+              </Link>
+            </div>
+          )}
+        </section>
+
+        {/* How it works */}
+        <section className="py-10 sm:py-14 px-4 sm:px-6 max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold mb-8 text-center" style={{ color: "var(--foreground)" }}>
+            How it works
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 justify-center items-center">
+            {[
+              { icon: "🛒", label: "Browse", desc: "Pick your treats" },
+              { icon: "📦", label: "Order", desc: "We prepare fresh" },
+              { icon: "🚚", label: "Delivered", desc: "To your door" },
+            ].map((step, i) => (
+              <div key={i} className="flex flex-col items-center text-center">
+                <div className="text-4xl mb-2">{step.icon}</div>
+                <span className="font-semibold text-lg" style={{ color: "var(--foreground)" }}>
+                  {step.label}
+                </span>
+                <span className="text-sm opacity-80" style={{ color: "var(--foreground)" }}>
+                  {step.desc}
+                </span>
+              </div>
             ))}
           </div>
         </section>
-      )}
+      </main>
 
-      {/* How It Works */}
-      <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-center">How It Works</h2>
-        <div className="flex flex-col md:flex-row gap-6 sm:gap-8 justify-center items-center">
-          {[
-            { icon: "🛒", label: "Browse" },
-            { icon: "📦", label: "Order" },
-            { icon: "🚚", label: "Delivered" },
-          ].map((step, i) => (
-            <div key={i} className="flex flex-col items-center">
-              <div className="text-4xl mb-2">{step.icon}</div>
-              <span className="font-medium text-lg">{step.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-center">Testimonials</h2>
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-2">
-          {testimonials.length === 0 ? (
-            <p className="text-zinc-600 mx-auto text-center">
-              Testimonials will appear here after the founder approves them.
-            </p>
-          ) : (
-            testimonials.map((t: any) => {
-              const raw = t.image_url as string | null | undefined;
-              const imageSrc =
-                raw && typeof raw === "string"
-                  ? raw.startsWith("http")
-                    ? raw
-                    : `${API_BASE}${raw}`
-                  : null;
-              return (
-                <div
-                  key={t.id}
-                  className="min-w-[320px] rounded-2xl shadow-md bg-white dark:bg-zinc-900 p-6 flex flex-col items-center"
-                >
-                  <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full mb-3 overflow-hidden flex items-center justify-center">
-                    {imageSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={imageSrc} alt="Customer" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xs text-zinc-500">Customer</span>
-                    )}
-                  </div>
-                  <p className="italic text-zinc-600 dark:text-zinc-300 mb-2 text-center">
-                    “{t.content}”
-                  </p>
-                  <span className="font-semibold">
-                    {t.first_name ? `${t.first_name} ${t.last_name ?? ""}`.trim() : "Customer"}
-                  </span>
-                </div>
-              );
-            })
-          )}
-        </div>
-        <TestimonialForm target="founder" />
-      </section>
-
-      {/* Newsletter */}
-      <section className="py-8 sm:py-12 px-2 sm:px-4 max-w-2xl mx-auto text-center">
-        <h2 className="text-2xl font-bold mb-4">Get the best homemade treats in your inbox</h2>
-        <form
-          className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center"
-          action={async (formData: FormData) => {
-            "use server";
-            const email = String(formData.get("email") ?? "").trim();
-            if (!email) return;
-            await fetch(`${API_BASE}/newsletter/subscribe`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email }),
-            });
-          }}
-        >
-          <label htmlFor="newsletter-email" className="sr-only">
-            Your email for newsletter
-          </label>
-          <input
-            id="newsletter-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            placeholder="Your email"
-            className="px-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 focus:outline-none w-full sm:w-auto"
-            aria-label="Your email for newsletter"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-primary text-white px-6 py-2 rounded-full font-semibold w-full sm:w-auto"
-          >
-            Subscribe
-          </button>
-        </form>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-zinc-900 text-white py-8 sm:py-12 px-2 sm:px-4 mt-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
-          <div>
-            <h3 className="font-bold mb-2">Company</h3>
-            <ul className="space-y-1 text-sm">
-              <li><a href="/about">About</a></li>
-              <li><a href="#">Careers</a></li>
-              <li><a href="/blog">Blog</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold mb-2">Vendors & Riders</h3>
-            <ul className="space-y-1 text-sm">
-              <li><a href="/vendor/signup">Become a Vendor</a></li>
-              <li><a href="/dashboard/vendor">Vendor Dashboard</a></li>
-              <li><a href="/auth/register/rider">Become a Rider</a></li>
-              <li><a href="/dashboard/rider">Rider Dashboard</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold mb-2">Help</h3>
-            <ul className="space-y-1 text-sm">
-              <li><a href="/help">Help</a></li>
-              <li><a href="/support">Support</a></li>
-              <li><a href="/faqs">FAQs</a></li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold mb-2">Legal</h3>
-            <ul className="space-y-1 text-sm">
-              <li><a href="/legal">Legal</a></li>
-              <li><a href="/terms">Terms</a></li>
-              <li><a href="/privacy">Privacy</a></li>
-            </ul>
-            <div className="flex gap-3 mt-4">
-              <a href="#" aria-label="Twitter"><span className="material-icons">twitter</span></a>
-              <a href="#" aria-label="Instagram"><span className="material-icons">instagram</span></a>
-              <a href="#" aria-label="Facebook"><span className="material-icons">facebook</span></a>
-            </div>
-          </div>
-        </div>
-        <div className="mt-8 space-y-1 text-center text-xs text-zinc-400">
-          <div>© {new Date().getFullYear()} MummyJ2Treats. All rights reserved.</div>
-          <div>
-            Built by{" "}
-            <a
-              href="https://henry-ugochukwu-porfolio.vercel.app/"
-              target="_blank"
-              rel="noreferrer"
-              className="underline hover:text-white"
-            >
-              Henry M. Ugochukwu
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

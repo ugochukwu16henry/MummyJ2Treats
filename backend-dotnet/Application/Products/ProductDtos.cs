@@ -18,3 +18,11 @@ public sealed record ProductDetailDto(
     string CategoryName
 );
 
+public sealed record CategoryListDto(
+    string Id,
+    string Name,
+    string Slug,
+    string? Description,
+    int ProductCount
+);
+

@@ -11,5 +11,7 @@ public interface IProductQueryService
     Task<IReadOnlyList<ProductSummaryDto>> GetByCategorySlugAsync(string categorySlug, CancellationToken cancellationToken = default);
 
     Task<ProductDetailDto?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CategoryListDto>> GetCategoriesAsync(CancellationToken cancellationToken = default);
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { SiteHeader } from "../_components/SiteHeader";
 import { SiteFooter } from "../_components/SiteFooter";
 
@@ -217,7 +218,9 @@ export default function CartPage() {
             </div>
           )}
           {items.length === 0 ? (
-            <p style={{ color: "var(--foreground)" }}>Your cart is empty.</p>
+            <p className="opacity-90" style={{ color: "var(--foreground)" }}>
+              Your cart is empty. <Link href="/categories" className="font-medium underline" style={{ color: "var(--primary)" }}>Browse the shop</Link> to add treats.
+            </p>
           ) : (
           <>
             <div className="space-y-3">
@@ -237,7 +240,9 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      className="px-2 py-1 border rounded"
+                      type="button"
+                      className="px-2.5 py-1 border rounded-md text-sm font-medium transition-colors hover:opacity-90"
+                      style={{ borderColor: "var(--primary)", color: "var(--primary)" }}
                       onClick={() =>
                         updateQuantity(
                           item.productId,
@@ -245,20 +250,22 @@ export default function CartPage() {
                         )
                       }
                     >
-                      -
+                      −
                     </button>
-                    <span className="w-8 text-center text-sm">
+                    <span className="w-8 text-center text-sm" style={{ color: "var(--foreground)" }}>
                       {item.quantity}
                     </span>
                     <button
-                      className="px-2 py-1 border rounded"
+                      type="button"
+                      className="px-2.5 py-1 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: "var(--primary)" }}
                       onClick={() =>
                         updateQuantity(item.productId, item.quantity + 1)
                       }
                     >
                       +
                     </button>
-                    <div className="w-20 text-right font-semibold">
+                    <div className="w-20 text-right font-semibold" style={{ color: "var(--foreground)" }}>
                       ₦{item.lineTotal.toLocaleString()}
                     </div>
                   </div>

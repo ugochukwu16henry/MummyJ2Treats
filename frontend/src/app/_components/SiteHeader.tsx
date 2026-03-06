@@ -19,25 +19,25 @@ export function SiteHeader() {
             </span>
           </Link>
           <div className="flex items-center gap-5 sm:gap-8 text-sm font-medium">
-            <Link href="/" className="hover:opacity-80 transition-opacity" style={{ color: "var(--foreground)" }}>
+            <Link href="/" className="transition-colors hover:opacity-80" style={{ color: "var(--foreground)" }}>
               Home
             </Link>
-            <Link href="/categories" className="hover:opacity-80 transition-opacity" style={{ color: "var(--foreground)" }}>
+            <Link href="/categories" className="transition-colors hover:opacity-80" style={{ color: "var(--foreground)" }}>
               Shop
             </Link>
-            <Link href="/blog" className="hover:opacity-80 transition-opacity" style={{ color: "var(--foreground)" }}>
+            <Link href="/blog" className="transition-colors hover:opacity-80" style={{ color: "var(--foreground)" }}>
               Blog
             </Link>
-            <Link href="/about" className="hover:opacity-80 transition-opacity" style={{ color: "var(--foreground)" }}>
+            <Link href="/about" className="transition-colors hover:opacity-80" style={{ color: "var(--foreground)" }}>
               About
             </Link>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/auth/login" className="text-sm font-medium hover:opacity-80" style={{ color: "var(--foreground)" }}>
+            <Link href="/auth/login" className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: "var(--foreground)" }}>
               Login
             </Link>
-            <Link href="/cart" className="relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label="Cart">
-              <span className="material-icons" style={{ color: "var(--foreground)", fontSize: "1.5rem" }}>
+            <Link href="/cart" className="relative p-2 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)]" aria-label="Cart" style={{ color: "var(--primary)" }}>
+              <span className="material-icons" style={{ fontSize: "1.5rem" }}>
                 shopping_cart
               </span>
             </Link>

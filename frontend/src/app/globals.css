@@ -40,6 +40,29 @@ body {
   font-family: var(--font-body);
 }
 
+/* Material Icons (cart and other icons) */
+.material-icons {
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Focus ring for inputs/buttons using primary */
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* Screen-reader only: visible to assistive tech, hidden visually */
 .sr-only {
   position: absolute;

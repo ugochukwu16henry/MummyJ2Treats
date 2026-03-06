@@ -52,7 +52,7 @@ export default async function Home() {
               Homemade treats, delivered to you
             </h1>
             <p className="text-base sm:text-lg opacity-90" style={{ color: "var(--foreground)" }}>
-              Order fresh, trusted homemade goodies from MummyJ2Treats—one store, one passion for quality.
+              Fresh baked and handcrafted from our kitchen to yours. One store, one passion for quality.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 mt-2">
               <Link
@@ -90,8 +90,8 @@ export default async function Home() {
             Featured treats
           </h2>
           {featured.length === 0 ? (
-            <p className="opacity-70" style={{ color: "var(--foreground)" }}>
-              New treats coming soon. Check back or browse categories.
+            <p className="opacity-80 text-sm" style={{ color: "var(--foreground)" }}>
+              New treats are on the way. Browse categories or check back soon.
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
@@ -131,9 +131,9 @@ export default async function Home() {
           </h2>
           <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 justify-center items-center">
             {[
-              { icon: "🛒", label: "Browse", desc: "Pick your treats" },
-              { icon: "📦", label: "Order", desc: "We prepare fresh" },
-              { icon: "🚚", label: "Delivered", desc: "To your door" },
+              { icon: "🛒", label: "Browse", desc: "Choose your favourites" },
+              { icon: "📦", label: "Order", desc: "We prepare them fresh" },
+              { icon: "🚚", label: "Delivered", desc: "Straight to your door" },
             ].map((step, i) => (
               <div key={i} className="flex flex-col items-center text-center">
                 <div className="text-4xl mb-2">{step.icon}</div>

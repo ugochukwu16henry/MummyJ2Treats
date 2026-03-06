@@ -60,7 +60,7 @@ export default async function CategoryProductsPage({
             {categoryName}
           </h1>
           <p className="text-sm sm:text-base max-w-2xl opacity-90" style={{ color: "var(--foreground)" }}>
-            Fresh {categoryName.toLowerCase()} from MummyJ2Treats.
+            Handcrafted {categoryName.toLowerCase()}—made to order.
           </p>
         </header>
 

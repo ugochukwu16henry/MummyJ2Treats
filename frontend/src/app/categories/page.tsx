@@ -35,7 +35,7 @@ export default async function CategoriesPage() {
             Shop
           </h1>
           <p className="text-sm sm:text-base max-w-2xl opacity-90" style={{ color: "var(--foreground)" }}>
-            Browse by category. All treats are made fresh by MummyJ2Treats.
+            Browse by category. Every treat is made fresh in our kitchen.
           </p>
         </header>
 

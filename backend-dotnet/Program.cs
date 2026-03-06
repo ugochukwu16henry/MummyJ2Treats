@@ -109,6 +109,13 @@ builder.Services.AddScoped<IRiderService, RiderService>();
 
 var app = builder.Build();
 
+// Ensure database schema exists (for new environments like Railway)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MummyJ2TreatsDbContext>();
+    db.Database.EnsureCreated();
+}
+
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();

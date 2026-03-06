@@ -1,15 +1,16 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SiteHeader } from "../_components/SiteHeader";
+import { SiteFooter } from "../_components/SiteFooter";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 type CartItem = {
   productId: string;
   name: string;
-  vendorName: string;
+  vendorName?: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -192,38 +193,44 @@ export default function CartPage() {
 
   if (loading && !data) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p className="text-zinc-600">Loading cart...</p>
-      </main>
+      <div className="min-h-screen flex flex-col">
+        <SiteHeader />
+        <main className="flex-1 flex items-center justify-center py-20" style={{ color: "var(--foreground)" }}>
+          Loading cart…
+        </main>
+        <SiteFooter />
+      </div>
     );
   }
 
   const items = data?.items ?? [];
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-md p-6 space-y-4">
-        <h1 className="text-2xl font-bold">Your Cart</h1>
-        {error && (
-          <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-md">
-            {error}
-          </div>
-        )}
-        {items.length === 0 ? (
-          <p className="text-zinc-600">Your cart is empty.</p>
-        ) : (
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader />
+      <main className="flex-1 px-4 py-8" style={{ background: "var(--background)" }}>
+        <div className="max-w-4xl mx-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-6 space-y-4" style={{ background: "var(--background)" }}>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>Your Cart</h1>
+          {error && (
+            <div className="text-sm px-3 py-2 rounded-lg" style={{ backgroundColor: "var(--error)", color: "white" }}>
+              {error}
+            </div>
+          )}
+          {items.length === 0 ? (
+            <p style={{ color: "var(--foreground)" }}>Your cart is empty.</p>
+          ) : (
           <>
             <div className="space-y-3">
               {items.map((item) => (
                 <div
                   key={item.productId}
-                  className="flex items-center justify-between border-b border-zinc-100 pb-3"
+                  className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3"
                 >
                   <div>
-                    <div className="font-semibold">{item.name}</div>
-                    <div className="text-xs text-zinc-500">
-                      {item.vendorName}
-                    </div>
+                    <div className="font-semibold" style={{ color: "var(--foreground)" }}>{item.name}</div>
+                    {item.vendorName && (
+                      <div className="text-xs opacity-70" style={{ color: "var(--foreground)" }}>{item.vendorName}</div>
+                    )}
                     <div className="text-xs text-zinc-500">
                       ₦{item.unitPrice.toLocaleString()} each
                     </div>
@@ -478,15 +485,18 @@ export default function CartPage() {
               <button
                 onClick={checkout}
                 disabled={checkoutLoading || items.length === 0}
-                className="w-full bg-primary text-white py-2 rounded-md text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
+                className="w-full py-3 rounded-lg text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60 transition-opacity"
+                style={{ backgroundColor: "var(--primary)" }}
               >
-                {checkoutLoading ? "Processing..." : "Checkout"}
+                {checkoutLoading ? "Processing…" : "Checkout"}
               </button>
             </div>
           </>
         )}
-      </div>
-    </main>
+        </div>
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
 

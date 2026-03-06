@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { SiteHeader } from "../../_components/SiteHeader";
 import { SiteFooter } from "../../_components/SiteFooter";
+import { addGuestCartItem } from "../../_lib/guestCart";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -77,7 +78,14 @@ export default function ProductPage() {
         body: JSON.stringify({ productId: product.id, quantity: 1 }),
       });
       if (res.status === 401) {
-        router.push("/auth/login?next=" + encodeURIComponent("/shop/" + slug));
+        // Guest cart: store locally and only require login at checkout
+        addGuestCartItem({
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+        });
+        setMessage("Added to cart!");
         return;
       }
       if (!res.ok) {
@@ -105,7 +113,14 @@ export default function ProductPage() {
         body: JSON.stringify({ productId: product.id, quantity: 1 }),
       });
       if (res.status === 401) {
-        router.push("/auth/login?next=" + encodeURIComponent("/shop/" + slug));
+        // Guest cart: add locally, then go to cart; login happens at checkout
+        addGuestCartItem({
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+        });
+        router.push("/cart");
         return;
       }
       if (!res.ok) {

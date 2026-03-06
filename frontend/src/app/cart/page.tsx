@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SiteHeader } from "../_components/SiteHeader";
 import { SiteFooter } from "../_components/SiteFooter";
+import { loadGuestCart, updateGuestCartItem, clearGuestCart } from "../_lib/guestCart";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -45,6 +46,8 @@ export default function CartPage() {
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
+  const [isGuest, setIsGuest] = useState<boolean | null>(null);
+
   async function loadCart() {
     try {
       setLoading(true);
@@ -52,11 +55,32 @@ export default function CartPage() {
         credentials: "include",
       });
       if (res.status === 401) {
-        router.push("/auth/login");
+        // Guest session: use local cart only
+        const guestItems = loadGuestCart();
+        const subtotal = guestItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        setData({
+          cart: null,
+          items: guestItems.map((i) => ({
+            productId: i.productId,
+            name: i.name,
+            vendorName: undefined,
+            quantity: i.quantity,
+            unitPrice: i.price,
+            lineTotal: i.price * i.quantity,
+          })),
+          subtotal,
+        });
+        setIsGuest(true);
+        return;
+      }
+      if (!res.ok) {
+        setError("Failed to load cart.");
+        setIsGuest(null);
         return;
       }
       const json = (await res.json()) as CartResponse;
       setData(json);
+      setIsGuest(false);
     } catch {
       setError("Failed to load cart.");
     } finally {
@@ -70,6 +94,24 @@ export default function CartPage() {
   }, []);
 
   async function updateQuantity(productId: string, quantity: number) {
+    if (isGuest) {
+      updateGuestCartItem(productId, quantity);
+      const guestItems = loadGuestCart();
+      const subtotal = guestItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      setData({
+        cart: null,
+        items: guestItems.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          vendorName: undefined,
+          quantity: i.quantity,
+          unitPrice: i.price,
+          lineTotal: i.price * i.quantity,
+        })),
+        subtotal,
+      });
+      return;
+    }
     try {
       setError(null);
       const res = await fetch(`${API_BASE}/cart/items/${productId}`, {
@@ -112,6 +154,10 @@ export default function CartPage() {
     const hasLegacy = address.trim().length > 0;
     if (!hasManual && !hasLocation && !hasLegacy) {
       setError("Please enter a delivery address or use your current location.");
+      return;
+    }
+    if (isGuest) {
+      router.push("/auth/login?next=" + encodeURIComponent("/cart"));
       return;
     }
     try {

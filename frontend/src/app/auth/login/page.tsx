@@ -56,7 +56,19 @@ export default function LoginPage() {
 
       router.push("/dashboard");
     } catch (err) {
-      setError("Network error, please try again.");
+      if (typeof err === "object" && err !== null && "message" in err) {
+        const msg = String((err as { message: string }).message);
+        if (msg.includes("fetch") || msg.includes("Failed") || msg.includes("NetworkError") || msg.includes("Load")) {
+          setError("Cannot reach the server. Check that the backend is running and that NEXT_PUBLIC_API_URL points to it (e.g. http://localhost:5134 for local).");
+        } else {
+          setError("Network error, please try again.");
+        }
+      } else {
+        setError("Cannot reach the server. Check that the backend is running and that NEXT_PUBLIC_API_URL points to it (e.g. http://localhost:5134 for local).");
+      }
+      if (process.env.NODE_ENV === "development") {
+        console.error("Login fetch error:", err);
+      }
     } finally {
       setLoading(false);
     }

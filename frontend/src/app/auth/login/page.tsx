@@ -1,8 +1,11 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
+import Link from "next/link";
+import { SiteHeader } from "../../_components/SiteHeader";
+import { SiteFooter } from "../../_components/SiteFooter";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -60,60 +63,65 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-      <div className="w-full max-w-md bg-white shadow-md rounded-2xl p-6 space-y-4">
-        <h1 className="text-2xl font-bold text-center">Login to MummyJ2Treats</h1>
-        {error && (
-          <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-md">
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="login-email" className="block text-sm font-medium mb-1">Email</label>
-            <input
-              id="login-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              value={form.email}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, email: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="login-password" className="block text-sm font-medium mb-1">Password</label>
-            <input
-              id="login-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              value={form.password}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, password: e.target.value }))
-              }
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-white py-2 rounded-md text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-        <p className="text-xs text-center text-zinc-500">
-          Don&apos;t have an account?{" "}
-          <a href="/auth/register" className="text-primary font-medium">
-            Register
-          </a>
-        </p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <SiteHeader />
+      <main className="flex-1 flex items-center justify-center py-12 px-4" style={{ background: "var(--background)" }}>
+        <div className="w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 shadow-lg" style={{ background: "var(--background)" }}>
+          <h1 className="text-2xl font-bold text-center mb-6" style={{ color: "var(--foreground)" }}>
+            Login to MummyJ2Treats
+          </h1>
+          {error && (
+            <div className="mb-4 text-sm px-3 py-2 rounded-lg" style={{ backgroundColor: "var(--error)", color: "white" }}>
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="login-email" className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>Email</label>
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                style={{ background: "var(--background)", color: "var(--foreground)" }}
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="login-password" className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>Password</label>
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                style={{ background: "var(--background)", color: "var(--foreground)" }}
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-lg text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60 transition-opacity"
+              style={{ backgroundColor: "var(--primary)" }}
+            >
+              {loading ? "Logging in…" : "Login"}
+            </button>
+          </form>
+          <p className="text-sm text-center mt-4" style={{ color: "var(--foreground)" }}>
+            Don&apos;t have an account?{" "}
+            <Link href="/auth/register" className="font-medium" style={{ color: "var(--primary)" }}>
+              Register
+            </Link>
+          </p>
+        </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

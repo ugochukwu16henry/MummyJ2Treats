@@ -227,18 +227,18 @@ export default function CartPage() {
               {items.map((item) => (
                 <div
                   key={item.productId}
-                  className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3"
+                  className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 last:border-0"
                 >
-                  <div>
-                    <div className="font-semibold" style={{ color: "var(--foreground)" }}>{item.name}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold break-words" style={{ color: "var(--foreground)" }}>{item.name}</div>
                     {item.vendorName && (
                       <div className="text-xs opacity-70" style={{ color: "var(--foreground)" }}>{item.vendorName}</div>
                     )}
-                    <div className="text-xs text-zinc-500">
+                    <div className="text-xs text-zinc-500 mt-0.5">
                       ₦{item.unitPrice.toLocaleString()} each
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       type="button"
                       className="px-2.5 py-1 border rounded-md text-sm font-medium transition-colors hover:opacity-90"
@@ -265,7 +265,7 @@ export default function CartPage() {
                     >
                       +
                     </button>
-                    <div className="w-20 text-right font-semibold" style={{ color: "var(--foreground)" }}>
+                    <div className="w-20 text-right font-semibold sm:text-right" style={{ color: "var(--foreground)" }}>
                       ₦{item.lineTotal.toLocaleString()}
                     </div>
                   </div>

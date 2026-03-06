@@ -19,7 +19,7 @@ export function SiteHeader() {
                 MummyJ2Treats
               </span>
             </Link>
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:gap-x-6 md:gap-x-8 sm:flex-1 sm:justify-center sm:order-none order-3">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:gap-x-6 md:gap-x-8 sm:flex-1 sm:justify-center">
               <Link href="/" className="text-sm font-medium transition-colors hover:opacity-80 py-1" style={{ color: "var(--foreground)" }}>
                 Home
               </Link>
@@ -33,7 +33,7 @@ export function SiteHeader() {
                 About
               </Link>
             </div>
-            <div className="flex items-center justify-center gap-3 sm:gap-4 shrink-0 sm:order-none order-2">
+            <div className="flex items-center justify-center gap-3 sm:gap-4 shrink-0">
               <Link href="/auth/login" className="text-sm font-medium transition-colors hover:opacity-80 py-1" style={{ color: "var(--foreground)" }}>
                 Login
               </Link>

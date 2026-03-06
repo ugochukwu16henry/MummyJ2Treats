@@ -65,8 +65,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
-      <main className="flex-1 flex items-center justify-center py-12 px-4" style={{ background: "var(--background)" }}>
-        <div className="w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 shadow-lg" style={{ background: "var(--background)" }}>
+      <main className="flex-1 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6" style={{ background: "var(--background)" }}>
+        <div className="w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-8 shadow-lg" style={{ background: "var(--background)" }}>
           <h1 className="text-2xl font-bold text-center mb-6" style={{ color: "var(--foreground)" }}>
             Login to MummyJ2Treats
           </h1>

@@ -116,8 +116,8 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12">
-        <nav className="mb-6 text-sm">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+        <nav className="mb-4 sm:mb-6 text-sm flex flex-wrap items-center gap-x-1">
           <Link href="/" className="opacity-80 hover:opacity-100" style={{ color: "var(--foreground)" }}>
             Home
           </Link>
@@ -129,14 +129,14 @@ export default function ProductPage() {
           <span style={{ color: "var(--foreground)" }}>{product.name}</span>
         </nav>
 
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden flex flex-col sm:flex-row">
+        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden flex flex-col sm:flex-row min-w-0">
           <div
-            className="w-full sm:w-72 h-64 sm:h-96 flex items-center justify-center text-6xl font-bold opacity-20"
+            className="w-full sm:w-72 h-48 sm:h-80 md:h-96 flex items-center justify-center text-5xl sm:text-6xl font-bold opacity-20 flex-shrink-0"
             style={{ backgroundColor: "var(--secondary)" }}
           >
             {product.name.charAt(0)}
           </div>
-          <div className="flex-1 p-6 sm:p-8 flex flex-col">
+          <div className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col min-w-0">
             {product.categoryName && (
               <span
                 className="text-xs font-medium uppercase tracking-wider mb-2 inline-block"
@@ -145,7 +145,7 @@ export default function ProductPage() {
                 {product.categoryName}
               </span>
             )}
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: "var(--foreground)" }}>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 break-words" style={{ color: "var(--foreground)" }}>
               {product.name}
             </h1>
             <p className="text-2xl font-bold mb-4" style={{ color: "var(--primary)" }}>
@@ -167,19 +167,19 @@ export default function ProductPage() {
                   {message}
                 </p>
               )}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
                 <button
                   type="button"
                   disabled={!inStock || adding}
                   onClick={addToCart}
-                  className="rounded-full px-6 py-3 font-semibold text-white disabled:opacity-50 hover:opacity-95 transition-opacity"
+                  className="w-full sm:w-auto rounded-full px-5 py-2.5 sm:px-6 sm:py-3 font-semibold text-white disabled:opacity-50 hover:opacity-95 transition-opacity"
                   style={{ backgroundColor: "var(--primary)" }}
                 >
                   {adding ? "Adding…" : "Add to cart"}
                 </button>
                 <Link
                   href="/cart"
-                  className="inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border-2 transition-colors"
+                  className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-5 py-2.5 sm:px-6 sm:py-3 font-semibold border-2 transition-colors"
                   style={{ borderColor: "var(--primary)", color: "var(--primary)" }}
                 >
                   View cart

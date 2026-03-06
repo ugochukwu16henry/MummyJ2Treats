@@ -184,3 +184,5 @@ C:\Users\Dell\Documents\MummyJ2Treats\backend-dotnet\bin\Debug\net10.0\Microsoft
 C:\Users\Dell\Documents\MummyJ2Treats\backend-dotnet\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\Dell\Documents\MummyJ2Treats\backend-dotnet\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\Dell\Documents\MummyJ2Treats\backend-dotnet\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\Dell\Documents\MummyJ2Treats\backend-dotnet\bin\Debug\net10.0\DotNetEnv.dll
+C:\Users\Dell\Documents\MummyJ2Treats\backend-dotnet\bin\Debug\net10.0\Sprache.dll

@@ -86,6 +86,8 @@ public sealed class OrderService : IOrderService
     {
         var orders = await _db.Orders
             .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
+            .Include(o => o.DeliveryLocation)
             .Where(o => o.CustomerId == customerId && !o.IsDeleted)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -93,11 +95,44 @@ public sealed class OrderService : IOrderService
         return orders.Select(MapToSummary).ToList();
     }
 
+    public async Task<OrderDetailDto?> GetMyOrderByIdAsync(Guid customerId, Guid orderId, CancellationToken cancellationToken = default)
+    {
+        var order = await _db.Orders
+            .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
+            .Include(o => o.DeliveryLocation)
+            .Where(o => o.CustomerId == customerId && o.Id == orderId && !o.IsDeleted)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (order is null) return null;
+
+        var address = order.DeliveryLocation != null
+            ? string.Join(", ", new[] { order.DeliveryLocation.AddressLine1, order.DeliveryLocation.AddressLine2, order.DeliveryLocation.City, order.DeliveryLocation.State, order.DeliveryLocation.Country }.Where(s => !string.IsNullOrWhiteSpace(s)))
+            : null;
+
+        var items = order.Items
+            .Select(i => new OrderItemDto(
+                ProductName: i.Product?.Name ?? "Product",
+                Quantity: i.Quantity,
+                UnitPrice: i.UnitPrice))
+            .ToList();
+
+        return new OrderDetailDto(
+            Id: order.Id.ToString(),
+            CreatedAt: order.CreatedAt,
+            Subtotal: order.Subtotal,
+            DeliveryFee: order.DeliveryFee,
+            Total: order.Total,
+            Status: order.Status.ToString(),
+            DeliveryAddress: address,
+            Items: items);
+    }
+
     private static OrderSummaryDto MapToSummary(Order order)
     {
         var items = order.Items
             .Select(i => new OrderItemDto(
-                ProductName: string.Empty, // can be populated with join later
+                ProductName: i.Product?.Name ?? "Product",
                 Quantity: i.Quantity,
                 UnitPrice: i.UnitPrice))
             .ToList();

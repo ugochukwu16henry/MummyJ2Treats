@@ -73,5 +73,24 @@ public sealed class ProductQueryService : IProductQueryService
                 c.Products.Count(p => p.IsActive && !p.IsDeleted)))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ProductSummaryDto>> SearchAsync(string query, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+            return Array.Empty<ProductSummaryDto>();
+
+        var term = query.Trim().ToLower();
+        return await _db.Products
+            .Where(p => p.IsActive && !p.IsDeleted && (p.Name.ToLower().Contains(term) || (p.Description != null && p.Description.ToLower().Contains(term))))
+            .OrderBy(p => p.Name)
+            .Take(20)
+            .Select(p => new ProductSummaryDto(
+                p.Id.ToString(),
+                p.Name,
+                p.Slug,
+                p.Description,
+                p.Price))
+            .ToListAsync(cancellationToken);
+    }
 }
 

@@ -37,3 +37,14 @@ public sealed record OrderSummaryDto(
     IReadOnlyList<OrderItemDto> Items
 );
 
+public sealed record OrderDetailDto(
+    string Id,
+    DateTime CreatedAt,
+    decimal Subtotal,
+    decimal DeliveryFee,
+    decimal Total,
+    string Status,
+    string? DeliveryAddress,
+    IReadOnlyList<OrderItemDto> Items
+);
+

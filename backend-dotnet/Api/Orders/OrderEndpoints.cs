@@ -40,6 +40,19 @@ public static class OrderEndpoints
         })
         .WithSummary("Get orders for the authenticated customer");
 
+        group.MapGet("/me/{id:guid}", async (Guid id, ClaimsPrincipal user, IOrderService service, CancellationToken ct) =>
+        {
+            var userId = GetUserId(user);
+            if (userId is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            var order = await service.GetMyOrderByIdAsync(userId.Value, id, ct);
+            return order is null ? Results.NotFound() : Results.Ok(order);
+        })
+        .WithSummary("Get a single order by id for the authenticated customer");
+
         return app;
     }
 

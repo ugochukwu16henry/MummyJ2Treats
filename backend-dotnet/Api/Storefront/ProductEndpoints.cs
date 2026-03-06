@@ -23,6 +23,14 @@ public static class ProductEndpoints
         })
         .WithSummary("Get featured products for homepage");
 
+        group.MapGet("/search", async (string? q, IProductQueryService service, CancellationToken ct) =>
+        {
+            var query = q ?? string.Empty;
+            var products = await service.SearchAsync(query, ct);
+            return Results.Ok(products);
+        })
+        .WithSummary("Search products by name or description");
+
         group.MapGet("/by-category/{slug}", async (string slug, IProductQueryService service, CancellationToken ct) =>
         {
             var products = await service.GetByCategorySlugAsync(slug, ct);

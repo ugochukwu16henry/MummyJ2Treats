@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "../../_components/SiteHeader";
 import { SiteFooter } from "../../_components/SiteFooter";
+import { CategoryProductGrid } from "./_components/CategoryProductGrid";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -69,26 +70,7 @@ export default async function CategoryProductsPage({
             No products in this category yet. Check back soon.
           </p>
         ) : (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-            {products.map((p) => (
-              <Link
-                key={p.id}
-                href={`/shop/${encodeURIComponent(p.slug)}`}
-                className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col gap-2 hover:shadow-md transition-shadow"
-                style={{ background: "var(--background)" }}
-              >
-                <div className="font-semibold line-clamp-2" style={{ color: "var(--foreground)" }}>
-                  {p.name}
-                </div>
-                <div className="font-bold text-lg mt-auto" style={{ color: "var(--primary)" }}>
-                  ₦{Number(p.price).toLocaleString()}
-                </div>
-                <span className="text-xs opacity-70" style={{ color: "var(--foreground)" }}>
-                  View details →
-                </span>
-              </Link>
-            ))}
-          </section>
+          <CategoryProductGrid products={products} />
         )}
       </main>
       <SiteFooter />

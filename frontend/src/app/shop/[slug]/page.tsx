@@ -18,11 +18,14 @@ type ProductDetail = {
   categoryName: string;
 };
 
+type ProductSummary = { id: string; name: string; slug: string; price: number };
+
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const slug = typeof params.slug === "string" ? params.slug : "";
   const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [related, setRelated] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -43,6 +46,14 @@ export default function ProductPage() {
         }
         const data = (await res.json()) as ProductDetail;
         if (!cancelled) setProduct(data);
+        if (!cancelled && data) {
+          const featRes = await fetch(`${API_BASE}/products/featured`, { cache: "no-store" });
+          if (featRes.ok) {
+            const arr = (await featRes.json()) as ProductSummary[];
+            const list = Array.isArray(arr) ? arr.filter((p) => p.id !== data.id).slice(0, 4) : [];
+            if (!cancelled) setRelated(list);
+          }
+        }
       } catch {
         if (!cancelled) setProduct(null);
       } finally {
@@ -75,6 +86,34 @@ export default function ProductPage() {
         return;
       }
       setMessage("Added to cart!");
+    } catch {
+      setMessage("Network error.");
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function buyNow() {
+    if (!product) return;
+    setMessage(null);
+    setAdding(true);
+    try {
+      const res = await fetch(`${API_BASE}/cart/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ productId: product.id, quantity: 1 }),
+      });
+      if (res.status === 401) {
+        router.push("/auth/login?next=" + encodeURIComponent("/shop/" + slug));
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setMessage((body as { message?: string }).message ?? "Could not add to cart.");
+        return;
+      }
+      router.push("/cart");
     } catch {
       setMessage("Network error.");
     } finally {
@@ -177,6 +216,15 @@ export default function ProductPage() {
                 >
                   {adding ? "Adding…" : "Add to cart"}
                 </button>
+                <button
+                  type="button"
+                  disabled={!inStock || adding}
+                  onClick={buyNow}
+                  className="w-full sm:w-auto rounded-full px-5 py-2.5 sm:px-6 sm:py-3 font-semibold border-2 transition-opacity disabled:opacity-50 hover:opacity-90"
+                  style={{ borderColor: "var(--secondary)", color: "var(--secondary)" }}
+                >
+                  Buy now
+                </button>
                 <Link
                   href="/cart"
                   className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-5 py-2.5 sm:px-6 sm:py-3 font-semibold border-2 transition-colors"
@@ -188,6 +236,25 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
+
+        {related.length > 0 && (
+          <section className="mt-10 sm:mt-12">
+            <h2 className="text-lg font-bold mb-4" style={{ color: "var(--foreground)" }}>You may also like</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {related.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/shop/${encodeURIComponent(p.slug)}`}
+                  className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3 flex flex-col gap-1 hover:shadow-md transition-shadow"
+                  style={{ background: "var(--background)" }}
+                >
+                  <span className="font-semibold line-clamp-2 text-sm" style={{ color: "var(--foreground)" }}>{p.name}</span>
+                  <span className="font-bold text-sm mt-auto" style={{ color: "var(--primary)" }}>₦{Number(p.price).toLocaleString()}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
       <SiteFooter />
     </div>

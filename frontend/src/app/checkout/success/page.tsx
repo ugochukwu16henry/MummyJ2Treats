@@ -8,6 +8,7 @@ import { SiteFooter } from "../../_components/SiteFooter";
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId") ?? "";
+  const isBankTransfer = searchParams.get("payment") === "bank_transfer";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -24,9 +25,17 @@ export default function CheckoutSuccessPage() {
             We’ve received your order and will prepare it fresh. You’ll get updates by email if we have your address.
           </p>
           {orderId && (
-            <p className="text-sm font-mono mb-6 px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 inline-block" style={{ color: "var(--foreground)" }}>
+            <p className="text-sm font-mono mb-4 px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 inline-block" style={{ color: "var(--foreground)" }}>
               Order ID: {orderId.slice(0, 8)}…
             </p>
+          )}
+          {isBankTransfer && (
+            <div className="mb-6 p-4 rounded-lg border text-left text-sm" style={{ borderColor: "var(--primary)", color: "var(--foreground)" }}>
+              <p className="font-medium mb-2">Complete payment by bank transfer</p>
+              <p>Pay to: <strong>Marylou Ihechi Okechukwu</strong></p>
+              <p>Bank: Opay · Account: 9068042947</p>
+              <p className="mt-2 opacity-90">Upload your receipt from your order page after payment.</p>
+            </div>
           )}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link

@@ -123,4 +123,5 @@ app.MapCartEndpoints();
 app.MapAdminOrderEndpoints();
 app.MapAdminRiderEndpoints();
 
+app.MapGet("/", () => "MummyJ2Treats Backend is running!");
 app.Run();

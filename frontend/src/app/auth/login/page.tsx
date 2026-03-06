@@ -43,8 +43,9 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(body.message ?? "Login failed");
+        const body = await res.json().catch(() => ({})) as { message?: string; error?: string };
+        const msg = body?.message ?? body?.error ?? (res.status === 401 ? "Invalid email or password." : "Login failed.");
+        setError(msg);
         return;
       }
 

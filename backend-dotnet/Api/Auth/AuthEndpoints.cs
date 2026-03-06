@@ -1,4 +1,3 @@
-using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using MummyJ2Treats.Application.Auth;
@@ -27,7 +26,7 @@ public static class AuthEndpoints
             }
             catch (UnauthorizedAccessException)
             {
-                return Results.StatusCode(StatusCodes.Status401Unauthorized);
+                return Results.Json(new { message = "Invalid email or password." }, statusCode: StatusCodes.Status401Unauthorized);
             }
         })
         .WithSummary("Login with email and password");

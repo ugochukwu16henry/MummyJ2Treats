@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import Link from "next/link";
 import { SiteHeader } from "../../_components/SiteHeader";
@@ -17,6 +17,9 @@ const API_BASE =
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
+  const redirectTo = next && next.startsWith("/") ? next : "/dashboard";
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,7 +58,7 @@ export default function LoginPage() {
         document.cookie = `access_token=${body.accessToken}; path=/; secure; samesite=Lax`;
       }
 
-      router.push("/dashboard");
+      router.push(redirectTo);
     } catch (err) {
       if (typeof err === "object" && err !== null && "message" in err) {
         const msg = String((err as { message: string }).message);
@@ -128,7 +131,11 @@ export default function LoginPage() {
           </form>
           <p className="text-sm text-center mt-4" style={{ color: "var(--foreground)" }}>
             Don&apos;t have an account?{" "}
-            <Link href="/auth/register" className="font-medium" style={{ color: "var(--primary)" }}>
+            <Link
+              href={next ? `/auth/register?next=${encodeURIComponent(next)}` : "/auth/register"}
+              className="font-medium"
+              style={{ color: "var(--primary)" }}
+            >
               Register
             </Link>
           </p>

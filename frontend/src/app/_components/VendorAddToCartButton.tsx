@@ -1,4 +1,4 @@
-\"use client\";
+"use client";
 
 import { useState } from "react";
 import { addGuestCartItem } from "../_lib/guestCart";
@@ -19,9 +19,9 @@ export function VendorAddToCartButton({ productId, productName, price }: Props) 
     setAdding(true);
     try {
       const res = await fetch(`${API_BASE}/cart/items`, {
-        method: \"POST\",
-        headers: { \"Content-Type\": \"application/json\" },
-        credentials: \"include\",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ productId, quantity: 1 }),
       });
       if (res.status === 401) {
@@ -45,14 +45,13 @@ export function VendorAddToCartButton({ productId, productName, price }: Props) 
 
   return (
     <button
-      type=\"button\"
+      type="button"
       onClick={handleAdd}
       disabled={adding}
-      className=\"mt-auto px-3 py-1 bg-primary text-white rounded-full text-xs sm:text-sm disabled:opacity-60\"
+      className="mt-auto px-3 py-1 bg-primary text-white rounded-full text-xs sm:text-sm disabled:opacity-60"
     >
-      {adding ? \"Adding…\" : \"Add to cart\"}
+      {adding ? "Adding…" : "Add to cart"}
     </button>
   );
 }
-
 

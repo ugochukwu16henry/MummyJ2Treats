@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import Link from "next/link";
 import { SiteHeader } from "../../_components/SiteHeader";
@@ -25,6 +25,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
+  const redirectTo = next && next.startsWith("/") ? next : "/dashboard";
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -62,7 +65,7 @@ export default function RegisterPage() {
       if ((body as { accessToken?: string })?.accessToken) {
         document.cookie = `access_token=${(body as { accessToken: string }).accessToken}; path=/; secure; samesite=Lax`;
       }
-      router.push("/dashboard");
+      router.push(redirectTo);
     } catch {
       setError("Network error, please try again.");
     } finally {
@@ -120,7 +123,11 @@ export default function RegisterPage() {
           </form>
           <p className="text-sm text-center mt-4" style={{ color: "var(--foreground)" }}>
             Already have an account?{" "}
-            <Link href="/auth/login" className="font-medium" style={{ color: "var(--primary)" }}>
+            <Link
+              href={next ? `/auth/login?next=${encodeURIComponent(next)}` : "/auth/login"}
+              className="font-medium"
+              style={{ color: "var(--primary)" }}
+            >
               Login
             </Link>
           </p>

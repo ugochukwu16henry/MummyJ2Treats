@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CopyrightYear } from "./CopyrightYear";
 
 export function SiteFooter() {
   return (
@@ -96,7 +97,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto mt-8 sm:mt-10 pt-6 border-t border-white/20 text-center text-xs text-white/70 space-y-1 px-0">
-        <div>© {new Date().getFullYear()} MummyJ2Treats. All rights reserved.</div>
+        <div>© <CopyrightYear /> MummyJ2Treats. All rights reserved.</div>
         <div>
           Built by{" "}
           <a

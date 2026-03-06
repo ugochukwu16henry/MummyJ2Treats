@@ -24,6 +24,8 @@ using MummyJ2Treats.Infrastructure.Payments;
 using MummyJ2Treats.Infrastructure.Carts;
 using MummyJ2Treats.Infrastructure.Riders;
 
+// Load .env from project directory (so ConnectionStrings__DefaultConnection etc. can override appsettings)
+DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Database

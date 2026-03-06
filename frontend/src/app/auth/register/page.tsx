@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import Link from "next/link";
 import { SiteHeader } from "../../_components/SiteHeader";
@@ -25,9 +25,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next");
-  const redirectTo = next && next.startsWith("/") ? next : "/dashboard";
+  const [nextPath, setNextPath] = useState<string | null>(null);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -38,6 +36,17 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const n = params.get("next");
+    if (n && n.startsWith("/")) {
+      setNextPath(n);
+    }
+  }, []);
+
+  const redirectTo = nextPath ?? "/dashboard";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -124,7 +133,7 @@ export default function RegisterPage() {
           <p className="text-sm text-center mt-4" style={{ color: "var(--foreground)" }}>
             Already have an account?{" "}
             <Link
-              href={next ? `/auth/login?next=${encodeURIComponent(next)}` : "/auth/login"}
+              href={nextPath ? `/auth/login?next=${encodeURIComponent(nextPath)}` : "/auth/login"}
               className="font-medium"
               style={{ color: "var(--primary)" }}
             >

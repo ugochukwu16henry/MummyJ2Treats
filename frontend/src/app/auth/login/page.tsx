@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import Link from "next/link";
 import { SiteHeader } from "../../_components/SiteHeader";
@@ -17,12 +17,21 @@ const API_BASE =
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next");
-  const redirectTo = next && next.startsWith("/") ? next : "/dashboard";
+  const [nextPath, setNextPath] = useState<string | null>(null);
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const n = params.get("next");
+    if (n && n.startsWith("/")) {
+      setNextPath(n);
+    }
+  }, []);
+
+  const redirectTo = nextPath ?? "/dashboard";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -132,7 +141,7 @@ export default function LoginPage() {
           <p className="text-sm text-center mt-4" style={{ color: "var(--foreground)" }}>
             Don&apos;t have an account?{" "}
             <Link
-              href={next ? `/auth/register?next=${encodeURIComponent(next)}` : "/auth/register"}
+              href={nextPath ? `/auth/register?next=${encodeURIComponent(nextPath)}` : "/auth/register"}
               className="font-medium"
               style={{ color: "var(--primary)" }}
             >

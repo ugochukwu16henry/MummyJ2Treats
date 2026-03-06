@@ -28,8 +28,11 @@ using MummyJ2Treats.Infrastructure.Riders;
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
-// Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Database: prefer ConnectionStrings__DefaultConnection, fallback to DATABASE_URL (Railway sets this when Postgres is linked)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["DATABASE_URL"];
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException("Set ConnectionStrings__DefaultConnection or DATABASE_URL.");
 builder.Services.AddDbContext<MummyJ2TreatsDbContext>(options =>
     options.UseNpgsql(connectionString));
 

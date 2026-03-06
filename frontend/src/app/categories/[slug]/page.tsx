@@ -46,7 +46,7 @@ export default async function CategoryProductsPage({
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
-      <main className="flex-1 max-w-6xl mx-auto w-full py-8 px-4 sm:px-6 md:px-8 space-y-6" style={{ background: "var(--background)" }}>
+      <main className="flex-1 max-w-6xl mx-auto w-full py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-6" style={{ background: "var(--background)" }}>
         <nav className="text-sm opacity-80" style={{ color: "var(--foreground)" }}>
           <Link href="/">Home</Link>
           <span className="mx-2">/</span>
@@ -56,7 +56,7 @@ export default async function CategoryProductsPage({
         </nav>
 
         <header>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ color: "var(--foreground)" }}>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2" style={{ color: "var(--foreground)" }}>
             {categoryName}
           </h1>
           <p className="text-sm sm:text-base max-w-2xl opacity-90" style={{ color: "var(--foreground)" }}>
@@ -69,7 +69,7 @@ export default async function CategoryProductsPage({
             No products in this category yet. Check back soon.
           </p>
         ) : (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {products.map((p) => (
               <Link
                 key={p.id}

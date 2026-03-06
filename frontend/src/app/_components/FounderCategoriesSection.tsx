@@ -3,11 +3,11 @@ type Cat = { id: string; name: string; slug: string; description?: string | null
 export function FounderCategoriesSection({ categories }: { categories: Cat[] }) {
   if (categories.length === 0) return null;
   return (
-    <section id="categories" className="py-8 sm:py-12 px-4 sm:px-6 max-w-7xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6" style={{ color: "var(--foreground)" }}>
+    <section id="categories" className="py-8 sm:py-10 lg:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ color: "var(--foreground)" }}>
         Shop by category
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {categories.map((cat) => (
           <a
             key={cat.id}

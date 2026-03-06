@@ -209,8 +209,8 @@ export default function CartPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
-      <main className="flex-1 px-4 py-8" style={{ background: "var(--background)" }}>
-        <div className="max-w-4xl mx-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-6 space-y-4" style={{ background: "var(--background)" }}>
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8" style={{ background: "var(--background)" }}>
+        <div className="max-w-4xl mx-auto w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-4 sm:p-6 space-y-4" style={{ background: "var(--background)" }}>
           <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>Your Cart</h1>
           {error && (
             <div className="text-sm px-3 py-2 rounded-lg" style={{ backgroundColor: "var(--error)", color: "white" }}>

@@ -24,7 +24,6 @@ using MummyJ2Treats.Infrastructure.Payments;
 using MummyJ2Treats.Infrastructure.Carts;
 using MummyJ2Treats.Infrastructure.Riders;
 using MummyJ2Treats.Domain.Users;
-using BCrypt.Net;
 
 // Load .env from project directory (so ConnectionStrings__DefaultConnection etc. can override appsettings)
 DotNetEnv.Env.TraversePath().Load();
@@ -143,7 +142,7 @@ using (var scope = app.Services.CreateScope())
                 FirstName = "Admin",
                 LastName = "Founder",
                 Email = founderEmail,
-                PasswordHash = BCrypt.HashPassword(seedPassword),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(seedPassword),
                 Role = UserRole.Admin,
                 IsActive = true
             });

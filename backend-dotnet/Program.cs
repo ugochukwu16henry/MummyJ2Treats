@@ -29,6 +29,10 @@ using MummyJ2Treats.Domain.Users;
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
+// Railway (and similar hosts) set PORT; listen on 0.0.0.0 so the app accepts external traffic
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // Database: prefer env vars (Railway) over appsettings.json
 var envConnection =
     Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ??
@@ -123,13 +127,13 @@ builder.Services.AddScoped<IRiderService, RiderService>();
 
 var app = builder.Build();
 
-// Ensure database schema exists and seed founder admin if configured
-using (var scope = app.Services.CreateScope())
+// Ensure database schema exists and seed founder admin if configured (non-fatal so app still starts if DB is down)
+try
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<MummyJ2TreatsDbContext>();
     db.Database.EnsureCreated();
 
-    // Seed one Admin user when FOUNDER_ADMIN_EMAIL and ADMIN_SEED_PASSWORD are set (e.g. on Railway)
     var founderEmail = Environment.GetEnvironmentVariable("FOUNDER_ADMIN_EMAIL")?.Trim();
     var seedPassword = Environment.GetEnvironmentVariable("ADMIN_SEED_PASSWORD")?.Trim();
     if (!string.IsNullOrEmpty(founderEmail) && !string.IsNullOrEmpty(seedPassword))
@@ -149,6 +153,11 @@ using (var scope = app.Services.CreateScope())
             db.SaveChangesAsync().GetAwaiter().GetResult();
         }
     }
+}
+catch (Exception ex)
+{
+    // Log but do not crash: app will start and respond; API calls may fail until DB is fixed
+    Console.WriteLine($"[Startup] Database init/seed failed: {ex.Message}");
 }
 
 app.UseHttpsRedirection();

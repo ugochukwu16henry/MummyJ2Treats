@@ -142,7 +142,7 @@ using (var scope = app.Services.CreateScope())
                 FirstName = "Admin",
                 LastName = "Founder",
                 Email = founderEmail,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(seedPassword),
+                PasswordHash = global::BCrypt.Net.BCrypt.HashPassword(seedPassword),
                 Role = UserRole.Admin,
                 IsActive = true
             });

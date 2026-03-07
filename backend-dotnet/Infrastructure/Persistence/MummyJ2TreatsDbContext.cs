@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using MummyJ2Treats.Domain.Blog;
 using MummyJ2Treats.Domain.Carts;
 using MummyJ2Treats.Domain.Locations;
 using MummyJ2Treats.Domain.Orders;
@@ -10,6 +9,10 @@ using MummyJ2Treats.Domain.Users;
 
 namespace MummyJ2Treats.Infrastructure.Persistence;
 
+/// <summary>
+/// Database context for MummyJ2Treats: auth, products, orders, cart, payments, riders.
+/// Blog and DeliveryAssignment are not used by the current API and are excluded from the schema.
+/// </summary>
 public class MummyJ2TreatsDbContext : DbContext
 {
     public MummyJ2TreatsDbContext(DbContextOptions<MummyJ2TreatsDbContext> options)
@@ -24,10 +27,7 @@ public class MummyJ2TreatsDbContext : DbContext
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Rider> Riders => Set<Rider>();
-    public DbSet<DeliveryAssignment> DeliveryAssignments => Set<DeliveryAssignment>();
     public DbSet<Location> Locations => Set<Location>();
-    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
-    public DbSet<BlogMedia> BlogMedia => Set<BlogMedia>();
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
 
@@ -45,10 +45,6 @@ public class MummyJ2TreatsDbContext : DbContext
 
         modelBuilder.Entity<Category>()
             .HasIndex(c => c.Slug)
-            .IsUnique();
-
-        modelBuilder.Entity<BlogPost>()
-            .HasIndex(b => b.Slug)
             .IsUnique();
 
         modelBuilder.Entity<Cart>()

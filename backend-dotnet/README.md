@@ -10,6 +10,15 @@ The API uses PostgreSQL. On first run it creates the schema automatically (Ensur
 
 On **Railway**, set the variable `ConnectionStrings__DefaultConnection` (or `DATABASE_URL`) in the API service’s **Variables** tab so the app connects to Railway Postgres, not localhost.
 
+### Admin seed (optional)
+
+To get an Admin user who can add products, set these in the API service’s **Variables** (e.g. on Railway):
+
+- **FOUNDER_ADMIN_EMAIL** – your email (e.g. `you@example.com`)
+- **ADMIN_SEED_PASSWORD** – the password for that admin account
+
+On first startup, if no user with that email exists, one Admin user is created. Log in with that email and password, then use the dashboard to add products. Change the password after first login if you want (via profile/change-password if you add that, or leave as-is for now).
+
 ### Schema (current)
 
 Tables created by the app: **Users**, **Categories**, **Products**, **Orders**, **OrderItems**, **Locations**, **Payments**, **Carts**, **CartItems**, **Riders**. Blog and delivery-assignment tables are not used and are excluded. For a completely fresh database, the app will create only these tables on startup.

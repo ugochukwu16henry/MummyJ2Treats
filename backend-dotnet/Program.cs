@@ -23,6 +23,8 @@ using MummyJ2Treats.Infrastructure.Orders;
 using MummyJ2Treats.Infrastructure.Payments;
 using MummyJ2Treats.Infrastructure.Carts;
 using MummyJ2Treats.Infrastructure.Riders;
+using MummyJ2Treats.Domain.Users;
+using BCrypt.Net;
 
 // Load .env from project directory (so ConnectionStrings__DefaultConnection etc. can override appsettings)
 DotNetEnv.Env.TraversePath().Load();
@@ -122,11 +124,32 @@ builder.Services.AddScoped<IRiderService, RiderService>();
 
 var app = builder.Build();
 
-// Ensure database schema exists (for new environments like Railway)
+// Ensure database schema exists and seed founder admin if configured
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MummyJ2TreatsDbContext>();
     db.Database.EnsureCreated();
+
+    // Seed one Admin user when FOUNDER_ADMIN_EMAIL and ADMIN_SEED_PASSWORD are set (e.g. on Railway)
+    var founderEmail = Environment.GetEnvironmentVariable("FOUNDER_ADMIN_EMAIL")?.Trim();
+    var seedPassword = Environment.GetEnvironmentVariable("ADMIN_SEED_PASSWORD")?.Trim();
+    if (!string.IsNullOrEmpty(founderEmail) && !string.IsNullOrEmpty(seedPassword))
+    {
+        var existing = db.Users.FirstOrDefaultAsync(u => u.Email == founderEmail).GetAwaiter().GetResult();
+        if (existing == null)
+        {
+            db.Users.Add(new User
+            {
+                FirstName = "Admin",
+                LastName = "Founder",
+                Email = founderEmail,
+                PasswordHash = BCrypt.HashPassword(seedPassword),
+                Role = UserRole.Admin,
+                IsActive = true
+            });
+            db.SaveChangesAsync().GetAwaiter().GetResult();
+        }
+    }
 }
 
 app.UseHttpsRedirection();

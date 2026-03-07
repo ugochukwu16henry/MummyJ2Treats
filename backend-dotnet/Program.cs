@@ -176,12 +176,13 @@ app.MapAdminRiderEndpoints();
 
 app.MapGet("/", () => "MummyJ2Treats Backend is running!");
 
-// Health check: verifies the API can reach the database (helps debug "Login failed" / "Registration failed")
+// Health check: verifies DB and ensures schema exists (creates tables if startup had failed)
 app.MapGet("/health", async (MummyJ2TreatsDbContext db) =>
 {
     try
     {
         _ = await db.Database.CanConnectAsync();
+        await db.Database.EnsureCreatedAsync(); // idempotent: create tables if missing
         return Results.Ok(new { status = "ok", database = "connected" });
     }
     catch (Exception ex)

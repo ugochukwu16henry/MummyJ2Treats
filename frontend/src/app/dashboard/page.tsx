@@ -27,7 +27,7 @@ export default async function DashboardPage() {
     });
     if (res.ok) {
       const user = (await res.json()) as { role?: string };
-      role = user.role ?? null;
+      role = user.role ? user.role.toLowerCase() : null;
     }
   } catch {
     // ignore

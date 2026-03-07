@@ -108,7 +108,7 @@ export default function AdminDashboardLayout({
         return res.json();
       })
       .then((me: { role?: string } | undefined) => {
-        if (me?.role !== "admin") {
+        if ((me?.role ?? "").toLowerCase() !== "admin") {
           router.push("/dashboard");
           return;
         }

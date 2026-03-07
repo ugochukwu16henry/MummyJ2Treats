@@ -43,7 +43,7 @@ export default function VendorDashboardLayout({
         return res.json();
       })
       .then((me: { role?: string } | undefined) => {
-        const role = me?.role ?? "";
+        const role = (me?.role ?? "").toLowerCase();
         if (role !== "vendor" && role !== "admin") {
           router.push("/dashboard");
           return;

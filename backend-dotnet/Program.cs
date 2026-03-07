@@ -1,3 +1,4 @@
+using System.Threading;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -127,37 +128,57 @@ builder.Services.AddScoped<IRiderService, RiderService>();
 
 var app = builder.Build();
 
-// Ensure database schema exists and seed founder admin if configured (non-fatal so app still starts if DB is down)
-try
+// Ensure database schema exists and seed founder admin (retry so DB has time to be ready, e.g. on Railway)
+var dbRetries = 5;
+var dbDelayMs = 2000;
+Exception? lastDbEx = null;
+for (var attempt = 1; attempt <= dbRetries; attempt++)
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<MummyJ2TreatsDbContext>();
-    db.Database.EnsureCreated();
-
-    var founderEmail = Environment.GetEnvironmentVariable("FOUNDER_ADMIN_EMAIL")?.Trim();
-    var seedPassword = Environment.GetEnvironmentVariable("ADMIN_SEED_PASSWORD")?.Trim();
-    if (!string.IsNullOrEmpty(founderEmail) && !string.IsNullOrEmpty(seedPassword))
+    try
     {
-        var existing = db.Users.FirstOrDefaultAsync(u => u.Email == founderEmail).GetAwaiter().GetResult();
-        if (existing == null)
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MummyJ2TreatsDbContext>();
+        if (!db.Database.CanConnect())
         {
-            db.Users.Add(new User
+            throw new InvalidOperationException("Cannot connect to database.");
+        }
+        db.Database.EnsureCreated();
+
+        var founderEmail = Environment.GetEnvironmentVariable("FOUNDER_ADMIN_EMAIL")?.Trim();
+        var seedPassword = Environment.GetEnvironmentVariable("ADMIN_SEED_PASSWORD")?.Trim();
+        if (!string.IsNullOrEmpty(founderEmail) && !string.IsNullOrEmpty(seedPassword))
+        {
+            var existing = db.Users.FirstOrDefaultAsync(u => u.Email == founderEmail).GetAwaiter().GetResult();
+            if (existing == null)
             {
-                FirstName = "Admin",
-                LastName = "Founder",
-                Email = founderEmail,
-                PasswordHash = global::BCrypt.Net.BCrypt.HashPassword(seedPassword),
-                Role = UserRole.Admin,
-                IsActive = true
-            });
-            db.SaveChangesAsync().GetAwaiter().GetResult();
+                db.Users.Add(new User
+                {
+                    FirstName = "Admin",
+                    LastName = "Founder",
+                    Email = founderEmail,
+                    PasswordHash = global::BCrypt.Net.BCrypt.HashPassword(seedPassword),
+                    Role = UserRole.Admin,
+                    IsActive = true
+                });
+                db.SaveChangesAsync().GetAwaiter().GetResult();
+            }
+        }
+        lastDbEx = null;
+        break;
+    }
+    catch (Exception ex)
+    {
+        lastDbEx = ex;
+        Console.WriteLine($"[Startup] Database init attempt {attempt}/{dbRetries} failed: {ex.Message}");
+        if (attempt < dbRetries)
+        {
+            Thread.Sleep(dbDelayMs);
         }
     }
 }
-catch (Exception ex)
+if (lastDbEx != null)
 {
-    // Log but do not crash: app will start and respond; API calls may fail until DB is fixed
-    Console.WriteLine($"[Startup] Database init/seed failed: {ex.Message}");
+    Console.WriteLine($"[Startup] Database init/seed failed after {dbRetries} attempts. App will start but login/register will fail until DB is ready. Hit /health to retry schema creation.");
 }
 
 app.UseHttpsRedirection();

@@ -31,11 +31,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Database: prefer env vars (Railway) over appsettings.json
 var envConnection =
     Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ??
-    Environment.GetEnvironmentVariable("DATABASE_URL");
+    Environment.GetEnvironmentVariable("DATABASE_URL") ??
+    builder.Configuration.GetConnectionString("DefaultConnection");
 
-var connectionString = !string.IsNullOrWhiteSpace(envConnection)
-    ? envConnection
-    : builder.Configuration.GetConnectionString("DefaultConnection");
+// Normalize to one line (Railway UI sometimes keeps pasted newlines)
+var connectionString = string.IsNullOrWhiteSpace(envConnection) ? null : string.Join(";",
+    envConnection.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).Where(s => s.Length > 0));
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {

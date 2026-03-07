@@ -10,6 +10,14 @@ The API uses PostgreSQL. On first run it creates the schema automatically (Ensur
 
 On **Railway**, set the variable `ConnectionStrings__DefaultConnection` (or `DATABASE_URL`) in the API service’s **Variables** tab so the app connects to Railway Postgres, not localhost.
 
+### Login / JWT
+
+Login and registration require a JWT signing key. If you see **"Login failed"** or **"JWT Key is not configured"** in the UI (or in logs), set in the API’s environment (e.g. Railway Variables):
+
+- **Jwt__Key** – a long secret string (e.g. 32+ random characters). Example: `Jwt__Key=my-super-secret-key-change-in-production`
+
+Optional: `Jwt__Issuer`, `Jwt__Audience`, `Jwt__AccessTokenMinutes`, `Jwt__RefreshTokenDays` (defaults are used if unset).
+
 ### Admin seed (optional)
 
 To get an Admin user who can add products, set these in the API service’s **Variables** (e.g. on Railway):

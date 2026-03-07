@@ -12,8 +12,20 @@ public static class AuthEndpoints
 
         group.MapPost("/register/customer", async (RegisterCustomerRequest request, IAuthService service, CancellationToken ct) =>
         {
-            var result = await service.RegisterCustomerAsync(request, ct);
-            return Results.Ok(result);
+            try
+            {
+                var result = await service.RegisterCustomerAsync(request, ct);
+                return Results.Ok(result);
+            }
+            catch (InvalidOperationException ex) when (ex.Message?.Contains("already registered") == true)
+            {
+                return Results.Json(new { message = ex.Message }, statusCode: StatusCodes.Status400BadRequest);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Auth] Register error: {ex}");
+                return Results.Json(new { message = ex.Message ?? "Registration failed." }, statusCode: StatusCodes.Status500InternalServerError);
+            }
         })
         .WithSummary("Register a new customer account");
 
@@ -27,6 +39,11 @@ public static class AuthEndpoints
             catch (UnauthorizedAccessException)
             {
                 return Results.Json(new { message = "Invalid email or password." }, statusCode: StatusCodes.Status401Unauthorized);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Auth] Login error: {ex}");
+                return Results.Json(new { message = ex.Message ?? "Login failed." }, statusCode: StatusCodes.Status500InternalServerError);
             }
         })
         .WithSummary("Login with email and password");

@@ -58,13 +58,15 @@ export default async function DashboardPage() {
     }
   }
 
+  const roleLabel = role === "customer" ? "Customer Dashboard" : role === "admin" ? "Admin Dashboard" : role === "vendor" ? "Vendor Dashboard" : role === "rider" ? "Rider Dashboard" : "Dashboard";
+
   return (
     <main className="min-h-screen px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col" style={{ background: "var(--background)" }}>
       <div className="max-w-3xl mx-auto space-y-4 flex-1 w-full min-w-0">
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-md p-4 sm:p-6 space-y-4" style={{ background: "var(--background)" }}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>Dashboard</h1>
+              <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>{roleLabel}</h1>
               <p className="text-sm opacity-80" style={{ color: "var(--foreground)" }}>
                 You are logged in{role ? ` as ${role}` : ""}.
               </p>
@@ -72,13 +74,17 @@ export default async function DashboardPage() {
             <DashboardLogoutButton />
           </div>
           {role === "customer" && (
-            <Link
-              href="/dashboard/orders"
-              className="inline-block font-medium hover:underline"
-              style={{ color: "var(--primary)" }}
-            >
-              My orders →
-            </Link>
+            <div className="flex flex-wrap gap-4">
+              <Link href="/dashboard/orders" className="inline-block font-medium hover:underline" style={{ color: "var(--primary)" }}>
+                My orders →
+              </Link>
+              <Link href="/cart" className="inline-block font-medium hover:underline" style={{ color: "var(--primary)" }}>
+                Cart →
+              </Link>
+              <Link href="/" className="inline-block font-medium hover:underline" style={{ color: "var(--primary)" }}>
+                Shop →
+              </Link>
+            </div>
           )}
           {role === "rider" && (
             <Link href="/dashboard/rider" className="inline-block font-medium hover:underline" style={{ color: "var(--primary)" }}>
@@ -86,8 +92,8 @@ export default async function DashboardPage() {
             </Link>
           )}
           {!role && (
-            <p className="text-xs opacity-70" style={{ color: "var(--foreground)" }}>
-              (Load profile to see role-based links.)
+            <p className="text-sm opacity-80" style={{ color: "var(--foreground)" }}>
+              Could not load your profile. Please log out and log in again to see your links.
             </p>
           )}
         </div>

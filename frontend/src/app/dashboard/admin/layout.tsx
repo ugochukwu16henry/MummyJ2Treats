@@ -159,8 +159,8 @@ export default function AdminDashboardLayout({
             {uploadingPic ? "Uploading…" : "Add/Change photo"}
           </label>
           {uploadError && <p className="text-xs text-red-600 mb-2">{uploadError}</p>}
-          <h1 className="font-semibold text-zinc-900">Founder Admin</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">Dashboard</p>
+          <h1 className="font-semibold text-zinc-900">Admin</h1>
+          <p className="text-xs text-zinc-500 mt-0.5">Admin Dashboard</p>
         </div>
         <nav className="p-2 flex-1">
           {nav.map((item) => {

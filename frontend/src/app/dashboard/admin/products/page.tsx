@@ -15,6 +15,7 @@ type Product = {
   vendor_name: string;
   vendor_slug: string;
   category?: string | null;
+  category_id?: string;
   size_label?: string | null;
   ingredients?: string | null;
   nutritional_info?: string | null;
@@ -30,8 +31,6 @@ type FounderCategory = {
   sort_order: number;
 };
 
-type VendorProfile = { business_name?: string; slug?: string } | null;
-
 function toFullUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   return url.startsWith("/") ? `${API_BASE.replace(/\/$/, "")}${url}` : url;
@@ -40,7 +39,6 @@ function toFullUrl(url: string | null | undefined): string | null {
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<FounderCategory[]>([]);
-  const [vendor, setVendor] = useState<VendorProfile>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -57,7 +55,7 @@ export default function AdminProductsPage() {
     description: "",
     price: "",
     stock: "",
-    category: "",
+    categoryId: "",
     sizeLabel: "",
     ingredients: "",
     nutritionalInfo: "",
@@ -76,16 +74,11 @@ export default function AdminProductsPage() {
     setLoading(true);
     Promise.all([
       fetch(`${API_BASE}/admin/products`, opts()),
-      fetch(`${API_BASE}/vendors/me/profile`, opts()),
       fetch(`${API_BASE}/admin/founder-categories`, opts()),
     ])
-      .then(async ([productsRes, profileRes, categoriesRes]) => {
+      .then(async ([productsRes, categoriesRes]) => {
         const productsData = (await productsRes.json()) as { data?: Product[] };
         setProducts(productsData.data ?? []);
-        if (profileRes.ok) {
-          const profile = (await profileRes.json()) as VendorProfile;
-          setVendor(profile);
-        } else setVendor(null);
         if (categoriesRes.ok) {
           const catData = (await categoriesRes.json()) as { data?: FounderCategory[] };
           setCategories(catData.data ?? []);
@@ -94,8 +87,6 @@ export default function AdminProductsPage() {
       .finally(() => setLoading(false));
   }
 
-  const founderSlug = vendor?.slug ?? null;
-
   useEffect(() => {
     loadData();
   }, []);
@@ -103,15 +94,20 @@ export default function AdminProductsPage() {
   async function handleSubmitProduct(e: React.FormEvent) {
     e.preventDefault();
     const price = Number(form.price);
+    const stock = form.stock.trim() ? Number(form.stock) : 0;
     if (!form.name.trim() || Number.isNaN(price) || price < 0) {
       setMessage({ type: "err", text: "Name and a valid price are required." });
+      return;
+    }
+    if (!editingProductId && !form.categoryId.trim()) {
+      setMessage({ type: "err", text: "Please select a category." });
       return;
     }
     setSubmitting(true);
     setMessage(null);
     try {
       if (editingProductId) {
-        const res = await fetch(`${API_BASE}/products/me/${editingProductId}`, {
+        const res = await fetch(`${API_BASE}/admin/products/${editingProductId}`, {
           method: "PATCH",
           ...opts(),
           headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -119,11 +115,9 @@ export default function AdminProductsPage() {
             name: form.name.trim(),
             description: form.description.trim() || undefined,
             price,
-            stock: form.stock.trim() ? Number(form.stock) : undefined,
-            category: form.category.trim() || undefined,
-            sizeLabel: form.sizeLabel.trim() || undefined,
-            ingredients: form.ingredients.trim() || undefined,
-            nutritionalInfo: form.nutritionalInfo.trim() || undefined,
+            stock,
+            isActive: true,
+            categoryId: form.categoryId.trim() || undefined,
           }),
         });
         if (!res.ok) {
@@ -131,19 +125,10 @@ export default function AdminProductsPage() {
           setMessage({ type: "err", text: data.message || "Update failed." });
           return;
         }
-        if (productImageFile) {
-          const fd = new FormData();
-          fd.append("file", productImageFile);
-          await fetch(`${API_BASE}/products/me/${editingProductId}/image`, {
-            method: "POST",
-            ...opts(),
-            body: fd,
-          });
-        }
         setMessage({ type: "ok", text: "Product updated." });
         setEditingProductId(null);
       } else {
-        const res = await fetch(`${API_BASE}/products/me`, {
+        const res = await fetch(`${API_BASE}/admin/products`, {
           method: "POST",
           ...opts(),
           headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -151,11 +136,9 @@ export default function AdminProductsPage() {
             name: form.name.trim(),
             description: form.description.trim() || undefined,
             price,
-            stock: form.stock.trim() ? Number(form.stock) : undefined,
-            category: form.category.trim() || undefined,
-            sizeLabel: form.sizeLabel.trim() || undefined,
-            ingredients: form.ingredients.trim() || undefined,
-            nutritionalInfo: form.nutritionalInfo.trim() || undefined,
+            stock,
+            categoryId: form.categoryId.trim(),
+            isActive: true,
           }),
         });
         const data = await res.json();
@@ -163,20 +146,10 @@ export default function AdminProductsPage() {
           setMessage({ type: "err", text: data.message || "Failed to add product." });
           return;
         }
-        const newId = data.id;
-        if (productImageFile && newId) {
-          const fd = new FormData();
-          fd.append("file", productImageFile);
-          await fetch(`${API_BASE}/products/me/${newId}/image`, {
-            method: "POST",
-            ...opts(),
-            body: fd,
-          });
-        }
-        setMessage({ type: "ok", text: "Product added." });
-        setProducts((prev) => [{ ...data, vendor_name: vendor?.business_name ?? "", vendor_slug: vendor?.slug ?? "" }, ...prev]);
+        setMessage({ type: "ok", text: "Product added. It will appear on the store homepage." });
+        setProducts((prev) => [{ ...data, vendor_name: "Store", vendor_slug: "store" }, ...prev]);
       }
-      setForm({ name: "", description: "", price: "", stock: "", category: "", sizeLabel: "", ingredients: "", nutritionalInfo: "" });
+      setForm({ name: "", description: "", price: "", stock: "", categoryId: "", sizeLabel: "", ingredients: "", nutritionalInfo: "" });
       setProductImageFile(null);
       setShowForm(false);
       loadData();
@@ -191,7 +164,7 @@ export default function AdminProductsPage() {
     if (!confirm("Delete this product?")) return;
     setDeletingProductId(id);
     try {
-      const res = await fetch(`${API_BASE}/products/me/${id}`, { method: "DELETE", ...opts() });
+      const res = await fetch(`${API_BASE}/admin/products/${id}`, { method: "DELETE", ...opts() });
       if (res.ok) {
         setProducts((prev) => prev.filter((p) => p.id !== id));
         setMessage({ type: "ok", text: "Product deleted." });
@@ -288,7 +261,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">Products &amp; Categories</h1>
           <p className="text-sm text-zinc-600 mt-0.5">
-            View all products from all vendors. You can only edit and delete your own products. Homepage categories are yours; you can add, edit, and delete them.
+            Add categories and products to show on the store homepage. Customers see these in Featured treats and Shop by category.
           </p>
         </div>
       </div>
@@ -412,7 +385,7 @@ export default function AdminProductsPage() {
             onClick={() => {
               setShowForm((v) => !v);
               setEditingProductId(null);
-              if (!showForm) setForm({ name: "", description: "", price: "", stock: "", category: "", sizeLabel: "", ingredients: "", nutritionalInfo: "" });
+              if (!showForm) setForm({ name: "", description: "", price: "", stock: "", categoryId: "", sizeLabel: "", ingredients: "", nutritionalInfo: "" });
             }}
             className="px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800"
           >
@@ -453,19 +426,21 @@ export default function AdminProductsPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">Category</label>
-                  <input
-                    list="category-list"
-                    value={form.category}
-                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    placeholder="e.g. Parfaits, Small Chops, Banana Bread"
+                  <label className="block text-sm font-medium text-zinc-700 mb-1">Category *</label>
+                  <select
+                    value={form.categoryId}
+                    onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-zinc-900"
-                  />
-                  <datalist id="category-list">
+                    required={!editingProductId}
+                  >
+                    <option value="">Select category</option>
                     {categories.map((c) => (
-                      <option key={c.id} value={c.name} />
+                      <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
-                  </datalist>
+                  </select>
+                  {categories.length === 0 && (
+                    <p className="text-xs text-amber-600 mt-1">Add a category above first, then add products.</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 mb-1">Size / portion</label>
@@ -549,40 +524,34 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {founderSlug && p.vendor_slug === founderSlug ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingProductId(p.id);
-                          setForm({
-                            name: p.name,
-                            description: p.description ?? "",
-                            price: String(p.price),
-                            stock: p.stock != null ? String(p.stock) : "",
-                            category: p.category ?? "",
-                            sizeLabel: p.size_label ?? "",
-                            ingredients: p.ingredients ?? "",
-                            nutritionalInfo: p.nutritional_info ?? "",
-                          });
-                          setShowForm(true);
-                        }}
-                        className="text-sm text-zinc-600 hover:underline"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteProduct(p.id)}
-                        disabled={deletingProductId === p.id}
-                        className="text-sm text-red-600 hover:underline disabled:opacity-50"
-                      >
-                        {deletingProductId === p.id ? "…" : "Delete"}
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-xs text-zinc-400">Vendor: {p.vendor_slug}</span>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingProductId(p.id);
+                      setForm({
+                        name: p.name,
+                        description: p.description ?? "",
+                        price: String(p.price),
+                        stock: p.stock != null ? String(p.stock) : "",
+                        categoryId: p.category_id ?? "",
+                        sizeLabel: p.size_label ?? "",
+                        ingredients: p.ingredients ?? "",
+                        nutritionalInfo: p.nutritional_info ?? "",
+                      });
+                      setShowForm(true);
+                    }}
+                    className="text-sm text-zinc-600 hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteProduct(p.id)}
+                    disabled={deletingProductId === p.id}
+                    className="text-sm text-red-600 hover:underline disabled:opacity-50"
+                  >
+                    {deletingProductId === p.id ? "…" : "Delete"}
+                  </button>
                 </div>
               </li>
             ))}

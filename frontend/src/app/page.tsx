@@ -4,14 +4,15 @@ import { SiteHeader } from "./_components/SiteHeader";
 import { SiteFooter } from "./_components/SiteFooter";
 import { FounderCategoriesSection } from "./_components/FounderCategoriesSection";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const SERVER_API_BASE =
+  process.env.API_PROXY_TARGET ?? process.env.BACKEND_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5134";
 
 type ProductSummary = { id: string; name: string; slug: string; description?: string | null; price: number };
 type CategoryItem = { id: string; name: string; slug: string; description?: string | null; productCount: number };
 
 async function fetchFeatured() {
   try {
-    const res = await fetch(`${API_BASE}/products/featured`, { cache: "no-store" });
+    const res = await fetch(`${SERVER_API_BASE.replace(/\/$/, "")}/products/featured`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return (Array.isArray(json) ? json : []) as ProductSummary[];
@@ -22,7 +23,7 @@ async function fetchFeatured() {
 
 async function fetchCategories(): Promise<CategoryItem[]> {
   try {
-    const res = await fetch(`${API_BASE}/products/categories`, { cache: "no-store" });
+    const res = await fetch(`${SERVER_API_BASE.replace(/\/$/, "")}/products/categories`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return (Array.isArray(json) ? json : []) as CategoryItem[];
@@ -157,7 +158,7 @@ export default async function Home() {
               const email = String(formData.get("email") ?? "").trim();
               if (!email) return;
               try {
-                await fetch(`${API_BASE}/newsletter/subscribe`, {
+                await fetch(`${SERVER_API_BASE.replace(/\/$/, "")}/newsletter/subscribe`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ email }),

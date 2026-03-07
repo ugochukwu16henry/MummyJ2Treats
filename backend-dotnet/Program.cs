@@ -175,4 +175,19 @@ app.MapAdminOrderEndpoints();
 app.MapAdminRiderEndpoints();
 
 app.MapGet("/", () => "MummyJ2Treats Backend is running!");
+
+// Health check: verifies the API can reach the database (helps debug "Login failed" / "Registration failed")
+app.MapGet("/health", async (MummyJ2TreatsDbContext db) =>
+{
+    try
+    {
+        _ = await db.Database.CanConnectAsync();
+        return Results.Ok(new { status = "ok", database = "connected" });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { status = "degraded", database = "error", message = ex.Message }, statusCode: 503);
+    }
+});
+
 app.Run();

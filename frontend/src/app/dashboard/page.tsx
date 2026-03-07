@@ -4,7 +4,12 @@ import Link from "next/link";
 import { DashboardLogoutButton } from "./_components/DashboardLogoutButton";
 import { DeleteMyAccountSection } from "./_components/DeleteMyAccountSection";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+// Server-side must call the real backend (full URL). Client uses NEXT_PUBLIC_API_URL (e.g. /api).
+const SERVER_API_BASE =
+  process.env.API_PROXY_TARGET ??
+  process.env.BACKEND_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  "http://localhost:5134";
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -16,8 +21,9 @@ export default async function DashboardPage() {
 
   let role: string | null = null;
   try {
-    const res = await fetch(`${API_BASE}/auth/me`, {
+    const res = await fetch(`${SERVER_API_BASE.replace(/\/$/, "")}/auth/me`, {
       headers: { Cookie: `access_token=${access.value}` },
+      cache: "no-store",
     });
     if (res.ok) {
       const user = (await res.json()) as { role?: string };
@@ -42,8 +48,8 @@ export default async function DashboardPage() {
   if (role === "customer") {
     try {
       const [refRes, loyaltyRes] = await Promise.all([
-        fetch(`${API_BASE}/moat/referral/me`, { headers: { Cookie: `access_token=${access.value}` } }),
-        fetch(`${API_BASE}/moat/loyalty/me`, { headers: { Cookie: `access_token=${access.value}` } }),
+        fetch(`${SERVER_API_BASE.replace(/\/$/, "")}/moat/referral/me`, { headers: { Cookie: `access_token=${access.value}` }, cache: "no-store" }),
+        fetch(`${SERVER_API_BASE.replace(/\/$/, "")}/moat/loyalty/me`, { headers: { Cookie: `access_token=${access.value}` }, cache: "no-store" }),
       ]);
       if (refRes.ok) {
         const ref = (await refRes.json()) as { code?: string };

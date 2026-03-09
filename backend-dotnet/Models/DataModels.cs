@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace MummyJ2Treats.Api.Models;
 
 public class StoreData
@@ -81,14 +83,18 @@ public class Product
 
 public class Order
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Guid OrderId { get; set; } = Guid.NewGuid();
+    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
     public string CustomerName { get; set; } = string.Empty;
     public string CustomerEmail { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;
     public string DeliveryAddress { get; set; } = string.Empty;
-    public string Status { get; set; } = "Pending"; // Pending | Approved
-    public string? BankReceiptUrl { get; set; }
+    public decimal TotalAmount { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
+
+    public string? BankReceiptImageUrl { get; set; }
     public string? ReceiptPdfUrl { get; set; }
     public List<OrderItem> Items { get; set; } = new();
 
@@ -100,7 +106,7 @@ public class Order
             CustomerEmail = request.CustomerEmail.Trim(),
             CustomerPhone = request.CustomerPhone.Trim(),
             DeliveryAddress = request.DeliveryAddress.Trim(),
-            BankReceiptUrl = request.BankReceiptUrl
+            BankReceiptImageUrl = request.BankReceiptUrl
         };
 
         foreach (var item in request.Items)
@@ -121,6 +127,7 @@ public class Order
         if (!order.Items.Any())
             throw new InvalidOperationException("Order must contain at least one item.");
 
+        order.TotalAmount = order.Items.Sum(i => i.UnitPrice * i.Quantity);
         return order;
     }
 }
@@ -162,4 +169,13 @@ public record CreateOrderRequest(
     List<CreateOrderItemRequest> Items);
 
 public record CreateOrderItemRequest(Guid ProductId, int Quantity);
+
+public enum OrderStatus
+{
+    Pending,
+    Approved,
+    Rejected,
+    Delivered
+}
+
 

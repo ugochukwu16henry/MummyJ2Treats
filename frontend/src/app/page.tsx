@@ -79,7 +79,7 @@ export default function HomePage() {
           <div className="flex justify-center">
             <div className="relative w-full max-w-lg rounded-3xl shadow-2xl border border-white/60 overflow-hidden">
               <img
-                src="/mummyj2banner.png"
+                src="/mummy j banner.jpeg"
                 alt="MummyJ2Treats banner"
                 className="w-full h-full object-cover"
               />

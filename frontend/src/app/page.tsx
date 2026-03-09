@@ -77,7 +77,13 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex justify-center">
-            <div className="h-56 w-56 sm:h-72 sm:w-72 rounded-3xl bg-[url('/mummyj2logo.png')] bg-cover bg-center shadow-2xl border border-white/60" />
+            <div className="relative w-full max-w-lg rounded-3xl shadow-2xl border border-white/60 overflow-hidden">
+              <img
+                src="/mummyj2banner.png"
+                alt="MummyJ2Treats banner"
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>

@@ -47,18 +47,18 @@ export default function HomePage() {
       </header>
 
       <section className="bg-gradient-to-b from-amber-50 to-white border-b border-amber-100">
-        <div className="max-w-6xl mx-auto px-4 py-12 grid gap-10 md:grid-cols-2 items-center">
-          <div className="space-y-4">
+        <div className="max-w-6xl mx-auto px-4 py-10 md:py-16 grid gap-10 md:grid-cols-2 items-center">
+          <div className="space-y-4 text-center md:text-left">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
               Fresh, homemade treats
               <br />
               from my kitchen to your door.
             </h1>
-            <p className="text-sm sm:text-base text-neutral-600">
+            <p className="text-sm sm:text-base text-neutral-600 max-w-xl mx-auto md:mx-0">
               Order small chops, cakes, and desserts directly from MummyJ2Treats.
               I bake every order fresh and arrange delivery across Lagos.
             </p>
-            <div className="flex flex-wrap gap-3 mt-2">
+            <div className="flex flex-wrap gap-3 mt-2 justify-center md:justify-start">
               <Link
                 href="#shop"
                 className="inline-flex items-center justify-center rounded-full bg-amber-700 px-6 py-2.5 text-sm font-semibold text-white shadow hover:bg-amber-800 transition-colors"
@@ -76,8 +76,8 @@ export default function HomePage() {
               Bank transfer checkout • Upload receipt • I confirm and you get a digital PDF receipt.
             </p>
           </div>
-          <div className="flex justify-center">
-            <div className="relative w-full max-w-lg rounded-3xl shadow-2xl border border-white/60 overflow-hidden">
+          <div className="flex justify-center md:justify-end">
+            <div className="relative w-full max-w-sm sm:max-w-md md:max-w-lg rounded-3xl shadow-2xl border border-white/60 overflow-hidden">
               <img
                 src="/mummy j banner.jpeg"
                 alt="MummyJ2Treats banner"
@@ -98,7 +98,7 @@ export default function HomePage() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Example product card using the \"soft glass\" style */}
-          <div className="max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
             <div className="relative h-64 bg-gray-100">
               <img
                 src="https://images.unsplash.com/photo-1578985545062-69928b1d9587"

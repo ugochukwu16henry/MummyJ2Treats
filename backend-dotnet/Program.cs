@@ -5,6 +5,8 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using MummyJ2Treats.Api.Services;
 using MummyJ2Treats.Api.Models;
 
@@ -38,7 +40,7 @@ if (!string.IsNullOrWhiteSpace(cloudName) &&
 builder.Services.AddSingleton<PdfReceiptService>();
 
 // Simple JWT auth (for admin APIs)
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "CHANGE_THIS_KEY_IN_PRODUCTION_123!";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? Environment.GetEnvironmentVariable("JWT_SECRET") ?? "CHANGE_THIS_KEY_IN_PRODUCTION_123!";
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
 builder.Services
@@ -64,6 +66,36 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 var api = app.MapGroup("/api");
+
+// Auth: simple single-admin login that returns a JWT
+api.MapPost("/auth/login", (LoginRequest request) =>
+{
+    var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@mummyj2treats.com";
+    var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "YourSecurePassword";
+
+    if (!string.Equals(request.Email?.Trim(), adminEmail, StringComparison.OrdinalIgnoreCase) ||
+        request.Password != adminPassword)
+    {
+        return Results.Unauthorized();
+    }
+
+    var claims = new[]
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, adminEmail),
+        new Claim(ClaimTypes.Role, "Admin")
+    };
+
+    var token = new JwtSecurityToken(
+        claims: claims,
+        expires: DateTime.UtcNow.AddHours(12),
+        signingCredentials: new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
+    );
+
+    var handler = new JwtSecurityTokenHandler();
+    var jwt = handler.WriteToken(token);
+
+    return Results.Ok(new { token = jwt });
+});
 
 // Public storefront APIs
 api.MapGet("/products", (JsonDataStore store) =>
@@ -150,10 +182,104 @@ admin.MapGet("/products", (JsonDataStore store) =>
     return Results.Ok(data.Products);
 });
 
-admin.MapPost("/products", (CreateProductRequest request, JsonDataStore store) =>
+admin.MapPost("/products", async (HttpRequest httpRequest, JsonDataStore store, IWebHostEnvironment env, IServiceProvider sp) =>
 {
     var data = store.Load();
-    var product = Product.Create(request, data.Categories);
+
+    // Support multipart form-data with image upload, or fallback to JSON body.
+    CreateProductRequest request;
+    IFormFile? imageFile = null;
+
+    if (httpRequest.HasFormContentType)
+    {
+        var form = await httpRequest.ReadFormAsync();
+        var name = form["name"].ToString();
+        var description = form["description"].ToString();
+        var size = form["size"].ToString();
+        var categoryIdText = form["categoryId"].ToString();
+        var priceText = form["price"].ToString();
+        var isActiveText = form["isActive"].ToString();
+
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(priceText) || string.IsNullOrWhiteSpace(categoryIdText))
+        {
+            return Results.BadRequest(new { message = "Name, price and category are required." });
+        }
+
+        if (!decimal.TryParse(priceText, out var price))
+        {
+            return Results.BadRequest(new { message = "Invalid price." });
+        }
+
+        if (!Guid.TryParse(categoryIdText, out var categoryId))
+        {
+            return Results.BadRequest(new { message = "Invalid category id." });
+        }
+
+        var isActive = string.IsNullOrWhiteSpace(isActiveText) || bool.Parse(isActiveText);
+
+        imageFile = form.Files["image"];
+
+        request = new CreateProductRequest(
+            Name: name,
+            Slug: null,
+            Description: string.IsNullOrWhiteSpace(description) ? null : description,
+            Price: price,
+            Size: string.IsNullOrWhiteSpace(size) ? null : size,
+            ImageUrl: null,
+            CategoryId: categoryId,
+            IsActive: isActive
+        );
+    }
+    else
+    {
+        var body = await httpRequest.ReadFromJsonAsync<CreateProductRequest>();
+        if (body is null)
+        {
+            return Results.BadRequest(new { message = "Invalid product payload." });
+        }
+        request = body;
+    }
+
+    // If there is an image file, upload to Cloudinary or local /uploads/products.
+    string? imageUrl = request.ImageUrl;
+    if (imageFile != null && imageFile.Length > 0)
+    {
+        var cloud = sp.GetService<Cloudinary>();
+        if (cloud != null)
+        {
+            await using var stream = imageFile.OpenReadStream();
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription(imageFile.FileName, stream),
+                Folder = "mummyj2_products"
+            };
+            var result = await cloud.UploadAsync(uploadParams);
+            imageUrl = result.SecureUrl?.ToString();
+        }
+        else
+        {
+            var webRoot = string.IsNullOrEmpty(env.WebRootPath)
+                ? Path.Combine(env.ContentRootPath, "wwwroot")
+                : env.WebRootPath;
+            Directory.CreateDirectory(webRoot);
+            var uploadDir = Path.Combine(webRoot, "uploads", "products");
+            Directory.CreateDirectory(uploadDir);
+
+            var ext = Path.GetExtension(imageFile.FileName);
+            if (string.IsNullOrWhiteSpace(ext))
+                ext = ".jpg";
+            var safeExt = ext.ToLowerInvariant();
+            var fileName = Guid.NewGuid() + safeExt;
+            var path = Path.Combine(uploadDir, fileName);
+
+            await using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+            await imageFile.CopyToAsync(fs);
+            imageUrl = "/uploads/products/" + fileName;
+        }
+    }
+
+    var createWithImage = request with { ImageUrl = imageUrl };
+    var product = Product.Create(createWithImage, data.Categories);
     data.Products.Add(product);
     store.Save(data);
     return Results.Ok(product);

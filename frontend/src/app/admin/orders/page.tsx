@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5134/api";
-const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
 
 type OrderStatus = "Pending" | "Approved" | "Rejected" | "Delivered";
 
@@ -27,8 +26,9 @@ export default function AdminOrdersPage() {
     async function load() {
       try {
         setLoading(true);
+        const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
         const res = await fetch(`${API_BASE}/admin/orders`, {
-          headers: ADMIN_TOKEN ? { Authorization: `Bearer ${ADMIN_TOKEN}` } : {},
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!res.ok) {
           setError("Failed to load orders (check admin token and API).");
@@ -49,9 +49,10 @@ export default function AdminOrdersPage() {
     try {
       setApprovingId(orderId);
       setError(null);
+      const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
       const res = await fetch(`${API_BASE}/admin/orders/${orderId}/approve`, {
         method: "POST",
-        headers: ADMIN_TOKEN ? { Authorization: `Bearer ${ADMIN_TOKEN}` } : {},
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {

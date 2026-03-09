@@ -63,18 +63,73 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="shop" className="max-w-6xl mx-auto px-4 py-10 space-y-4">
+      <section id="shop" className="max-w-6xl mx-auto px-4 py-10 space-y-6">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl sm:text-2xl font-semibold">Shop treats</h2>
           <span className="text-xs text-neutral-500">
-            Data is loaded from the .NET JSON API at <code className="font-mono">{API_BASE}</code>
+            Powered by your .NET JSON API at <code className="font-mono">{API_BASE}</code>
           </span>
         </div>
-        <p className="text-sm text-neutral-600">
-          This section will list categories and products from your JSON-powered .NET backend.
-          Once the API is deployed, the frontend will fetch <code className="font-mono">/products</code> and{" "}
-          <code className="font-mono">/categories</code> and render them here.
-        </p>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Example product card using the \"soft glass\" style */}
+          <div className="max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
+            <div className="relative h-64 bg-gray-100">
+              <img
+                src="https://images.unsplash.com/photo-1578985545062-69928b1d9587"
+                alt="Chocolate Cake"
+                className="w-full h-full object-cover"
+              />
+              <span className="absolute top-3 right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                Popular
+              </span>
+            </div>
+
+            <div className="p-5">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-xl font-semibold text-gray-800">Double Choco Delight</h3>
+                <span className="text-lg font-bold text-pink-600">₦15,000</span>
+              </div>
+              <p className="text-gray-500 text-sm mb-4">
+                Rich, moist chocolate layers with Belgian ganache. Perfect for celebrations.
+              </p>
+
+              <div className="flex gap-2 mb-6">
+                <button className="px-3 py-1 border border-gray-200 rounded-md text-xs hover:bg-pink-50">
+                  Small
+                </button>
+                <button className="px-3 py-1 border border-pink-500 bg-pink-50 rounded-md text-xs text-pink-600 font-medium">
+                  Standard (1kg)
+                </button>
+                <button className="px-3 py-1 border border-gray-200 rounded-md text-xs hover:bg-pink-50">
+                  Large
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium hover:bg-pink-600 transition-colors flex justify-center items-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="8" cy="21" r="1" />
+                  <circle cx="19" cy="21" r="1" />
+                  <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                </svg>
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section

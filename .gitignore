@@ -1,0 +1,20 @@
+# Build and cache
+/backend-dotnet/bin/
+/backend-dotnet/obj/
+/frontend/.next/
+
+# Node modules
+/frontend/node_modules/
+
+# Logs
+*.log
+
+# User-specific
+*.user
+*.suo
+*.userprefs
+
+# OS junk
+.DS_Store
+Thumbs.db
+

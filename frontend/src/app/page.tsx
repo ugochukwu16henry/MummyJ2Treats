@@ -19,11 +19,30 @@ export default function HomePage() {
               <div className="text-xs text-neutral-500">Homemade treats from my kitchen to yours</div>
             </div>
           </div>
-          <nav className="flex items-center gap-4 text-sm">
-            <Link href="#shop" className="hover:text-amber-700">Shop</Link>
-            <Link href="#how-it-works" className="hover:text-amber-700">How it works</Link>
-            <Link href="#help" className="hover:text-amber-700">Help</Link>
-          </nav>
+          <div className="flex items-center gap-6">
+            <nav className="flex items-center gap-4 text-sm">
+              <Link href="#shop" className="hover:text-amber-700">Shop</Link>
+              <Link href="#how-it-works" className="hover:text-amber-700">How it works</Link>
+              <Link href="#help" className="hover:text-amber-700">Help</Link>
+            </nav>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/signup"
+                className="hidden sm:inline-flex text-sm font-medium text-gray-700 hover:text-amber-700"
+              >
+                Sign up
+              </Link>
+              <Link
+                href="/cart"
+                className="relative inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-800 hover:bg-amber-50 transition-colors"
+              >
+                <span className="mr-1.5">
+                  🛒
+                </span>
+                <span>Cart</span>
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
 

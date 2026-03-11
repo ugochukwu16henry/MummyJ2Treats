@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5134/api";
+import { API_BASE } from "../../../lib/apiBase";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -22,8 +21,16 @@ export default function AdminLogin() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const body = (await res.json().catch(() => ({}))) as { token?: string };
+      const body = (await res.json().catch(() => ({}))) as { token?: string; message?: string };
       if (!res.ok || !body.token) {
+        if (res.status === 404) {
+          setError("Admin API URL is incorrect. Ensure NEXT_PUBLIC_API_URL points to your backend base URL.");
+          return;
+        }
+        if (res.status !== 401 && body.message) {
+          setError(body.message);
+          return;
+        }
         setError("Invalid email or password.");
         return;
       }

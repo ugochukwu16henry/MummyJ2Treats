@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5134/api";
+import { API_BASE } from "../../../lib/apiBase";
 
 type OrderStatus = "Pending" | "Approved" | "Rejected" | "Delivered";
 

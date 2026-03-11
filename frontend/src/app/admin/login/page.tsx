@@ -24,7 +24,7 @@ export default function AdminLogin() {
       const body = (await res.json().catch(() => ({}))) as { token?: string; message?: string };
       if (!res.ok || !body.token) {
         if (res.status === 404) {
-          setError("Admin API URL is incorrect. Ensure NEXT_PUBLIC_API_URL points to your backend base URL.");
+          setError(`Admin API URL is incorrect. Check NEXT_PUBLIC_API_URL. Tried: ${API_BASE}/auth/login`);
           return;
         }
         if (res.status !== 401 && body.message) {

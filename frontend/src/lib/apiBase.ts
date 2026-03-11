@@ -1,19 +1,12 @@
 const DEFAULT_API_BASE = "http://localhost:5134/api";
 
-function normalizePathToApi(pathname: string): string {
+function normalizePath(pathname: string): string {
   const cleaned = pathname
     .trim()
     .replace(/\/+$/, "")
     .replace(/\/auth\/login$/i, "");
 
-  const segments = cleaned.split("/").filter(Boolean);
-  const apiIndex = segments.findIndex((segment) => segment.toLowerCase() === "api");
-
-  if (apiIndex >= 0) {
-    return `/${segments.slice(0, apiIndex + 1).join("/")}`;
-  }
-
-  return "/api";
+  return cleaned;
 }
 
 function normalizeApiBaseUrl(rawUrl: string): string {
@@ -22,7 +15,7 @@ function normalizeApiBaseUrl(rawUrl: string): string {
 
   try {
     const url = new URL(trimmed);
-    const normalizedPath = normalizePathToApi(url.pathname);
+    const normalizedPath = normalizePath(url.pathname);
     return `${url.origin}${normalizedPath}`;
   } catch {
     // Fallback for values like localhost:5134 or relative paths.
@@ -30,7 +23,7 @@ function normalizeApiBaseUrl(rawUrl: string): string {
 
     try {
       const url = new URL(withProtocol);
-      const normalizedPath = normalizePathToApi(url.pathname);
+      const normalizedPath = normalizePath(url.pathname);
       return `${url.origin}${normalizedPath}`;
     } catch {
       return DEFAULT_API_BASE;

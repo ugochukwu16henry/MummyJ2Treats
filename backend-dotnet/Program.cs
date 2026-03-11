@@ -96,6 +96,18 @@ app.UseAuthorization();
 
 var api = app.MapGroup("/api");
 
+api.MapGet("/health", (IWebHostEnvironment env) =>
+{
+    var dataPath = Path.Combine(env.ContentRootPath, "data", "store.json");
+    return Results.Ok(new
+    {
+        status = "ok",
+        storage = "json-file",
+        dataPath,
+        service = "MummyJ2Treats.Api"
+    });
+});
+
 // Auth: simple single-admin login that returns a JWT
 api.MapPost("/auth/login", (LoginRequest request) =>
 {

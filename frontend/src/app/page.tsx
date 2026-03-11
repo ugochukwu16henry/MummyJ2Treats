@@ -215,7 +215,12 @@ export default function HomePage() {
       </section>
 
       <footer className="mt-8 border-t border-neutral-200 py-4 text-center text-xs text-neutral-500">
-        © {new Date().getFullYear()} MummyJ2Treats. All rights reserved.
+        <div>© {new Date().getFullYear()} MummyJ2Treats. All rights reserved.</div>
+        <div className="mt-1">
+          <Link href="/admin/login" className="underline hover:text-amber-700">
+            Admin dashboard
+          </Link>
+        </div>
       </footer>
     </main>
   );

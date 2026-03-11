@@ -12,6 +12,15 @@ using MummyJ2Treats.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var corsOriginsRaw = Environment.GetEnvironmentVariable("CORS_ORIGINS")
+    ?? Environment.GetEnvironmentVariable("FRONTEND_URL")
+    ?? string.Empty;
+
+var corsOrigins = corsOriginsRaw
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .ToArray();
+
 // JSON options
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -58,10 +67,30 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        if (corsOrigins.Length > 0)
+        {
+            policy.WithOrigins(corsOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+        else
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    });
+});
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseCors("FrontendPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { API_BASE } from "../../../lib/apiBase";
+import { apiFetch } from "../../../lib/apiClient";
 
 type Category = {
   id: string;
@@ -24,7 +24,7 @@ export default function AdminAddProductPage() {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const res = await fetch(`${API_BASE}/categories`);
+        const { response: res } = await apiFetch("/categories");
         if (!res.ok) return;
         const data = (await res.json()) as { id: string; name: string }[];
         setCategories(data);
@@ -69,7 +69,7 @@ export default function AdminAddProductPage() {
         fd.append("image", imageFile);
       }
       const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
-      const res = await fetch(`${API_BASE}/admin/products`, {
+      const { response: res } = await apiFetch("/admin/products", {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: fd,

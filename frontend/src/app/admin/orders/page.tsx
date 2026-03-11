@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API_BASE } from "../../../lib/apiBase";
+import { apiFetch } from "../../../lib/apiClient";
 
 type OrderStatus = "Pending" | "Approved" | "Rejected" | "Delivered";
 
@@ -26,7 +26,7 @@ export default function AdminOrdersPage() {
       try {
         setLoading(true);
         const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
-        const res = await fetch(`${API_BASE}/admin/orders`, {
+        const { response: res } = await apiFetch("/admin/orders", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!res.ok) {
@@ -49,7 +49,7 @@ export default function AdminOrdersPage() {
       setApprovingId(orderId);
       setError(null);
       const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
-      const res = await fetch(`${API_BASE}/admin/orders/${orderId}/approve`, {
+      const { response: res } = await apiFetch(`/admin/orders/${orderId}/approve`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });

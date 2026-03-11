@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { API_BASE } from "../../../lib/apiBase";
+import { apiFetch } from "../../../lib/apiClient";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function AdminLogin() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
+      const { response: res, triedUrls } = await apiFetch("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -24,7 +24,7 @@ export default function AdminLogin() {
       const body = (await res.json().catch(() => ({}))) as { token?: string; message?: string };
       if (!res.ok || !body.token) {
         if (res.status === 404) {
-          setError(`Admin API URL is incorrect. Check NEXT_PUBLIC_API_URL. Tried: ${API_BASE}/auth/login`);
+          setError(`Admin API URL is incorrect. Check NEXT_PUBLIC_API_URL. Tried: ${triedUrls.join(" or ")}`);
           return;
         }
         if (res.status !== 401 && body.message) {
